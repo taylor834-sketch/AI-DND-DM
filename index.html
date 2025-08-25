@@ -318,7 +318,7 @@
                     <div class="form-section">
                         <h3>Starting Scenario</h3>
                         <div class="scenario-selection">
-                            <div class="scenario-option" data-scenario="mysterious_caravan">
+                            <div class="scenario-option selected" data-scenario="mysterious_caravan" onclick="selectScenario('mysterious_caravan')">
                                 <div class="scenario-header">
                                     <h4>🚚 The Mysterious Caravan</h4>
                                     <span class="scenario-difficulty">Beginner</span>
@@ -331,7 +331,7 @@
                                 </div>
                             </div>
 
-                            <div class="scenario-option" data-scenario="goblin_raids">
+                            <div class="scenario-option" data-scenario="goblin_raids" onclick="selectScenario('goblin_raids')">
                                 <div class="scenario-header">
                                     <h4>⚔️ Goblin Raids</h4>
                                     <span class="scenario-difficulty">Beginner</span>
@@ -344,7 +344,7 @@
                                 </div>
                             </div>
 
-                            <div class="scenario-option" data-scenario="ancient_ruins">
+                            <div class="scenario-option" data-scenario="ancient_ruins" onclick="selectScenario('ancient_ruins')">
                                 <div class="scenario-header">
                                     <h4>🏛️ The Ancient Ruins</h4>
                                     <span class="scenario-difficulty">Intermediate</span>
@@ -357,7 +357,7 @@
                                 </div>
                             </div>
 
-                            <div class="scenario-option" data-scenario="political_intrigue">
+                            <div class="scenario-option" data-scenario="political_intrigue" onclick="selectScenario('political_intrigue')">
                                 <div class="scenario-header">
                                     <h4>👑 Court of Shadows</h4>
                                     <span class="scenario-difficulty">Advanced</span>
@@ -901,14 +901,58 @@
                 </header>
                 
                 <div class="game-content">
-                    <div class="story-section">
-                        <h3>Current Adventure</h3>
-                        <div id="story-text" class="story-text">
-                            <p>Welcome to your D&D adventure! Your party stands at the edge of a mysterious forest, ready to begin their epic journey.</p>
+                    <!-- AI DM Conversation Interface -->
+                    <div class="dm-conversation">
+                        <div class="conversation-header">
+                            <h3>🎲 Adventure Story</h3>
+                            <button class="secondary-button" onclick="startNewStoryBeat()">New Scene</button>
+                        </div>
+                        
+                        <div id="conversation-history" class="conversation-history">
+                            <!-- Conversation history will be populated here -->
+                        </div>
+                        
+                        <div class="player-input-section">
+                            <div class="voice-controls">
+                                <div class="voice-status">
+                                    <div id="voice-status-indicator" class="voice-indicator">
+                                        <span id="voice-status-text">Ready to listen</span>
+                                        <div id="voice-animation" class="voice-animation"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="voice-buttons">
+                                    <button id="start-listening-btn" class="voice-button primary-button" onclick="startListening()">
+                                        🎤 Speak Action
+                                    </button>
+                                    <button id="stop-listening-btn" class="voice-button secondary-button" onclick="stopListening()" style="display: none;">
+                                        ⏹️ Stop
+                                    </button>
+                                    <button class="voice-button secondary-button" onclick="toggleDMVoice()">
+                                        <span id="dm-voice-toggle">🔊 DM Voice: ON</span>
+                                    </button>
+                                    <button class="voice-button secondary-button" onclick="openVoiceSettings()">
+                                        ⚙️ Voice Settings
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="text-fallback">
+                                <details>
+                                    <summary>Or type your action (fallback)</summary>
+                                    <div class="input-group">
+                                        <textarea id="player-input" placeholder="What do you do? Describe your actions..." rows="2"></textarea>
+                                        <div class="input-actions">
+                                            <button class="secondary-button" onclick="sendPlayerAction()">Send Text</button>
+                                            <button class="secondary-button" onclick="rollDice()">🎲 Roll Dice</button>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="game-interface">
+                    <div class="game-sidebar">
                         <div class="party-status">
                             <h4>Party Status</h4>
                             <div id="game-party-list" class="game-party-list">
@@ -916,16 +960,88 @@
                             </div>
                         </div>
                         
-                        <div class="action-section">
-                            <h4>Actions</h4>
+                        <div class="quick-actions">
+                            <h4>Quick Actions</h4>
                             <div class="action-buttons">
-                                <button class="action-btn" onclick="alert('Combat system coming soon!')">⚔️ Combat</button>
-                                <button class="action-btn" onclick="alert('Exploration system coming soon!')">🗺️ Explore</button>
-                                <button class="action-btn" onclick="alert('Rest system coming soon!')">🏕️ Rest</button>
-                                <button class="action-btn" onclick="alert('Inventory system coming soon!')">🎒 Inventory</button>
+                                <button class="action-btn" onclick="initiateAction('combat')">⚔️ Combat</button>
+                                <button class="action-btn" onclick="initiateAction('explore')">🗺️ Explore</button>
+                                <button class="action-btn" onclick="initiateAction('rest')">🏕️ Rest</button>
+                                <button class="action-btn" onclick="initiateAction('inventory')">🎒 Inventory</button>
+                            </div>
+                        </div>
+                        
+                        <div class="game-state">
+                            <h4>Current Status</h4>
+                            <div id="game-status" class="status-info">
+                                <p><strong>Location:</strong> <span id="current-location">Starting Region</span></p>
+                                <p><strong>Time:</strong> <span id="current-time">Morning</span></p>
+                                <p><strong>Weather:</strong> <span id="current-weather">Clear</span></p>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Voice Settings Modal -->
+        <div id="voice-settings-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🎤 Voice Settings</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').style.display='none'">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="voice-engine-selection">
+                        <h4>Voice Engine</h4>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="voiceEngine" value="browser" checked>
+                                Browser TTS (Free, Basic Quality)
+                            </label>
+                            <label>
+                                <input type="radio" name="voiceEngine" value="elevenlabs">
+                                ElevenLabs (Premium, High Quality)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="elevenlabs-settings" class="elevenlabs-settings" style="display: none;">
+                        <h4>ElevenLabs Configuration</h4>
+                        <div class="form-group">
+                            <label for="elevenlabs-api-key">API Key:</label>
+                            <input type="password" id="elevenlabs-api-key" placeholder="Enter your ElevenLabs API key" 
+                                   value="${localStorage.getItem('elevenlabs_api_key') || ''}">
+                            <small>Your API key is stored locally and never sent to our servers</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="elevenlabs-voice-id">DM Voice:</label>
+                            <select id="elevenlabs-voice-id">
+                                <option value="">Loading voices...</option>
+                            </select>
+                            <button type="button" onclick="loadElevenLabsVoices()" class="secondary-button">Refresh Voices</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="voice-stability">Stability (0-1):</label>
+                            <input type="range" id="voice-stability" min="0" max="1" step="0.1" value="0.5">
+                            <span id="stability-value">0.5</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="voice-clarity">Clarity & Similarity (0-1):</label>
+                            <input type="range" id="voice-clarity" min="0" max="1" step="0.1" value="0.75">
+                            <span id="clarity-value">0.75</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="button" onclick="testElevenLabsVoice()" class="primary-button">Test Voice</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-button" onclick="this.closest('.modal').style.display='none'">Cancel</button>
+                    <button class="primary-button" onclick="saveVoiceSettings()">Save Settings</button>
                 </div>
             </div>
         </div>
@@ -1014,6 +1130,31 @@
             
             console.log('All button handlers set up');
         });
+        
+        // Scenario selection function
+        function selectScenario(scenarioId) {
+            console.log('Selecting scenario:', scenarioId);
+            
+            // Remove selected class from all scenarios
+            const scenarios = document.querySelectorAll('.scenario-option');
+            scenarios.forEach(scenario => {
+                scenario.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked scenario
+            const selectedScenario = document.querySelector(`[data-scenario="${scenarioId}"]`);
+            if (selectedScenario) {
+                selectedScenario.classList.add('selected');
+                
+                // Update hidden input value
+                const hiddenInput = document.getElementById('selected-scenario');
+                if (hiddenInput) {
+                    hiddenInput.value = scenarioId;
+                }
+                
+                console.log('Scenario selected:', scenarioId);
+            }
+        }
         
         // Campaign creation function
         function createCampaign(event) {
@@ -1556,6 +1697,12 @@
                     gamePartyList.appendChild(partyMember);
                 });
             }
+            
+            // Initialize the adventure conversation when game screen loads
+            setTimeout(() => {
+                initializeVoiceSystem();
+                initializeAdventure();
+            }, 500);
         }
         
         // Add event listeners when DOM loads
@@ -1630,6 +1777,867 @@
             
             console.log('All additional button handlers set up');
         });
+        
+        // ===============================
+        // VOICE SYSTEM VARIABLES
+        // ===============================
+        
+        let voiceRecognition = null;
+        let voiceSynthesis = window.speechSynthesis;
+        let isDMVoiceEnabled = true;
+        let isListening = false;
+        let dmVoice = null;
+        
+        // ElevenLabs configuration
+        let elevenLabsConfig = {
+            apiKey: localStorage.getItem('elevenlabs_api_key') || '',
+            voiceId: localStorage.getItem('elevenlabs_voice_id') || '',
+            stability: parseFloat(localStorage.getItem('elevenlabs_stability')) || 0.5,
+            clarity: parseFloat(localStorage.getItem('elevenlabs_clarity')) || 0.75,
+            enabled: localStorage.getItem('voice_engine') === 'elevenlabs'
+        };
+        
+        // Initialize voice system
+        function initializeVoiceSystem() {
+            console.log('Initializing voice system...');
+            
+            // Check if speech recognition is supported
+            if ('speechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                voiceRecognition = new (window.speechRecognition || window.webkitSpeechRecognition)();
+                setupSpeechRecognition();
+            } else {
+                console.warn('Speech recognition not supported in this browser');
+                document.getElementById('start-listening-btn').disabled = true;
+                document.getElementById('voice-status-text').textContent = 'Voice not supported';
+            }
+            
+            // Setup speech synthesis voice for DM
+            if (voiceSynthesis.getVoices().length === 0) {
+                voiceSynthesis.addEventListener('voiceschanged', setupDMVoice);
+            } else {
+                setupDMVoice();
+            }
+        }
+        
+        // Setup speech recognition
+        function setupSpeechRecognition() {
+            voiceRecognition.continuous = false;
+            voiceRecognition.interimResults = true;
+            voiceRecognition.lang = 'en-US';
+            
+            voiceRecognition.onstart = function() {
+                console.log('Voice recognition started');
+                isListening = true;
+                updateVoiceStatus('Listening... speak now', 'listening');
+                document.getElementById('start-listening-btn').style.display = 'none';
+                document.getElementById('stop-listening-btn').style.display = 'inline-block';
+            };
+            
+            voiceRecognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // Update status with interim results
+                if (interimTranscript) {
+                    updateVoiceStatus('Hearing: "' + interimTranscript + '"', 'processing');
+                }
+                
+                // Process final result
+                if (finalTranscript) {
+                    console.log('Voice recognition result:', finalTranscript);
+                    processVoiceInput(finalTranscript);
+                }
+            };
+            
+            voiceRecognition.onerror = function(event) {
+                console.error('Voice recognition error:', event.error);
+                updateVoiceStatus('Voice error: ' + event.error, 'error');
+                resetVoiceControls();
+            };
+            
+            voiceRecognition.onend = function() {
+                console.log('Voice recognition ended');
+                isListening = false;
+                resetVoiceControls();
+            };
+        }
+        
+        // Setup DM voice
+        function setupDMVoice() {
+            const voices = voiceSynthesis.getVoices();
+            
+            // Prefer a good narrative voice (look for specific voices)
+            dmVoice = voices.find(voice => 
+                voice.name.includes('Natural') || 
+                voice.name.includes('Neural') ||
+                voice.name.includes('Premium') ||
+                (voice.lang.startsWith('en') && voice.name.includes('Male'))
+            ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+            
+            console.log('DM Voice selected:', dmVoice?.name);
+        }
+        
+        // Voice control functions
+        function startListening() {
+            if (voiceRecognition && !isListening) {
+                try {
+                    voiceRecognition.start();
+                } catch (error) {
+                    console.error('Error starting voice recognition:', error);
+                    updateVoiceStatus('Error starting microphone', 'error');
+                }
+            }
+        }
+        
+        function stopListening() {
+            if (voiceRecognition && isListening) {
+                voiceRecognition.stop();
+            }
+        }
+        
+        function toggleDMVoice() {
+            isDMVoiceEnabled = !isDMVoiceEnabled;
+            const toggle = document.getElementById('dm-voice-toggle');
+            toggle.textContent = isDMVoiceEnabled ? '🔊 DM Voice: ON' : '🔇 DM Voice: OFF';
+            
+            if (!isDMVoiceEnabled) {
+                voiceSynthesis.cancel(); // Stop any current speech
+            }
+        }
+        
+        function updateVoiceStatus(text, status = 'ready') {
+            const statusText = document.getElementById('voice-status-text');
+            const indicator = document.getElementById('voice-status-indicator');
+            
+            statusText.textContent = text;
+            indicator.className = `voice-indicator ${status}`;
+        }
+        
+        function resetVoiceControls() {
+            document.getElementById('start-listening-btn').style.display = 'inline-block';
+            document.getElementById('stop-listening-btn').style.display = 'none';
+            updateVoiceStatus('Ready to listen', 'ready');
+        }
+        
+        // Process voice input from player
+        function processVoiceInput(transcript) {
+            console.log('Processing voice input:', transcript);
+            
+            // Add player message to conversation
+            const playerMessage = `
+                <div class="player-message voice-message">
+                    <div class="message-header">
+                        <strong>🎭 ${getActiveCharacterName()}</strong>
+                        <span class="voice-indicator-small">🎤</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p>"${transcript}"</p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(playerMessage);
+            updateVoiceStatus('Processing your action...', 'processing');
+            
+            // Generate AI DM response
+            setTimeout(() => {
+                generateVoiceDMResponse(transcript);
+            }, 1000);
+        }
+        
+        // Speak text using DM voice
+        function speakAsDM(text) {
+            if (!isDMVoiceEnabled) return;
+            
+            // Use ElevenLabs if configured, otherwise fall back to browser TTS
+            if (elevenLabsConfig.enabled && elevenLabsConfig.apiKey && elevenLabsConfig.voiceId) {
+                generateElevenLabsSpeech(text);
+            } else {
+                speakAsDMBrowser(text);
+            }
+        }
+        
+        // ===============================
+        // ELEVENLABS INTEGRATION
+        // ===============================
+        
+        // Open voice settings modal
+        function openVoiceSettings() {
+            const modal = document.getElementById('voice-settings-modal');
+            
+            // Load current settings
+            const engineRadios = document.querySelectorAll('input[name="voiceEngine"]');
+            engineRadios.forEach(radio => {
+                radio.checked = radio.value === (elevenLabsConfig.enabled ? 'elevenlabs' : 'browser');
+            });
+            
+            // Update UI
+            toggleElevenLabsSettings();
+            updateSliderDisplays();
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Load voices if ElevenLabs is selected and API key exists
+            if (elevenLabsConfig.enabled && elevenLabsConfig.apiKey) {
+                loadElevenLabsVoices();
+            }
+        }
+        
+        // Toggle ElevenLabs settings visibility
+        function toggleElevenLabsSettings() {
+            const elevenLabsRadio = document.querySelector('input[value="elevenlabs"]');
+            const elevenLabsSettings = document.getElementById('elevenlabs-settings');
+            
+            if (elevenLabsRadio.checked) {
+                elevenLabsSettings.style.display = 'block';
+            } else {
+                elevenLabsSettings.style.display = 'none';
+            }
+        }
+        
+        // Update slider display values
+        function updateSliderDisplays() {
+            const stabilitySlider = document.getElementById('voice-stability');
+            const claritySlider = document.getElementById('voice-clarity');
+            
+            stabilitySlider.value = elevenLabsConfig.stability;
+            claritySlider.value = elevenLabsConfig.clarity;
+            
+            document.getElementById('stability-value').textContent = elevenLabsConfig.stability;
+            document.getElementById('clarity-value').textContent = elevenLabsConfig.clarity;
+            
+            // Add event listeners for real-time updates
+            stabilitySlider.oninput = function() {
+                document.getElementById('stability-value').textContent = this.value;
+            };
+            claritySlider.oninput = function() {
+                document.getElementById('clarity-value').textContent = this.value;
+            };
+        }
+        
+        // Load available ElevenLabs voices
+        async function loadElevenLabsVoices() {
+            const apiKey = document.getElementById('elevenlabs-api-key').value || elevenLabsConfig.apiKey;
+            const voiceSelect = document.getElementById('elevenlabs-voice-id');
+            
+            if (!apiKey) {
+                voiceSelect.innerHTML = '<option value="">Enter API key first</option>';
+                return;
+            }
+            
+            try {
+                voiceSelect.innerHTML = '<option value="">Loading voices...</option>';
+                
+                const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+                    headers: {
+                        'xi-api-key': apiKey
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                voiceSelect.innerHTML = '<option value="">Select a voice...</option>';
+                
+                data.voices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.voice_id;
+                    option.textContent = `${voice.name} (${voice.category || 'Custom'})`;
+                    if (voice.voice_id === elevenLabsConfig.voiceId) {
+                        option.selected = true;
+                    }
+                    voiceSelect.appendChild(option);
+                });
+                
+                console.log('Loaded', data.voices.length, 'ElevenLabs voices');
+                
+            } catch (error) {
+                console.error('Error loading ElevenLabs voices:', error);
+                voiceSelect.innerHTML = '<option value="">Error loading voices</option>';
+                alert('Error loading voices. Please check your API key.');
+            }
+        }
+        
+        // Test ElevenLabs voice
+        async function testElevenLabsVoice() {
+            const apiKey = document.getElementById('elevenlabs-api-key').value;
+            const voiceId = document.getElementById('elevenlabs-voice-id').value;
+            
+            if (!apiKey || !voiceId) {
+                alert('Please enter API key and select a voice first.');
+                return;
+            }
+            
+            const testText = "Greetings, brave adventurers! I am your Dungeon Master, ready to guide you through epic tales of magic and mystery.";
+            
+            try {
+                await generateElevenLabsSpeech(testText, apiKey, voiceId);
+            } catch (error) {
+                console.error('Error testing voice:', error);
+                alert('Error testing voice: ' + error.message);
+            }
+        }
+        
+        // Generate speech using ElevenLabs API
+        async function generateElevenLabsSpeech(text, apiKey = null, voiceId = null) {
+            const key = apiKey || elevenLabsConfig.apiKey;
+            const voice = voiceId || elevenLabsConfig.voiceId;
+            
+            if (!key || !voice) {
+                console.warn('ElevenLabs not configured, falling back to browser TTS');
+                speakAsDMBrowser(text);
+                return;
+            }
+            
+            try {
+                updateVoiceStatus('Generating AI voice...', 'processing');
+                
+                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'audio/mpeg',
+                        'Content-Type': 'application/json',
+                        'xi-api-key': key
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        model_id: 'eleven_monolingual_v1',
+                        voice_settings: {
+                            stability: elevenLabsConfig.stability,
+                            similarity_boost: elevenLabsConfig.clarity,
+                            style: 0.0,
+                            use_speaker_boost: true
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`ElevenLabs API Error: ${response.status}`);
+                }
+                
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                
+                audio.onplay = () => {
+                    updateVoiceStatus('DM is speaking...', 'speaking');
+                };
+                
+                audio.onended = () => {
+                    updateVoiceStatus('Ready to listen', 'ready');
+                    URL.revokeObjectURL(audioUrl);
+                };
+                
+                audio.onerror = (error) => {
+                    console.error('Audio playback error:', error);
+                    updateVoiceStatus('Audio error', 'error');
+                    URL.revokeObjectURL(audioUrl);
+                };
+                
+                await audio.play();
+                
+            } catch (error) {
+                console.error('ElevenLabs TTS Error:', error);
+                updateVoiceStatus('Voice error, using fallback', 'error');
+                
+                // Fallback to browser TTS
+                speakAsDMBrowser(text);
+            }
+        }
+        
+        // Browser TTS fallback (rename existing function)
+        function speakAsDMBrowser(text) {
+            if (!voiceSynthesis) return;
+            
+            voiceSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (dmVoice) {
+                utterance.voice = dmVoice;
+            }
+            
+            utterance.rate = 0.85;
+            utterance.pitch = 0.8;
+            utterance.volume = 0.8;
+            
+            utterance.onstart = () => updateVoiceStatus('DM is speaking...', 'speaking');
+            utterance.onend = () => updateVoiceStatus('Ready to listen', 'ready');
+            utterance.onerror = () => updateVoiceStatus('Ready to listen', 'ready');
+            
+            voiceSynthesis.speak(utterance);
+        }
+        
+        // Save voice settings
+        function saveVoiceSettings() {
+            // Get selected engine
+            const selectedEngine = document.querySelector('input[name="voiceEngine"]:checked').value;
+            
+            // Save to config and localStorage
+            elevenLabsConfig.enabled = selectedEngine === 'elevenlabs';
+            localStorage.setItem('voice_engine', selectedEngine);
+            
+            if (elevenLabsConfig.enabled) {
+                // Save ElevenLabs settings
+                elevenLabsConfig.apiKey = document.getElementById('elevenlabs-api-key').value;
+                elevenLabsConfig.voiceId = document.getElementById('elevenlabs-voice-id').value;
+                elevenLabsConfig.stability = parseFloat(document.getElementById('voice-stability').value);
+                elevenLabsConfig.clarity = parseFloat(document.getElementById('voice-clarity').value);
+                
+                localStorage.setItem('elevenlabs_api_key', elevenLabsConfig.apiKey);
+                localStorage.setItem('elevenlabs_voice_id', elevenLabsConfig.voiceId);
+                localStorage.setItem('elevenlabs_stability', elevenLabsConfig.stability);
+                localStorage.setItem('elevenlabs_clarity', elevenLabsConfig.clarity);
+            }
+            
+            // Close modal
+            document.getElementById('voice-settings-modal').style.display = 'none';
+            
+            // Update voice toggle display
+            const toggle = document.getElementById('dm-voice-toggle');
+            toggle.innerHTML = elevenLabsConfig.enabled 
+                ? '🔊 DM Voice: ElevenLabs' 
+                : '🔊 DM Voice: Browser';
+            
+            alert('Voice settings saved!');
+        }
+        
+        // Add event listeners for voice engine radio buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const radioButtons = document.querySelectorAll('input[name="voiceEngine"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', toggleElevenLabsSettings);
+            });
+        });
+        
+        // ===============================
+        // AI DM CONVERSATION SYSTEM
+        // ===============================
+        
+        // Initialize conversation when game starts
+        function initializeAdventure() {
+            console.log('Initializing adventure...');
+            
+            // Clear any existing conversation
+            const history = document.getElementById('conversation-history');
+            if (history) {
+                history.innerHTML = '';
+            }
+            
+            // Start with the initial story beat
+            startInitialStory();
+        }
+        
+        // Get scenario-specific opening based on selected scenario
+        function getScenarioOpening(scenario) {
+            const scenarioOpenings = {
+                mysterious_caravan: {
+                    setting: "at the last known location of a missing merchant caravan",
+                    description: "Wagon tracks lead off the main road into dense woods, and scattered coins glint in the mud. The silence is unsettling.",
+                    hook: "You must discover what happened to the caravan and its valuable cargo."
+                },
+                goblin_raids: {
+                    setting: "on the outskirts of Millhaven village",
+                    description: "Smoke rises from burned farms, and frightened villagers huddle behind hastily built barricades. Goblin war cries echo in the distance.",
+                    hook: "The villagers desperately need your help to drive back the goblin raiders."
+                },
+                ancient_ruins: {
+                    setting: "before the entrance to long-forgotten ruins",
+                    description: "Ancient stone archways covered in mysterious runes loom before you. Strange magical energies pulse from within the depths.",
+                    hook: "Legend speaks of powerful artifacts hidden within these dangerous ruins."
+                },
+                political_intrigue: {
+                    setting: "in the grand halls of the royal palace",
+                    description: "Nobles in fine clothing whisper in shadowy corners, their words dripping with hidden meanings. Trust is a luxury you cannot afford.",
+                    hook: "You must navigate the treacherous waters of court politics to uncover a conspiracy."
+                }
+            };
+            
+            return scenarioOpenings[scenario] || scenarioOpenings.mysterious_caravan;
+        }
+        
+        // Start the initial story
+        function startInitialStory() {
+            const campaign = window.currentCampaign;
+            const characters = window.partyCharacters || [];
+            const scenarioInfo = getScenarioOpening(campaign?.startingScenario || 'mysterious_caravan');
+            
+            // Create spoken version (cleaner for voice)
+            const spokenIntro = `Welcome, brave adventurers, to ${campaign?.name || 'your epic adventure'}! 
+                You find yourselves in the ${campaign?.startingRegion || 'Sword Coast'}, ${scenarioInfo.setting}. 
+                ${scenarioInfo.description} 
+                ${characters.length > 0 ? `Your party consists of ${characters.map(c => `${c.name}, a level ${c.level} ${c.species} ${c.class}`).join(', ')}.` : 'Your character stands ready to begin this journey.'}
+                ${scenarioInfo.hook} What do you choose to do?`;
+            
+            let initialStory = `
+                <div class="dm-message voice-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="voice-indicator-small">🔊</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p>Welcome, brave adventurers, to <strong>${campaign?.name || 'your epic adventure'}</strong>!</p>
+                        
+                        <p>You find yourselves in the <strong>${campaign?.startingRegion || 'Sword Coast'}</strong>, ${scenarioInfo.setting}.</p>
+                        
+                        <p>${scenarioInfo.description}</p>
+                        
+                        ${characters.length > 0 ? `<p>Your party consists of:</p><ul>${characters.map(c => `<li><strong>${c.name}</strong> - Level ${c.level} ${c.species} ${c.class}</li>`).join('')}</ul>` : '<p>Your character stands ready to begin this journey.</p>'}
+                        
+                        <p><strong>${scenarioInfo.hook}</strong></p>
+                        
+                        <p class="dm-prompt"><em>What do you choose to do?</em></p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(initialStory);
+            
+            // Speak the introduction
+            setTimeout(() => {
+                speakAsDM(spokenIntro);
+            }, 1000);
+            
+            // Update game status
+            updateGameStatus(campaign?.startingRegion || 'Ancient Forest', 'Morning', 'Clear skies');
+        }
+        
+        // Start a new story beat
+        function startNewStoryBeat() {
+            const newScenePrompts = [
+                "A new challenge presents itself...",
+                "The adventure takes an unexpected turn...",
+                "Something stirs in the shadows...",
+                "A distant sound catches your attention...",
+                "The path ahead reveals new possibilities..."
+            ];
+            
+            const randomPrompt = newScenePrompts[Math.floor(Math.random() * newScenePrompts.length)];
+            
+            const newScene = `
+                <div class="dm-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p><em>${randomPrompt}</em></p>
+                        <p class="dm-prompt">What would you like to do?</p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(newScene);
+        }
+        
+        // Send player action
+        function sendPlayerAction() {
+            const input = document.getElementById('player-input');
+            const action = input.value.trim();
+            
+            if (!action) {
+                alert('Please enter an action first!');
+                return;
+            }
+            
+            // Add player message to conversation
+            const playerMessage = `
+                <div class="player-message">
+                    <div class="message-header">
+                        <strong>🎭 ${getActiveCharacterName()}</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p>${action}</p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(playerMessage);
+            
+            // Clear input
+            input.value = '';
+            
+            // Generate AI DM response
+            setTimeout(() => {
+                generateDMResponse(action);
+            }, 1000);
+        }
+        
+        // Generate voice-enabled DM response
+        function generateVoiceDMResponse(playerAction) {
+            const responses = [
+                {
+                    condition: playerAction.toLowerCase().includes('left') || playerAction.toLowerCase().includes('forest'),
+                    response: "You venture deeper into the forest. The strange lights dance between the ancient trees, leading you to a hidden clearing where an old stone altar sits covered in glowing runes. A soft humming fills the air.",
+                    voice: "You venture deeper into the forest. The strange lights dance between the ancient trees, leading you to a hidden clearing where an old stone altar sits covered in glowing runes. A soft humming fills the air. What do you do next?"
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('right') || playerAction.toLowerCase().includes('settlement'),
+                    response: "You approach the settlement, which turns out to be a small trading post. A weathered innkeeper greets you warmly, offering hot food and tales of recent strange happenings in the region.",
+                    voice: "You approach the settlement, which turns out to be a small trading post. A weathered innkeeper greets you warmly, offering hot food and tales of recent strange happenings in the region. What would you like to do?"
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('investigate') || playerAction.toLowerCase().includes('examine') || playerAction.toLowerCase().includes('look'),
+                    response: "Your investigation reveals more than you initially expected. Let me roll for your Investigation check...",
+                    voice: "Your investigation reveals more than you initially expected. Let me roll for your Investigation check.",
+                    requiresDMRoll: true,
+                    rollType: 'investigation'
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('attack') || playerAction.toLowerCase().includes('fight') || playerAction.toLowerCase().includes('combat'),
+                    response: "Combat begins! Let me roll for initiative and determine what happens next!",
+                    voice: "Combat begins! Let me roll for initiative and determine what happens next!",
+                    requiresDMRoll: true,
+                    rollType: 'initiative'
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('talk') || playerAction.toLowerCase().includes('speak') || playerAction.toLowerCase().includes('say'),
+                    response: "Your words carry weight in this moment. The NPC listens intently, their expression shifting as they consider your words carefully. Let me roll to see how they react...",
+                    voice: "Your words carry weight in this moment. The NPC listens intently, their expression shifting as they consider your words carefully. Let me roll to see how they react.",
+                    requiresDMRoll: true,
+                    rollType: 'persuasion'
+                }
+            ];
+            
+            // Find matching response or use default
+            let selectedResponse = responses.find(r => r.condition) || {
+                response: "Interesting choice! The consequences of your action begin to unfold before you. The world reacts to your decision in ways both expected and surprising.",
+                voice: "Interesting choice! The consequences of your action begin to unfold before you. The world reacts to your decision in ways both expected and surprising. What do you do next?",
+                requiresDMRoll: Math.random() < 0.3 // 30% chance of requiring a roll
+            };
+            
+            // Add some dynamic elements based on campaign
+            const campaign = window.currentCampaign;
+            if (campaign?.moralComplexity === 'morally_gray') {
+                selectedResponse.response += " The moral implications of this choice are not immediately clear...";
+                selectedResponse.voice += " The moral implications of this choice are not immediately clear.";
+            }
+            
+            // Handle DM dice rolling if required
+            if (selectedResponse.requiresDMRoll) {
+                handleDMDiceRoll(selectedResponse, playerAction);
+            } else {
+                displayDMResponse(selectedResponse.response, selectedResponse.voice);
+            }
+        }
+        
+        // Handle DM dice rolling
+        function handleDMDiceRoll(responseObj, playerAction) {
+            const rollTypes = {
+                investigation: { die: 20, modifier: 0, description: "Investigation check" },
+                initiative: { die: 20, modifier: 2, description: "Initiative roll" },
+                persuasion: { die: 20, modifier: 1, description: "Reaction roll" },
+                random: { die: 20, modifier: 0, description: "Outcome roll" }
+            };
+            
+            const rollType = rollTypes[responseObj.rollType] || rollTypes.random;
+            const roll = Math.floor(Math.random() * rollType.die) + 1;
+            const total = roll + rollType.modifier;
+            
+            // Display the initial response
+            displayDMResponse(responseObj.response, responseObj.voice);
+            
+            // Add DM dice roll after a delay
+            setTimeout(() => {
+                const rollMessage = `
+                    <div class="dm-roll">
+                        <div class="message-header">
+                            <strong>🎲 DM Roll</strong>
+                            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p><strong>${rollType.description}:</strong> d${rollType.die} + ${rollType.modifier} = <span class="roll-result">${total}</span> (rolled ${roll})</p>
+                        </div>
+                    </div>
+                `;
+                
+                appendToConversation(rollMessage);
+                
+                // Generate follow-up response based on roll result
+                setTimeout(() => {
+                    generateRollBasedResponse(rollType.description, total, playerAction);
+                }, 1500);
+                
+            }, 2000);
+        }
+        
+        // Generate response based on DM dice roll result
+        function generateRollBasedResponse(rollDescription, total, originalAction) {
+            let followupResponse = "";
+            let followupVoice = "";
+            
+            if (total >= 18) {
+                followupResponse = "Exceptional success! Your action succeeds beyond your wildest expectations, revealing hidden opportunities and advantages.";
+                followupVoice = "Exceptional success! Your action succeeds beyond your wildest expectations, revealing hidden opportunities and advantages. What do you do with this amazing result?";
+            } else if (total >= 15) {
+                followupResponse = "Great success! Your action works very well, achieving exactly what you hoped for and perhaps a little more.";
+                followupVoice = "Great success! Your action works very well, achieving exactly what you hoped for and perhaps a little more. How do you proceed?";
+            } else if (total >= 10) {
+                followupResponse = "Moderate success! Your action succeeds, though not without some complications or unexpected twists.";
+                followupVoice = "Moderate success! Your action succeeds, though not without some complications or unexpected twists. What's your next move?";
+            } else if (total >= 5) {
+                followupResponse = "Partial success with complications. Your action has some effect, but creates new challenges to overcome.";
+                followupVoice = "Partial success with complications. Your action has some effect, but creates new challenges to overcome. How do you adapt?";
+            } else {
+                followupResponse = "Things don't go as planned. Your action has unintended consequences that complicate the situation significantly.";
+                followupVoice = "Things don't go as planned. Your action has unintended consequences that complicate the situation significantly. How do you respond to this setback?";
+            }
+            
+            displayDMResponse(followupResponse, followupVoice);
+        }
+        
+        // Display DM response with voice
+        function displayDMResponse(textResponse, voiceResponse) {
+            const responseMessage = `
+                <div class="dm-message voice-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="voice-indicator-small">🔊</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p>${textResponse}</p>
+                        <p class="dm-prompt"><em>What do you do next?</em></p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(responseMessage);
+            
+            // Speak the response
+            setTimeout(() => {
+                speakAsDM(voiceResponse || textResponse);
+            }, 500);
+        }
+        
+        // Legacy text-only function (fallback)
+        function generateDMResponse(playerAction) {
+            const responses = [
+                {
+                    condition: playerAction.toLowerCase().includes('left') || playerAction.toLowerCase().includes('forest'),
+                    response: "You venture deeper into the forest. The strange lights dance between the ancient trees, leading you to a hidden clearing where an old stone altar sits covered in glowing runes. A soft humming fills the air."
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('right') || playerAction.toLowerCase().includes('settlement'),
+                    response: "You approach the settlement, which turns out to be a small trading post. A weathered innkeeper greets you warmly, offering hot food and tales of recent strange happenings in the region."
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('investigate') || playerAction.toLowerCase().includes('examine'),
+                    response: "Your investigation reveals more than you initially expected. Roll a d20 + your Investigation modifier to see what you discover!"
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('attack') || playerAction.toLowerCase().includes('fight'),
+                    response: "Combat begins! Roll for initiative! The tension in the air is palpable as weapons are drawn and spells are prepared."
+                },
+                {
+                    condition: playerAction.toLowerCase().includes('talk') || playerAction.toLowerCase().includes('speak'),
+                    response: "Your words carry weight in this moment. The NPC listens intently, their expression shifting as they consider your words carefully."
+                }
+            ];
+            
+            // Find matching response or use default
+            let dmResponse = responses.find(r => r.condition)?.response || 
+                "Interesting choice! The consequences of your action begin to unfold before you. The world reacts to your decision in ways both expected and surprising.";
+            
+            // Add some dynamic elements based on campaign
+            const campaign = window.currentCampaign;
+            if (campaign?.moralComplexity === 'morally_gray') {
+                dmResponse += " The moral implications of this choice are not immediately clear...";
+            }
+            
+            const responseMessage = `
+                <div class="dm-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p>${dmResponse}</p>
+                        <p class="dm-prompt"><em>What do you do next?</em></p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(responseMessage);
+        }
+        
+        // Roll dice
+        function rollDice() {
+            const dice = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'];
+            const selectedDie = prompt('Which die do you want to roll? (d4, d6, d8, d10, d12, d20)', 'd20');
+            
+            if (dice.includes(selectedDie)) {
+                const sides = parseInt(selectedDie.substring(1));
+                const result = Math.floor(Math.random() * sides) + 1;
+                
+                const rollMessage = `
+                    <div class="dice-roll">
+                        <div class="message-header">
+                            <strong>🎲 Dice Roll</strong>
+                            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p><strong>${getActiveCharacterName()}</strong> rolled a <strong>${selectedDie}</strong>: <span class="roll-result">${result}</span></p>
+                        </div>
+                    </div>
+                `;
+                
+                appendToConversation(rollMessage);
+            }
+        }
+        
+        // Initiate quick actions
+        function initiateAction(actionType) {
+            const actions = {
+                combat: "I want to initiate combat!",
+                explore: "I want to explore the area more thoroughly.",
+                rest: "I want to take a rest to recover.",
+                inventory: "I want to check my inventory and equipment."
+            };
+            
+            const input = document.getElementById('player-input');
+            input.value = actions[actionType] || "I want to take an action.";
+            sendPlayerAction();
+        }
+        
+        // Helper functions
+        function getActiveCharacterName() {
+            const characters = window.partyCharacters || [];
+            return characters.length > 0 ? characters[0].name : 'Adventurer';
+        }
+        
+        function appendToConversation(messageHTML) {
+            const history = document.getElementById('conversation-history');
+            if (history) {
+                history.innerHTML += messageHTML;
+                history.scrollTop = history.scrollHeight;
+                
+                // Save conversation to campaign
+                if (window.currentCampaign) {
+                    saveCurrentCampaignData();
+                }
+            }
+        }
+        
+        function updateGameStatus(location, time, weather) {
+            document.getElementById('current-location').textContent = location;
+            document.getElementById('current-time').textContent = time;
+            document.getElementById('current-weather').textContent = weather;
+        }
     </script>
 
     <!-- Initialize Application -->
