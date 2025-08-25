@@ -386,6 +386,104 @@
             </div>
         </div>
 
+        <!-- API Configuration Screen -->
+        <div id="apiSetup-screen" class="screen api-setup-screen">
+            <div class="api-setup-container">
+                <header class="screen-header">
+                    <h2>🔧 API Configuration</h2>
+                    <p>Configure your AI services for the best D&D experience</p>
+                </header>
+
+                <div class="api-setup-content">
+                    <!-- OpenAI Configuration -->
+                    <div class="api-section">
+                        <div class="api-header">
+                            <h3>🤖 OpenAI (AI Dungeon Master)</h3>
+                            <span class="api-status" id="openai-status">Not Configured</span>
+                        </div>
+                        <div class="api-description">
+                            <p>Powers intelligent DM responses and story continuation. Recommended for the best experience.</p>
+                            <a href="https://platform.openai.com/api-keys" target="_blank">Get your API key →</a>
+                        </div>
+                        <div class="form-group">
+                            <label for="setup-openai-key">API Key:</label>
+                            <div class="form-row">
+                                <input type="password" id="setup-openai-key" placeholder="sk-..." 
+                                       value="" class="api-key-input">
+                                <button type="button" onclick="testOpenAISetup()" class="test-button">Test</button>
+                            </div>
+                        </div>
+                        <div id="openai-test-result" class="test-result"></div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="setup-openai-enabled" checked>
+                                Enable OpenAI (recommended)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- ElevenLabs Configuration -->
+                    <div class="api-section">
+                        <div class="api-header">
+                            <h3>🎵 ElevenLabs (Voice Synthesis)</h3>
+                            <span class="api-status" id="elevenlabs-status">Not Configured</span>
+                        </div>
+                        <div class="api-description">
+                            <p>High-quality AI voice for DM narration. Optional but adds immersion.</p>
+                            <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank">Get your API key →</a>
+                        </div>
+                        <div class="form-group">
+                            <label for="setup-elevenlabs-key">API Key:</label>
+                            <div class="form-row">
+                                <input type="password" id="setup-elevenlabs-key" placeholder="Enter your ElevenLabs API key" 
+                                       value="" class="api-key-input">
+                                <button type="button" onclick="testElevenLabsSetup()" class="test-button">Test</button>
+                            </div>
+                        </div>
+                        <div id="elevenlabs-test-result" class="test-result"></div>
+                        
+                        <div class="form-group">
+                            <label for="setup-elevenlabs-voice">Voice:</label>
+                            <select id="setup-elevenlabs-voice">
+                                <option value="">Test API key first</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="setup-elevenlabs-enabled">
+                                Enable ElevenLabs voice (optional)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- API Skip Option -->
+                    <div class="api-section skip-section">
+                        <div class="api-header">
+                            <h3>⚡ Quick Start</h3>
+                        </div>
+                        <div class="api-description">
+                            <p>You can skip API setup and use basic features. APIs can be configured later in settings.</p>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="skip-api-setup">
+                                Skip API setup for now (use template responses)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screen-actions">
+                    <button onclick="goBackToCampaignList()" class="secondary-button">← Back to Campaigns</button>
+                    <button onclick="continueToCharacterSetup()" class="primary-button" id="continue-to-character-setup">
+                        Continue to Character Setup →
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Character Setup Screen -->
         <div id="characterSetup-screen" class="screen character-setup-screen">
             <div class="character-setup-container">
@@ -894,9 +992,10 @@
                 <header class="game-header">
                     <h2>D&D Adventure</h2>
                     <div class="game-controls">
-                        <button class="secondary-button" onclick="switchScreen('characterSheet')">Character Sheet</button>
-                        <button class="secondary-button" onclick="switchScreen('worldBrowser')">World Browser</button>
-                        <button class="secondary-button" onclick="promptToSave('mainMenu')">Main Menu</button>
+                        <button class="secondary-button" onclick="switchScreen('characterSheet')">📄 Character Sheet</button>
+                        <button class="secondary-button" onclick="switchScreen('worldBrowser')">🌍 World Browser</button>
+                        <button class="secondary-button" onclick="openGameSettings()">⚙️ Settings</button>
+                        <button class="secondary-button" onclick="promptToSave('mainMenu')">🏠 Main Menu</button>
                     </div>
                 </header>
                 
@@ -905,7 +1004,6 @@
                     <div class="dm-conversation">
                         <div class="conversation-header">
                             <h3>🎲 Adventure Story</h3>
-                            <button class="secondary-button" onclick="startNewStoryBeat()">New Scene</button>
                         </div>
                         
                         <div id="conversation-history" class="conversation-history">
@@ -930,12 +1028,6 @@
                                     </button>
                                     <button class="voice-button secondary-button" onclick="toggleDMVoice()">
                                         <span id="dm-voice-toggle">🔊 DM Voice: ON</span>
-                                    </button>
-                                    <button class="voice-button secondary-button" onclick="openVoiceSettings()">
-                                        ⚙️ Voice Settings
-                                    </button>
-                                    <button class="voice-button secondary-button" onclick="openAIDMSettings()">
-                                        🤖 AI Settings
                                     </button>
                                 </div>
                             </div>
@@ -981,6 +1073,112 @@
                                 <p><strong>Weather:</strong> <span id="current-weather">Clear</span></p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Combat System -->
+        <div id="combat-screen" class="screen combat-screen" style="display: none;">
+            <div class="combat-container">
+                <header class="combat-header">
+                    <h2>⚔️ Combat Encounter</h2>
+                    <div class="combat-controls">
+                        <button class="secondary-button" onclick="endCombat()">End Combat</button>
+                        <button class="secondary-button" onclick="switchScreen('game')">Back to Game</button>
+                    </div>
+                </header>
+                
+                <div class="combat-content">
+                    <!-- Initiative Tracker -->
+                    <div class="combat-sidebar">
+                        <div class="initiative-tracker">
+                            <h3>🎲 Initiative Order</h3>
+                            <div id="initiative-list" class="initiative-list">
+                                <!-- Initiative entries will be populated here -->
+                            </div>
+                            <div class="combat-controls-bottom">
+                                <button class="primary-button" onclick="nextTurn()">Next Turn</button>
+                                <button class="secondary-button" onclick="rollInitiative()">Re-roll Initiative</button>
+                            </div>
+                        </div>
+                        
+                        <div class="turn-actions">
+                            <h3>Current Turn Actions</h3>
+                            <div id="turn-actions" class="action-economy">
+                                <div class="action-slot">
+                                    <span class="action-label">Action:</span>
+                                    <span id="action-status" class="available">Available</span>
+                                </div>
+                                <div class="action-slot">
+                                    <span class="action-label">Bonus Action:</span>
+                                    <span id="bonus-action-status" class="available">Available</span>
+                                </div>
+                                <div class="action-slot">
+                                    <span class="action-label">Movement:</span>
+                                    <span id="movement-status" class="available">30 ft</span>
+                                </div>
+                                <div class="action-slot">
+                                    <span class="action-label">Reaction:</span>
+                                    <span id="reaction-status" class="available">Available</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="combat-actions">
+                            <h3>Combat Actions</h3>
+                            <div class="action-buttons">
+                                <button class="action-btn attack" onclick="combatAction('attack')">⚔️ Attack</button>
+                                <button class="action-btn" onclick="combatAction('dodge')">🛡️ Dodge</button>
+                                <button class="action-btn" onclick="combatAction('dash')">🏃 Dash</button>
+                                <button class="action-btn" onclick="combatAction('help')">🤝 Help</button>
+                                <button class="action-btn" onclick="combatAction('hide')">👤 Hide</button>
+                                <button class="action-btn" onclick="combatAction('ready')">⏳ Ready</button>
+                                <button class="action-btn" onclick="combatAction('disengage')">🏃‍♂️ Disengage</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Battle Map -->
+                    <div class="battle-map-container">
+                        <div class="battle-map-header">
+                            <h3>🗺️ Battle Map</h3>
+                            <div class="map-controls">
+                                <button class="secondary-button" onclick="zoomMap('in')">🔍+</button>
+                                <button class="secondary-button" onclick="zoomMap('out')">🔍-</button>
+                                <button class="secondary-button" onclick="centerMap()">🎯 Center</button>
+                            </div>
+                        </div>
+                        <div id="battle-map" class="battle-map">
+                            <div class="grid-overlay" id="grid-overlay"></div>
+                            <div class="combatants-layer" id="combatants-layer"></div>
+                        </div>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-icon player"></div>
+                                <span>Player Characters</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-icon ally"></div>
+                                <span>Allies</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-icon enemy"></div>
+                                <span>Enemies</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-icon current-turn"></div>
+                                <span>Current Turn</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Combat Log -->
+                <div class="combat-log">
+                    <h3>📜 Combat Log</h3>
+                    <div id="combat-messages" class="combat-messages">
+                        <!-- Combat messages will appear here -->
                     </div>
                 </div>
             </div>
@@ -1154,6 +1352,19 @@
                 targetScreen.style.display = 'block';
                 targetScreen.classList.add('active');
                 console.log('Screen shown:', screenName);
+                
+                // Initialize screen-specific functionality
+                if (screenName === 'characterSheet') {
+                    // Initialize character sheet tabs when switching to character sheet
+                    setTimeout(() => {
+                        initializeCharacterSheetTabs();
+                        
+                        // If no specific character is being viewed, show first party member
+                        if (window.partyCharacters && window.partyCharacters.length > 0) {
+                            populateCharacterSheet(window.partyCharacters[0]);
+                        }
+                    }, 100);
+                }
             } else {
                 console.error('Screen not found:', screenName);
             }
@@ -1275,8 +1486,11 @@
             // Set as current campaign
             window.currentCampaign = campaignData;
             
-            // Show character setup screen
-            switchScreen('characterSetup');
+            // Show API setup screen first for new campaigns
+            switchScreen('apiSetup');
+            setTimeout(() => {
+                loadAPISettingsForSetup(null); // Load from localStorage since it's a new campaign
+            }, 100);
             
             // Show success message
             alert('Campaign "' + campaignData.name + '" created successfully!');
@@ -1319,7 +1533,7 @@
             }
         }
         
-        // Save current campaign data (characters, progress, etc.)
+        // Save comprehensive campaign session data
         function saveCurrentCampaignData() {
             if (window.currentCampaign) {
                 // Update campaign with current party data
@@ -1327,20 +1541,428 @@
                     window.currentCampaign.characters = window.partyCharacters;
                 }
                 
+                // Save API configurations with campaign
+                window.currentCampaign.apiConfig = {
+                    openai: {
+                        enabled: openAIConfig.enabled,
+                        apiKey: openAIConfig.apiKey,
+                        model: openAIConfig.model,
+                        creativity: openAIConfig.creativity,
+                        responseLength: openAIConfig.responseLength
+                    },
+                    elevenlabs: {
+                        enabled: elevenLabsConfig.enabled,
+                        apiKey: elevenLabsConfig.apiKey,
+                        voiceId: elevenLabsConfig.voiceId,
+                        stability: elevenLabsConfig.stability,
+                        clarity: elevenLabsConfig.clarity
+                    }
+                };
+                
+                // Save complete game state
+                window.currentCampaign.gameState = {
+                    // DM state
+                    dmState: {
+                        currentLocation: DM_STATE.currentLocation,
+                        currentScene: DM_STATE.currentScene,
+                        combatActive: DM_STATE.combatActive,
+                        npcsNearby: DM_STATE.npcsNearby,
+                        activeNPCs: Array.from(DM_STATE.activeNPCs.entries()), // Convert Map to array
+                        recentEvents: DM_STATE.recentEvents,
+                        conversationHistory: DM_STATE.conversationHistory,
+                        tensionLevel: DM_STATE.tensionLevel,
+                        lastPlayerAction: DM_STATE.lastPlayerAction
+                    },
+                    // Story state  
+                    storyState: {
+                        currentChapter: STORY_STATE.currentChapter,
+                        plotThreads: STORY_STATE.plotThreads,
+                        activeQuests: STORY_STATE.activeQuests,
+                        completedEvents: STORY_STATE.completedEvents,
+                        worldState: STORY_STATE.worldState,
+                        narrativeTension: STORY_STATE.narrativeTension,
+                        storyBeats: STORY_STATE.storyBeats
+                    },
+                    // Conversation history from UI
+                    conversationLog: getConversationHistory(),
+                    // Session metadata
+                    sessionData: {
+                        playTime: Date.now() - (window.sessionStartTime || Date.now()),
+                        actionsCount: DM_STATE.conversationHistory.length,
+                        lastSaveTime: Date.now()
+                    }
+                };
+                
                 // Update last played timestamp
                 window.currentCampaign.lastPlayed = new Date().toISOString();
                 
                 // Save to localStorage
                 const success = saveCampaign(window.currentCampaign);
                 if (success) {
-                    console.log('Current campaign data saved');
+                    console.log('Comprehensive campaign session saved');
                     return true;
                 } else {
-                    console.error('Failed to save current campaign data');
+                    console.error('Failed to save campaign session');
                     return false;
                 }
             }
             return false;
+        }
+
+        // ===============================
+        // AUTO-SAVE SYSTEM
+        // ===============================
+        
+        // Auto-save interval (5 minutes = 300000ms)
+        const AUTO_SAVE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+        let autoSaveTimer = null;
+        let isAutoSaveEnabled = true;
+        
+        // Start auto-save timer
+        function startAutoSave() {
+            // Clear any existing timer
+            stopAutoSave();
+            
+            if (!isAutoSaveEnabled) {
+                console.log('Auto-save is disabled');
+                return;
+            }
+            
+            console.log('Starting auto-save timer (every 5 minutes)');
+            
+            autoSaveTimer = setInterval(() => {
+                if (window.currentCampaign) {
+                    console.log('🔄 Auto-saving campaign...');
+                    const saved = saveCurrentCampaignData();
+                    if (saved) {
+                        console.log('✅ Auto-save completed successfully');
+                        // Show brief notification
+                        showNotification('Campaign auto-saved', 'success', 2000);
+                    } else {
+                        console.error('❌ Auto-save failed');
+                        showNotification('Auto-save failed', 'error', 3000);
+                    }
+                } else {
+                    console.log('No active campaign to auto-save');
+                }
+            }, AUTO_SAVE_INTERVAL);
+        }
+        
+        // Stop auto-save timer
+        function stopAutoSave() {
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+                autoSaveTimer = null;
+                console.log('Auto-save timer stopped');
+            }
+        }
+        
+        // Enable/disable auto-save
+        function setAutoSave(enabled) {
+            isAutoSaveEnabled = enabled;
+            if (enabled) {
+                startAutoSave();
+            } else {
+                stopAutoSave();
+            }
+            console.log(`Auto-save ${enabled ? 'enabled' : 'disabled'}`);
+        }
+        
+        // Initialize session tracking
+        function initializeSession() {
+            if (!window.sessionStartTime) {
+                window.sessionStartTime = Date.now();
+                console.log('Session started at:', new Date(window.sessionStartTime));
+            }
+            
+            // Start auto-save when session begins
+            startAutoSave();
+        }
+        
+        // Show brief notification to user
+        function showNotification(message, type = 'info', duration = 3000) {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#2e7d32' : type === 'error' ? '#c62828' : '#1565c0'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 4px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-size: 14px;
+                max-width: 300px;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // Get conversation history from the UI
+        function getConversationHistory() {
+            const historyDiv = document.getElementById('conversation-history');
+            if (!historyDiv) return [];
+            
+            const messages = historyDiv.querySelectorAll('.player-message, .dm-message');
+            const conversationLog = [];
+            
+            messages.forEach((message, index) => {
+                const isDM = message.classList.contains('dm-message');
+                const content = message.querySelector('.message-content')?.textContent?.trim() || '';
+                const timestamp = message.querySelector('.timestamp')?.textContent || new Date().toLocaleTimeString();
+                
+                conversationLog.push({
+                    id: index,
+                    type: isDM ? 'dm' : 'player',
+                    content: content,
+                    timestamp: timestamp,
+                    html: message.outerHTML // Save full HTML for restoration
+                });
+            });
+            
+            return conversationLog;
+        }
+
+        // Load and restore campaign session state
+        function loadCampaignSession(campaign) {
+            if (campaign.gameState) {
+                const gameState = campaign.gameState;
+                
+                // Restore DM state
+                if (gameState.dmState) {
+                    DM_STATE.currentLocation = gameState.dmState.currentLocation || 'village';
+                    DM_STATE.currentScene = gameState.dmState.currentScene || 'quest_start';
+                    DM_STATE.combatActive = gameState.dmState.combatActive || false;
+                    DM_STATE.npcsNearby = gameState.dmState.npcsNearby || [];
+                    DM_STATE.recentEvents = gameState.dmState.recentEvents || [];
+                    DM_STATE.conversationHistory = gameState.dmState.conversationHistory || [];
+                    DM_STATE.tensionLevel = gameState.dmState.tensionLevel || 1;
+                    DM_STATE.lastPlayerAction = gameState.dmState.lastPlayerAction || '';
+                    
+                    // Restore activeNPCs Map from saved array
+                    DM_STATE.activeNPCs.clear();
+                    if (gameState.dmState.activeNPCs) {
+                        gameState.dmState.activeNPCs.forEach(([key, value]) => {
+                            DM_STATE.activeNPCs.set(key, value);
+                        });
+                    }
+                }
+                
+                // Restore story state
+                if (gameState.storyState) {
+                    STORY_STATE.currentChapter = gameState.storyState.currentChapter || 'adventure_start';
+                    STORY_STATE.plotThreads = gameState.storyState.plotThreads || [];
+                    STORY_STATE.activeQuests = gameState.storyState.activeQuests || [];
+                    STORY_STATE.completedEvents = gameState.storyState.completedEvents || [];
+                    STORY_STATE.worldState = gameState.storyState.worldState || {};
+                    STORY_STATE.narrativeTension = gameState.storyState.narrativeTension || 1;
+                    STORY_STATE.storyBeats = gameState.storyState.storyBeats || [];
+                }
+                
+                // Restore conversation history to UI
+                if (gameState.conversationLog && gameState.conversationLog.length > 0) {
+                    restoreConversationHistory(gameState.conversationLog);
+                }
+                
+                console.log('Campaign session state restored');
+                return true;
+            }
+            
+            console.log('No saved session state found - starting fresh');
+            return false;
+        }
+
+        // Restore conversation history to the UI
+        function restoreConversationHistory(conversationLog) {
+            const historyDiv = document.getElementById('conversation-history');
+            if (!historyDiv) return;
+            
+            // Clear existing conversation
+            historyDiv.innerHTML = '';
+            
+            // Restore each message
+            conversationLog.forEach(logEntry => {
+                const messageDiv = document.createElement('div');
+                messageDiv.innerHTML = logEntry.html;
+                historyDiv.appendChild(messageDiv.firstElementChild);
+            });
+            
+            // Scroll to bottom
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+            console.log(`Restored ${conversationLog.length} conversation messages`);
+        }
+
+        // Generate session recap using AI or template
+        async function generateSessionRecap(campaign) {
+            if (!campaign.gameState || !campaign.gameState.conversationLog) {
+                return null;
+            }
+            
+            const conversationLog = campaign.gameState.conversationLog;
+            const lastSession = conversationLog.slice(-10); // Last 10 messages
+            
+            if (lastSession.length === 0) {
+                return null;
+            }
+            
+            // Try to use OpenAI for recap if available
+            if (openAIConfig.enabled && openAIConfig.apiKey) {
+                try {
+                    const summary = lastSession.map(msg => 
+                        `${msg.type === 'dm' ? 'DM' : 'Player'}: ${msg.content}`
+                    ).join('\n');
+                    
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${openAIConfig.apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-3.5-turbo',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'You are a D&D Dungeon Master. Provide a brief 2-3 sentence recap of what happened in the last session based on the conversation log. Be engaging and set up for continuing the adventure.'
+                                },
+                                {
+                                    role: 'user',
+                                    content: `Last session conversation:\n${summary}`
+                                }
+                            ],
+                            max_tokens: 150,
+                            temperature: 0.7
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.choices[0].message.content;
+                    }
+                } catch (error) {
+                    console.error('Failed to generate AI recap:', error);
+                }
+            }
+            
+            // Fallback to template recap
+            const dmState = campaign.gameState.dmState;
+            const location = dmState?.currentLocation || 'unknown location';
+            const npcs = dmState?.npcsNearby?.length > 0 ? ` You were interacting with ${dmState.npcsNearby.join(', ')}.` : '';
+            const lastAction = dmState?.lastPlayerAction ? ` Your last action was: "${dmState.lastPlayerAction}".` : '';
+            
+            return `Welcome back, adventurers! Last session, you were in ${location}.${npcs}${lastAction} The adventure continues from where you left off. What do you do?`;
+        }
+        
+        // Display session recap to player
+        function displaySessionRecap(recap) {
+            if (!recap) {
+                console.log('No recap to display');
+                return;
+            }
+            
+            console.log('Displaying session recap:', recap);
+            
+            // Create recap message and add to conversation
+            const recapHTML = `
+                <div class="message dm-message session-recap">
+                    <div class="message-header">
+                        <span class="speaker">Dungeon Master</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <div class="recap-header">
+                            <strong>📜 Session Recap</strong>
+                        </div>
+                        <div class="recap-content">
+                            ${recap}
+                        </div>
+                    </div>
+                    ${getDMActionButtons()}
+                </div>
+            `;
+            
+            // Add recap to conversation history
+            appendToConversation(recapHTML);
+            
+            // Play TTS if available
+            if (window.isTTSEnabled && recap) {
+                speakText(recap);
+            }
+            
+            // Add to DM conversation history for continuity
+            addToConversationHistory('dm_response', recap);
+            
+            console.log('Session recap displayed successfully');
+        }
+        
+        // Restore API configuration from campaign
+        function restoreAPIConfiguration(campaign) {
+            if (campaign.apiConfig) {
+                console.log('🔧 Restoring API configuration from campaign:', campaign.apiConfig);
+                
+                // Restore OpenAI config
+                if (campaign.apiConfig.openai) {
+                    openAIConfig.enabled = campaign.apiConfig.openai.enabled || false;
+                    openAIConfig.apiKey = campaign.apiConfig.openai.apiKey || '';
+                    openAIConfig.model = campaign.apiConfig.openai.model || 'gpt-3.5-turbo';
+                    openAIConfig.creativity = campaign.apiConfig.openai.creativity || 0.7;
+                    openAIConfig.responseLength = campaign.apiConfig.openai.responseLength || 150;
+                    
+                    // Update localStorage
+                    if (openAIConfig.apiKey) {
+                        localStorage.setItem('openai_api_key', openAIConfig.apiKey);
+                        localStorage.setItem('openai_enabled', openAIConfig.enabled);
+                    }
+                    
+                    console.log('✅ OpenAI config restored:', openAIConfig.enabled);
+                }
+                
+                // Restore ElevenLabs config
+                if (campaign.apiConfig.elevenlabs) {
+                    elevenLabsConfig.enabled = campaign.apiConfig.elevenlabs.enabled || false;
+                    elevenLabsConfig.apiKey = campaign.apiConfig.elevenlabs.apiKey || '';
+                    elevenLabsConfig.voiceId = campaign.apiConfig.elevenlabs.voiceId || '';
+                    elevenLabsConfig.stability = campaign.apiConfig.elevenlabs.stability || 0.5;
+                    elevenLabsConfig.clarity = campaign.apiConfig.elevenlabs.clarity || 0.75;
+                    
+                    // Update localStorage
+                    if (elevenLabsConfig.apiKey) {
+                        localStorage.setItem('elevenlabs_api_key', elevenLabsConfig.apiKey);
+                        localStorage.setItem('elevenlabs_voice_id', elevenLabsConfig.voiceId);
+                        localStorage.setItem('voice_engine', elevenLabsConfig.enabled ? 'elevenlabs' : 'browser');
+                    }
+                    
+                    console.log('✅ ElevenLabs config restored:', elevenLabsConfig.enabled);
+                }
+            } else {
+                console.log('No API config found in campaign, using localStorage defaults');
+            }
         }
         
         // Prompt to save before navigating away
@@ -1357,7 +1979,8 @@
                     }
                 }
                 
-                // Clear current campaign when going to main menu
+                // Stop auto-save and clear current campaign when going to main menu
+                stopAutoSave();
                 window.currentCampaign = null;
                 window.partyCharacters = [];
             }
@@ -1672,6 +2295,58 @@
             
             // Switch to character sheet screen
             switchScreen('characterSheet');
+            
+            // Initialize tab functionality
+            setTimeout(() => {
+                initializeCharacterSheetTabs();
+            }, 100);
+        }
+        
+        // ===============================
+        // CHARACTER SHEET TAB SYSTEM
+        // ===============================
+        
+        // Initialize character sheet tabs
+        function initializeCharacterSheetTabs() {
+            const tabButtons = document.querySelectorAll('.character-tabs .tab-button');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchCharacterTab(tabName);
+                });
+            });
+            
+            console.log('Character sheet tabs initialized');
+        }
+        
+        // Switch character sheet tab
+        function switchCharacterTab(tabName) {
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.character-tabs .tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Add active class to clicked tab button
+            const activeButton = document.querySelector(`.character-tabs .tab-button[data-tab="${tabName}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+            
+            // Hide all tab panels
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            tabPanels.forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Show selected tab panel
+            const activePanel = document.getElementById(tabName + '-tab');
+            if (activePanel) {
+                activePanel.classList.add('active');
+            }
+            
+            console.log('Switched to character sheet tab:', tabName);
         }
         
         // Populate character sheet with character data
@@ -1774,16 +2449,46 @@
                 // Set as current campaign
                 window.currentCampaign = campaign;
                 
+                // Restore API configuration from campaign
+                restoreAPIConfiguration(campaign);
+                
                 // Load characters into party
                 if (campaign.characters && campaign.characters.length > 0) {
                     window.partyCharacters = campaign.characters;
                     
-                    // Go directly to game if characters exist
-                    populateGameScreen();
-                    switchScreen('game');
+                    // Check if this campaign has a saved session
+                    if (campaign.gameState && campaign.gameState.conversationLog && campaign.gameState.conversationLog.length > 0) {
+                        console.log('Found existing session data - loading saved game state');
+                        
+                        // Restore complete session
+                        loadCampaignSession(campaign);
+                        
+                        // Go directly to game 
+                        populateGameScreen();
+                        switchScreen('game');
+                        
+                        // Generate and display session recap instead of starting fresh
+                        setTimeout(async () => {
+                            const recap = await generateSessionRecap(campaign.gameState);
+                            displaySessionRecap(recap);
+                        }, 500);
+                    } else {
+                        console.log('No session data found but has characters - show API setup before continuing');
+                        
+                        // Show API setup screen to confirm/update API settings
+                        switchScreen('apiSetup');
+                        setTimeout(() => {
+                            loadAPISettingsForSetup(campaign);
+                        }, 100);
+                    }
                 } else {
-                    // Go to character setup if no characters
-                    switchScreen('characterSetup');
+                    console.log('No characters found - show API setup first');
+                    
+                    // Show API setup screen before character setup
+                    switchScreen('apiSetup');
+                    setTimeout(() => {
+                        loadAPISettingsForSetup(campaign);
+                    }, 100);
                 }
                 
                 alert('Loaded campaign: ' + campaign.name);
@@ -1810,6 +2515,9 @@
         function continueToGame() {
             console.log('Continuing to game...');
             
+            // Initialize session tracking and auto-save
+            initializeSession();
+            
             // Save current party to campaign
             if (window.currentCampaign) {
                 saveCurrentCampaignData();
@@ -1821,10 +2529,25 @@
             // Switch to game screen
             switchScreen('game');
             
-            // Start the adventure with opening narration
-            setTimeout(() => {
-                startAdventureNarration();
-            }, 500);
+            // Check if campaign has existing session data
+            const campaign = window.currentCampaign;
+            if (campaign && campaign.gameState && campaign.gameState.conversationLog && campaign.gameState.conversationLog.length > 0) {
+                console.log('Continuing existing session...');
+                
+                // Restore session and show recap
+                setTimeout(async () => {
+                    loadCampaignSession(campaign);
+                    const recap = await generateSessionRecap(campaign.gameState);
+                    displaySessionRecap(recap);
+                }, 500);
+            } else {
+                console.log('Starting new session...');
+                
+                // Start the adventure with opening narration for new campaigns
+                setTimeout(() => {
+                    startAdventureNarration();
+                }, 500);
+            }
         }
         
         // Populate game screen with party data
@@ -2193,32 +2916,35 @@
                 return;
             }
             
-            console.log('Loading ElevenLabs voices with API key:', apiKey.substring(0, 8) + '...');
+            console.log('🎵 Loading ElevenLabs voices with API key:', apiKey.substring(0, 12) + '...');
             
             try {
                 voiceSelect.innerHTML = '<option value="">Loading voices...</option>';
                 
+                console.log('📡 Making request to ElevenLabs voices endpoint...');
                 const response = await fetch('https://api.elevenlabs.io/v1/voices', {
                     method: 'GET',
                     headers: {
                         'xi-api-key': apiKey,
-                        'Content-Type': 'application/json'
+                        'Accept': 'application/json'
                     }
                 });
                 
-                console.log('ElevenLabs API response status:', response.status);
+                console.log('📨 ElevenLabs voices API response:', response.status, response.statusText);
+                console.log('📋 Response headers:', [...response.headers.entries()]);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('ElevenLabs API error:', errorText);
+                    console.error('❌ ElevenLabs voices API error:', response.status, errorText);
                     throw new Error(`API Error ${response.status}: ${errorText}`);
                 }
                 
                 const data = await response.json();
-                console.log('ElevenLabs response data:', data);
+                console.log('✅ ElevenLabs voices response data:', data);
                 
                 if (!data.voices || !Array.isArray(data.voices)) {
-                    throw new Error('Invalid response format - no voices array');
+                    console.error('❌ Invalid response format:', data);
+                    throw new Error('Invalid response format - no voices array found');
                 }
                 
                 voiceSelect.innerHTML = '<option value="">Select a voice...</option>';
@@ -2265,22 +2991,30 @@
                 return;
             }
             
-            resultDiv.innerHTML = '<span style="color: blue;">Testing API key...</span>';
+            console.log('🔍 Testing ElevenLabs API key:', apiKey.substring(0, 12) + '...');
+            resultDiv.innerHTML = '<span style="color: blue;">🔄 Testing API key...</span>';
             
             try {
+                console.log('📡 Making request to ElevenLabs user endpoint...');
                 const response = await fetch('https://api.elevenlabs.io/v1/user', {
                     method: 'GET',
                     headers: {
-                        'xi-api-key': apiKey
+                        'xi-api-key': apiKey,
+                        'Accept': 'application/json'
                     }
                 });
                 
-                console.log('ElevenLabs user API response:', response.status);
+                console.log('📨 ElevenLabs API response:', response.status, response.statusText);
+                console.log('📋 Response headers:', [...response.headers.entries()]);
                 
                 if (response.ok) {
                     const userData = await response.json();
+                    console.log('✅ ElevenLabs user data:', userData);
                     resultDiv.innerHTML = '<span style="color: green;">✅ API key valid! Loading voices...</span>';
-                    console.log('User data:', userData);
+                    
+                    // Store the working API key
+                    localStorage.setItem('elevenlabs_api_key', apiKey);
+                    elevenLabsConfig.apiKey = apiKey;
                     
                     // Automatically load voices after successful API test
                     setTimeout(() => {
@@ -2289,19 +3023,46 @@
                     
                 } else {
                     const errorText = await response.text();
-                    console.error('ElevenLabs API test error:', errorText);
+                    console.error('❌ ElevenLabs API test error:', response.status, errorText);
                     
+                    let errorMessage;
                     if (response.status === 401) {
-                        resultDiv.innerHTML = '<span style="color: red;">❌ Invalid API key</span>';
+                        errorMessage = '❌ Invalid API key - Double check your key from ElevenLabs dashboard';
                     } else if (response.status === 403) {
-                        resultDiv.innerHTML = '<span style="color: red;">❌ Access forbidden - check subscription</span>';
+                        errorMessage = '❌ Access forbidden - Check your subscription or billing status';
+                    } else if (response.status === 429) {
+                        errorMessage = '❌ Rate limit exceeded - Wait a moment and try again';
+                    } else if (response.status >= 500) {
+                        errorMessage = '❌ ElevenLabs server error - Try again later';
                     } else {
-                        resultDiv.innerHTML = `<span style="color: red;">❌ Error ${response.status}: ${errorText}</span>`;
+                        errorMessage = `❌ API Error ${response.status}: ${errorText.substring(0, 100)}`;
                     }
+                    
+                    resultDiv.innerHTML = `<span style="color: red;">${errorMessage}</span>`;
                 }
             } catch (error) {
-                console.error('API key test failed:', error);
-                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
+                console.error('🚨 API key test failed:', error);
+                console.log('🔍 Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    type: typeof error
+                });
+                
+                let errorMessage;
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    errorMessage = '❌ Network error - Check internet connection or try refreshing';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage = '❌ CORS error - ElevenLabs may block browser requests. Try using file:// protocol';
+                } else {
+                    errorMessage = `❌ Connection failed: ${error.message}`;
+                }
+                
+                resultDiv.innerHTML = `<span style="color: red;">${errorMessage}</span>`;
+                
+                // Show additional help
+                if (window.location.protocol === 'file:') {
+                    resultDiv.innerHTML += '<br><small style="color: orange;">💡 Try serving from localhost instead of file:// protocol</small>';
+                }
             }
         }
         
@@ -2325,7 +3086,64 @@
             }
         }
         
-        // Generate speech using ElevenLabs API
+        // ===============================
+        // VOICE GENERATION OPTIMIZATIONS
+        // ===============================
+        
+        // Voice cache for frequently used phrases
+        const voiceCache = new Map();
+        const CACHE_MAX_SIZE = 50; // Limit cache size
+        const MAX_CHUNK_LENGTH = 500; // Characters per chunk for long texts
+        
+        // Clear old cache entries when cache gets too large
+        function cleanVoiceCache() {
+            if (voiceCache.size > CACHE_MAX_SIZE) {
+                const entries = Array.from(voiceCache.entries());
+                // Remove oldest 10 entries
+                for (let i = 0; i < 10; i++) {
+                    const [key] = entries[i];
+                    voiceCache.delete(key);
+                }
+                console.log('Voice cache cleaned, size:', voiceCache.size);
+            }
+        }
+        
+        // Generate cache key for text
+        function getVoiceCacheKey(text, voice, stability, clarity) {
+            return `${voice}_${stability}_${clarity}_${text.substring(0, 100)}`;
+        }
+        
+        // Split long text into chunks for faster processing
+        function chunkText(text, maxLength = MAX_CHUNK_LENGTH) {
+            if (text.length <= maxLength) return [text];
+            
+            const chunks = [];
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            let currentChunk = '';
+            
+            for (const sentence of sentences) {
+                const trimmedSentence = sentence.trim();
+                if (currentChunk.length + trimmedSentence.length + 1 <= maxLength) {
+                    currentChunk += (currentChunk ? '. ' : '') + trimmedSentence;
+                } else {
+                    if (currentChunk) {
+                        chunks.push(currentChunk + '.');
+                        currentChunk = trimmedSentence;
+                    } else {
+                        // Single sentence too long, force split
+                        chunks.push(trimmedSentence + '.');
+                    }
+                }
+            }
+            
+            if (currentChunk) {
+                chunks.push(currentChunk + '.');
+            }
+            
+            return chunks;
+        }
+        
+        // Generate speech using ElevenLabs API with optimizations
         async function generateElevenLabsSpeech(text, apiKey = null, voiceId = null) {
             const key = apiKey || elevenLabsConfig.apiKey;
             const voice = voiceId || elevenLabsConfig.voiceId;
@@ -2336,52 +3154,29 @@
                 return;
             }
             
+            // Clean text for processing
+            const cleanText = text.trim();
+            if (!cleanText) return;
+            
             try {
                 updateVoiceStatus('Generating AI voice...', 'processing');
                 
-                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'audio/mpeg',
-                        'Content-Type': 'application/json',
-                        'xi-api-key': key
-                    },
-                    body: JSON.stringify({
-                        text: text,
-                        model_id: 'eleven_monolingual_v1',
-                        voice_settings: {
-                            stability: elevenLabsConfig.stability,
-                            similarity_boost: elevenLabsConfig.clarity,
-                            style: 0.0,
-                            use_speaker_boost: true
-                        }
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`ElevenLabs API Error: ${response.status}`);
+                // Check cache first
+                const cacheKey = getVoiceCacheKey(cleanText, voice, elevenLabsConfig.stability, elevenLabsConfig.clarity);
+                if (voiceCache.has(cacheKey)) {
+                    console.log('🚀 Using cached voice for:', cleanText.substring(0, 50) + '...');
+                    const audioUrl = voiceCache.get(cacheKey);
+                    await playAudioUrl(audioUrl);
+                    return;
                 }
                 
-                const audioBlob = await response.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audio = new Audio(audioUrl);
-                
-                audio.onplay = () => {
-                    updateVoiceStatus('DM is speaking...', 'speaking');
-                };
-                
-                audio.onended = () => {
-                    updateVoiceStatus('Ready to listen', 'ready');
-                    URL.revokeObjectURL(audioUrl);
-                };
-                
-                audio.onerror = (error) => {
-                    console.error('Audio playback error:', error);
-                    updateVoiceStatus('Audio error', 'error');
-                    URL.revokeObjectURL(audioUrl);
-                };
-                
-                await audio.play();
+                // For long texts, use chunking for faster initial playback
+                if (cleanText.length > MAX_CHUNK_LENGTH) {
+                    console.log('📝 Text is long, using chunked processing');
+                    await generateChunkedSpeech(cleanText, key, voice);
+                } else {
+                    await generateSingleSpeech(cleanText, key, voice, cacheKey);
+                }
                 
             } catch (error) {
                 console.error('ElevenLabs TTS Error:', error);
@@ -2390,6 +3185,93 @@
                 // Fallback to browser TTS
                 speakAsDMBrowser(text);
             }
+        }
+        
+        // Generate speech for a single chunk
+        async function generateSingleSpeech(text, key, voice, cacheKey) {
+            const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'audio/mpeg',
+                    'Content-Type': 'application/json',
+                    'xi-api-key': key
+                },
+                body: JSON.stringify({
+                    text: text,
+                    model_id: 'eleven_turbo_v2', // Use faster turbo model
+                    voice_settings: {
+                        stability: elevenLabsConfig.stability,
+                        similarity_boost: elevenLabsConfig.clarity,
+                        style: 0.0,
+                        use_speaker_boost: true
+                    },
+                    optimize_streaming_latency: 3, // Optimize for speed
+                    output_format: "mp3_44100_128" // Lower quality for speed
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`ElevenLabs API Error: ${response.status}`);
+            }
+            
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            // Cache the audio URL for reuse
+            voiceCache.set(cacheKey, audioUrl);
+            cleanVoiceCache();
+            
+            await playAudioUrl(audioUrl);
+        }
+        
+        // Generate speech for chunked text (play chunks sequentially)
+        async function generateChunkedSpeech(text, key, voice) {
+            const chunks = chunkText(text);
+            console.log(`🔊 Processing ${chunks.length} chunks for faster playback`);
+            
+            for (let i = 0; i < chunks.length; i++) {
+                const chunk = chunks[i];
+                const chunkCacheKey = getVoiceCacheKey(chunk, voice, elevenLabsConfig.stability, elevenLabsConfig.clarity);
+                
+                try {
+                    if (voiceCache.has(chunkCacheKey)) {
+                        console.log(`🚀 Using cached chunk ${i + 1}/${chunks.length}`);
+                        const audioUrl = voiceCache.get(chunkCacheKey);
+                        await playAudioUrl(audioUrl);
+                    } else {
+                        console.log(`🎵 Generating chunk ${i + 1}/${chunks.length}`);
+                        await generateSingleSpeech(chunk, key, voice, chunkCacheKey);
+                    }
+                } catch (error) {
+                    console.error(`Error processing chunk ${i + 1}:`, error);
+                    // Continue with next chunk or fallback
+                    speakAsDMBrowser(chunk);
+                }
+            }
+        }
+        
+        // Play audio from URL with proper cleanup
+        async function playAudioUrl(audioUrl) {
+            return new Promise((resolve, reject) => {
+                const audio = new Audio(audioUrl);
+                
+                audio.onplay = () => {
+                    updateVoiceStatus('DM is speaking...', 'speaking');
+                };
+                
+                audio.onended = () => {
+                    updateVoiceStatus('Ready to listen', 'ready');
+                    resolve();
+                };
+                
+                audio.onerror = (error) => {
+                    console.error('Audio playback error:', error);
+                    updateVoiceStatus('Audio error', 'error');
+                    reject(error);
+                };
+                
+                audio.play().catch(reject);
+            });
         }
         
         // Browser TTS fallback (rename existing function)
@@ -2456,6 +3338,679 @@
             });
         });
         
+        // ===============================
+        // API SETUP SYSTEM
+        // ===============================
+        
+        // Test OpenAI API during setup
+        async function testOpenAISetup() {
+            const apiKeyInput = document.getElementById('setup-openai-key');
+            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+            const resultDiv = document.getElementById('openai-test-result');
+            const statusSpan = document.getElementById('openai-status');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an API key first</span>';
+                return;
+            }
+            
+            console.log('🔍 Testing OpenAI API key during setup:', apiKey.substring(0, 12) + '...');
+            resultDiv.innerHTML = '<span style="color: blue;">🔄 Testing API key...</span>';
+            statusSpan.textContent = 'Testing...';
+            statusSpan.className = 'api-status testing';
+            
+            try {
+                const response = await fetch('https://api.openai.com/v1/models', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📨 OpenAI models API response:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ OpenAI models data:', data);
+                    resultDiv.innerHTML = '<span style="color: green;">✅ API key valid! OpenAI is ready.</span>';
+                    statusSpan.textContent = 'Configured';
+                    statusSpan.className = 'api-status configured';
+                    
+                    // Store the working API key
+                    localStorage.setItem('openai_api_key', apiKey);
+                    openAIConfig.apiKey = apiKey;
+                    openAIConfig.enabled = document.getElementById('setup-openai-enabled').checked;
+                    localStorage.setItem('openai_enabled', openAIConfig.enabled);
+                    
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ OpenAI API test error:', response.status, errorText);
+                    
+                    let errorMessage;
+                    if (response.status === 401) {
+                        errorMessage = '❌ Invalid API key - Check your OpenAI dashboard';
+                    } else if (response.status === 403) {
+                        errorMessage = '❌ Access forbidden - Check billing or usage limits';
+                    } else if (response.status === 429) {
+                        errorMessage = '❌ Rate limit exceeded - Wait and try again';
+                    } else {
+                        errorMessage = `❌ API Error ${response.status}: ${errorText.substring(0, 100)}`;
+                    }
+                    
+                    resultDiv.innerHTML = `<span style="color: red;">${errorMessage}</span>`;
+                    statusSpan.textContent = 'Failed';
+                    statusSpan.className = 'api-status';
+                }
+            } catch (error) {
+                console.error('🚨 OpenAI API test failed:', error);
+                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
+                statusSpan.textContent = 'Failed';
+                statusSpan.className = 'api-status';
+            }
+        }
+        
+        // Test ElevenLabs API during setup
+        async function testElevenLabsSetup() {
+            const apiKeyInput = document.getElementById('setup-elevenlabs-key');
+            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+            const resultDiv = document.getElementById('elevenlabs-test-result');
+            const statusSpan = document.getElementById('elevenlabs-status');
+            const voiceSelect = document.getElementById('setup-elevenlabs-voice');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an API key first</span>';
+                return;
+            }
+            
+            console.log('🔍 Testing ElevenLabs API key during setup:', apiKey.substring(0, 12) + '...');
+            resultDiv.innerHTML = '<span style="color: blue;">🔄 Testing API key...</span>';
+            statusSpan.textContent = 'Testing...';
+            statusSpan.className = 'api-status testing';
+            
+            try {
+                const response = await fetch('https://api.elevenlabs.io/v1/user', {
+                    method: 'GET',
+                    headers: {
+                        'xi-api-key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📨 ElevenLabs user API response:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    console.log('✅ ElevenLabs user data:', userData);
+                    resultDiv.innerHTML = '<span style="color: green;">✅ API key valid! Loading voices...</span>';
+                    statusSpan.textContent = 'Configured';
+                    statusSpan.className = 'api-status configured';
+                    
+                    // Store the working API key
+                    localStorage.setItem('elevenlabs_api_key', apiKey);
+                    elevenLabsConfig.apiKey = apiKey;
+                    elevenLabsConfig.enabled = document.getElementById('setup-elevenlabs-enabled').checked;
+                    localStorage.setItem('voice_engine', elevenLabsConfig.enabled ? 'elevenlabs' : 'browser');
+                    
+                    // Load voices for selection
+                    await loadVoicesForSetup(apiKey, voiceSelect);
+                    
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ ElevenLabs API test error:', response.status, errorText);
+                    
+                    let errorMessage;
+                    if (response.status === 401) {
+                        errorMessage = '❌ Invalid API key - Check your ElevenLabs dashboard';
+                    } else if (response.status === 403) {
+                        errorMessage = '❌ Access forbidden - Check subscription or billing';
+                    } else if (response.status === 429) {
+                        errorMessage = '❌ Rate limit exceeded - Wait and try again';
+                    } else {
+                        errorMessage = `❌ API Error ${response.status}: ${errorText.substring(0, 100)}`;
+                    }
+                    
+                    resultDiv.innerHTML = `<span style="color: red;">${errorMessage}</span>`;
+                    statusSpan.textContent = 'Failed';
+                    statusSpan.className = 'api-status';
+                }
+            } catch (error) {
+                console.error('🚨 ElevenLabs API test failed:', error);
+                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
+                statusSpan.textContent = 'Failed';
+                statusSpan.className = 'api-status';
+            }
+        }
+        
+        // Load voices for setup screen
+        async function loadVoicesForSetup(apiKey, voiceSelect) {
+            try {
+                console.log('🎵 Loading voices for setup...');
+                
+                const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+                    method: 'GET',
+                    headers: {
+                        'xi-api-key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Loaded voices for setup:', data.voices?.length);
+                    
+                    voiceSelect.innerHTML = '<option value="">Select a voice...</option>';
+                    
+                    if (data.voices && Array.isArray(data.voices)) {
+                        data.voices.forEach(voice => {
+                            const option = document.createElement('option');
+                            option.value = voice.voice_id;
+                            option.textContent = `${voice.name} (${voice.category || 'Unknown'})`;
+                            voiceSelect.appendChild(option);
+                        });
+                        
+                        // Select a good default voice for DM
+                        const defaultVoice = data.voices.find(v => 
+                            v.name.toLowerCase().includes('adam') || 
+                            v.name.toLowerCase().includes('brian') ||
+                            v.name.toLowerCase().includes('daniel')
+                        );
+                        if (defaultVoice) {
+                            voiceSelect.value = defaultVoice.voice_id;
+                        }
+                    }
+                } else {
+                    voiceSelect.innerHTML = '<option value="">Failed to load voices</option>';
+                }
+            } catch (error) {
+                console.error('Error loading voices for setup:', error);
+                voiceSelect.innerHTML = '<option value="">Error loading voices</option>';
+            }
+        }
+        
+        // Continue to character setup with API validation
+        function continueToCharacterSetup() {
+            const skipSetup = document.getElementById('skip-api-setup').checked;
+            const openaiEnabled = document.getElementById('setup-openai-enabled').checked;
+            const elevenLabsEnabled = document.getElementById('setup-elevenlabs-enabled').checked;
+            
+            if (!skipSetup) {
+                // Save API configurations
+                if (openaiEnabled) {
+                    const apiKey = document.getElementById('setup-openai-key').value.trim();
+                    if (apiKey) {
+                        openAIConfig.apiKey = apiKey;
+                        openAIConfig.enabled = true;
+                        localStorage.setItem('openai_api_key', apiKey);
+                        localStorage.setItem('openai_enabled', 'true');
+                    }
+                }
+                
+                if (elevenLabsEnabled) {
+                    const apiKey = document.getElementById('setup-elevenlabs-key').value.trim();
+                    const voiceId = document.getElementById('setup-elevenlabs-voice').value;
+                    if (apiKey) {
+                        elevenLabsConfig.apiKey = apiKey;
+                        elevenLabsConfig.voiceId = voiceId;
+                        elevenLabsConfig.enabled = true;
+                        localStorage.setItem('elevenlabs_api_key', apiKey);
+                        localStorage.setItem('elevenlabs_voice_id', voiceId);
+                        localStorage.setItem('voice_engine', 'elevenlabs');
+                    }
+                }
+                
+                console.log('✅ API configuration saved:', {
+                    openai: openAIConfig.enabled,
+                    elevenlabs: elevenLabsConfig.enabled
+                });
+            }
+            
+            // Save API config to current campaign if one exists
+            if (window.currentCampaign) {
+                saveCurrentCampaignData();
+            }
+            
+            // Check if campaign already has characters (returning from API setup)
+            if (window.currentCampaign && window.partyCharacters && window.partyCharacters.length > 0) {
+                console.log('Campaign has characters, proceeding to game...');
+                // Skip character setup and go straight to game
+                continueToGame();
+            } else {
+                console.log('No characters found, proceeding to character setup...');
+                // Continue to character setup
+                switchScreen('characterSetup');
+            }
+        }
+        
+        // Go back to campaign list
+        function goBackToCampaignList() {
+            switchScreen('campaignList');
+        }
+        
+        // Load API settings from campaign or localStorage
+        function loadAPISettingsForSetup(campaign = null) {
+            // Load from campaign first, then fallback to localStorage
+            if (campaign && campaign.apiConfig) {
+                console.log('Loading API config from campaign:', campaign.apiConfig);
+                
+                // OpenAI
+                if (campaign.apiConfig.openai) {
+                    document.getElementById('setup-openai-key').value = campaign.apiConfig.openai.apiKey || '';
+                    document.getElementById('setup-openai-enabled').checked = campaign.apiConfig.openai.enabled || false;
+                    
+                    if (campaign.apiConfig.openai.apiKey) {
+                        document.getElementById('openai-status').textContent = 'Configured';
+                        document.getElementById('openai-status').className = 'api-status configured';
+                    }
+                }
+                
+                // ElevenLabs
+                if (campaign.apiConfig.elevenlabs) {
+                    document.getElementById('setup-elevenlabs-key').value = campaign.apiConfig.elevenlabs.apiKey || '';
+                    document.getElementById('setup-elevenlabs-voice').value = campaign.apiConfig.elevenlabs.voiceId || '';
+                    document.getElementById('setup-elevenlabs-enabled').checked = campaign.apiConfig.elevenlabs.enabled || false;
+                    
+                    if (campaign.apiConfig.elevenlabs.apiKey) {
+                        document.getElementById('elevenlabs-status').textContent = 'Configured';
+                        document.getElementById('elevenlabs-status').className = 'api-status configured';
+                    }
+                }
+            } else {
+                // Load from localStorage
+                console.log('Loading API config from localStorage');
+                
+                // OpenAI
+                const openaiKey = localStorage.getItem('openai_api_key') || '';
+                const openaiEnabled = localStorage.getItem('openai_enabled') === 'true';
+                document.getElementById('setup-openai-key').value = openaiKey;
+                document.getElementById('setup-openai-enabled').checked = openaiEnabled;
+                
+                if (openaiKey) {
+                    document.getElementById('openai-status').textContent = 'Configured';
+                    document.getElementById('openai-status').className = 'api-status configured';
+                }
+                
+                // ElevenLabs
+                const elevenLabsKey = localStorage.getItem('elevenlabs_api_key') || '';
+                const elevenLabsVoice = localStorage.getItem('elevenlabs_voice_id') || '';
+                const elevenLabsEnabled = localStorage.getItem('voice_engine') === 'elevenlabs';
+                document.getElementById('setup-elevenlabs-key').value = elevenLabsKey;
+                document.getElementById('setup-elevenlabs-voice').value = elevenLabsVoice;
+                document.getElementById('setup-elevenlabs-enabled').checked = elevenLabsEnabled;
+                
+                if (elevenLabsKey) {
+                    document.getElementById('elevenlabs-status').textContent = 'Configured';
+                    document.getElementById('elevenlabs-status').className = 'api-status configured';
+                }
+            }
+        }
+
+        // ===============================
+        // GAME SETTINGS SYSTEM
+        // ===============================
+        
+        // Open game settings modal
+        function openGameSettings() {
+            const modal = document.getElementById('game-settings-modal');
+            
+            // Load current settings into the modal
+            loadGameSettings();
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Show first tab by default
+            showSettingsTab('ai-settings');
+        }
+        
+        // Show specific settings tab
+        function showSettingsTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.settings-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Mark button as active
+            const selectedButton = document.querySelector(`[onclick="showSettingsTab('${tabName}')"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+            
+            // Handle tab-specific logic
+            if (tabName === 'voice-settings') {
+                loadBrowserVoices();
+            }
+        }
+        
+        // Load current settings into the game settings modal
+        function loadGameSettings() {
+            console.log('Loading current settings into game settings modal');
+            
+            // AI Settings
+            const aiEngine = openAIConfig.enabled ? 'openai' : 'template';
+            document.querySelector(`input[name="gameAiEngine"][value="${aiEngine}"]`).checked = true;
+            document.getElementById('game-openai-api-key').value = openAIConfig.apiKey || '';
+            document.getElementById('game-ai-model').value = openAIConfig.model || 'gpt-3.5-turbo';
+            document.getElementById('game-ai-creativity').value = (openAIConfig.creativity * 100) || 70;
+            document.getElementById('game-ai-creativity-display').textContent = ((openAIConfig.creativity * 100) || 70) + '%';
+            document.getElementById('game-ai-response-length').value = openAIConfig.responseLength || 'normal';
+            
+            // Show/hide OpenAI settings
+            toggleGameOpenAISettings();
+            
+            // Voice Settings
+            const voiceEngine = elevenLabsConfig.enabled ? 'elevenlabs' : 'browser';
+            document.querySelector(`input[name="gameVoiceEngine"][value="${voiceEngine}"]`).checked = true;
+            document.getElementById('game-elevenlabs-api-key').value = elevenLabsConfig.apiKey || '';
+            document.getElementById('game-elevenlabs-voice-id').value = elevenLabsConfig.voiceId || '';
+            document.getElementById('game-voice-stability').value = (elevenLabsConfig.stability * 100) || 50;
+            document.getElementById('game-voice-stability-display').textContent = ((elevenLabsConfig.stability * 100) || 50) + '%';
+            document.getElementById('game-voice-clarity').value = (elevenLabsConfig.clarity * 100) || 75;
+            document.getElementById('game-voice-clarity-display').textContent = ((elevenLabsConfig.clarity * 100) || 75) + '%';
+            
+            // Show/hide voice engine settings
+            toggleGameVoiceSettings();
+            
+            // Game Preferences
+            document.getElementById('game-auto-save-enabled').checked = isAutoSaveEnabled;
+            document.getElementById('game-use-campaign-context').checked = openAIConfig.useCampaignContext !== false;
+            document.getElementById('game-use-reference-data').checked = openAIConfig.useReferenceData !== false;
+            document.getElementById('game-show-timestamps').checked = true; // Default for now
+            
+            // Set up event listeners for radio buttons
+            setupGameSettingsEventListeners();
+        }
+        
+        // Set up event listeners for game settings
+        function setupGameSettingsEventListeners() {
+            // AI Engine radio buttons
+            const aiRadios = document.querySelectorAll('input[name="gameAiEngine"]');
+            aiRadios.forEach(radio => {
+                radio.addEventListener('change', toggleGameOpenAISettings);
+            });
+            
+            // Voice Engine radio buttons  
+            const voiceRadios = document.querySelectorAll('input[name="gameVoiceEngine"]');
+            voiceRadios.forEach(radio => {
+                radio.addEventListener('change', toggleGameVoiceSettings);
+            });
+            
+            // Range sliders
+            document.getElementById('game-ai-creativity').addEventListener('input', function() {
+                document.getElementById('game-ai-creativity-display').textContent = this.value + '%';
+            });
+            
+            document.getElementById('game-voice-stability').addEventListener('input', function() {
+                document.getElementById('game-voice-stability-display').textContent = this.value + '%';
+            });
+            
+            document.getElementById('game-voice-clarity').addEventListener('input', function() {
+                document.getElementById('game-voice-clarity-display').textContent = this.value + '%';
+            });
+            
+            document.getElementById('game-voice-rate').addEventListener('input', function() {
+                document.getElementById('game-voice-rate-display').textContent = this.value + 'x';
+            });
+            
+            document.getElementById('game-voice-pitch').addEventListener('input', function() {
+                document.getElementById('game-voice-pitch-display').textContent = this.value + 'x';
+            });
+        }
+        
+        // Toggle OpenAI settings visibility in game settings
+        function toggleGameOpenAISettings() {
+            const openaiRadio = document.querySelector('input[name="gameAiEngine"][value="openai"]');
+            const openaiSettings = document.getElementById('game-openai-settings');
+            
+            if (openaiRadio && openaiRadio.checked) {
+                openaiSettings.style.display = 'block';
+            } else {
+                openaiSettings.style.display = 'none';
+            }
+        }
+        
+        // Toggle voice settings visibility in game settings
+        function toggleGameVoiceSettings() {
+            const elevenLabsRadio = document.querySelector('input[name="gameVoiceEngine"][value="elevenlabs"]');
+            const elevenLabsSettings = document.getElementById('game-elevenlabs-settings');
+            const browserSettings = document.getElementById('game-browser-tts-settings');
+            
+            if (elevenLabsRadio && elevenLabsRadio.checked) {
+                elevenLabsSettings.style.display = 'block';
+                browserSettings.style.display = 'none';
+            } else {
+                elevenLabsSettings.style.display = 'none';
+                browserSettings.style.display = 'block';
+            }
+        }
+        
+        // Load browser voices for game settings
+        function loadBrowserVoices() {
+            const voiceSelect = document.getElementById('game-browser-voice');
+            if (!voiceSelect) return;
+            
+            const voices = speechSynthesis.getVoices();
+            voiceSelect.innerHTML = '<option value="">Default System Voice</option>';
+            
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+        }
+        
+        // Test OpenAI in game settings
+        async function testOpenAIInSettings() {
+            const apiKeyInput = document.getElementById('game-openai-api-key');
+            const resultDiv = document.getElementById('game-openai-test-result');
+            
+            // Use existing testOpenAISetup logic
+            await testOpenAIAPI(apiKeyInput.value.trim(), resultDiv);
+        }
+        
+        // Test ElevenLabs in game settings
+        async function testElevenLabsInSettings() {
+            const apiKeyInput = document.getElementById('game-elevenlabs-api-key');
+            const resultDiv = document.getElementById('game-elevenlabs-test-result');
+            
+            // Use existing testElevenLabsSetup logic
+            await testElevenLabsAPI(apiKeyInput.value.trim(), resultDiv);
+        }
+        
+        // Load ElevenLabs voices in game settings
+        async function loadElevenLabsVoicesInSettings() {
+            const apiKey = document.getElementById('game-elevenlabs-api-key').value.trim();
+            const voiceSelect = document.getElementById('game-elevenlabs-voice-id');
+            
+            if (!apiKey) {
+                voiceSelect.innerHTML = '<option value="">Enter API key first</option>';
+                return;
+            }
+            
+            await loadVoicesForSetup(apiKey, voiceSelect);
+        }
+        
+        // Test ElevenLabs voice in game settings
+        async function testElevenLabsVoiceInSettings() {
+            const apiKey = document.getElementById('game-elevenlabs-api-key').value.trim();
+            const voiceId = document.getElementById('game-elevenlabs-voice-id').value;
+            
+            if (!apiKey || !voiceId) {
+                alert('Please enter API key and select a voice first.');
+                return;
+            }
+            
+            const testText = "Greetings, adventurers! Welcome to your epic quest!";
+            
+            try {
+                await generateElevenLabsSpeech(testText, apiKey, voiceId);
+            } catch (error) {
+                console.error('Error testing voice:', error);
+                alert('Error testing voice: ' + error.message);
+            }
+        }
+        
+        // Helper function to test OpenAI API
+        async function testOpenAIAPI(apiKey, resultDiv) {
+            if (!apiKey) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an API key first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span style="color: blue;">🔄 Testing API key...</span>';
+            
+            try {
+                const response = await fetch('https://api.openai.com/v1/models', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span style="color: green;">✅ API key valid!</span>';
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<span style="color: red;">❌ API Error ${response.status}: ${errorText.substring(0, 100)}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
+            }
+        }
+        
+        // Helper function to test ElevenLabs API
+        async function testElevenLabsAPI(apiKey, resultDiv) {
+            if (!apiKey) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an API key first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span style="color: blue;">🔄 Testing API key...</span>';
+            
+            try {
+                const response = await fetch('https://api.elevenlabs.io/v1/user', {
+                    method: 'GET',
+                    headers: {
+                        'xi-api-key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span style="color: green;">✅ API key valid! Loading voices...</span>';
+                    
+                    // Auto-load voices after successful test
+                    setTimeout(async () => {
+                        const voiceSelect = document.getElementById('game-elevenlabs-voice-id');
+                        await loadVoicesForSetup(apiKey, voiceSelect);
+                    }, 1000);
+                    
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<span style="color: red;">❌ API Error ${response.status}: ${errorText.substring(0, 100)}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
+            }
+        }
+        
+        // Save game settings
+        function saveGameSettings() {
+            console.log('Saving game settings...');
+            
+            // AI Settings
+            const aiEngine = document.querySelector('input[name="gameAiEngine"]:checked').value;
+            openAIConfig.enabled = aiEngine === 'openai';
+            
+            if (openAIConfig.enabled) {
+                openAIConfig.apiKey = document.getElementById('game-openai-api-key').value.trim();
+                openAIConfig.model = document.getElementById('game-ai-model').value;
+                openAIConfig.creativity = parseFloat(document.getElementById('game-ai-creativity').value) / 100;
+                openAIConfig.responseLength = document.getElementById('game-ai-response-length').value;
+                
+                // Save to localStorage
+                localStorage.setItem('openai_api_key', openAIConfig.apiKey);
+                localStorage.setItem('openai_model', openAIConfig.model);
+                localStorage.setItem('openai_creativity', openAIConfig.creativity);
+                localStorage.setItem('openai_response_length', openAIConfig.responseLength);
+                localStorage.setItem('openai_enabled', 'true');
+            } else {
+                localStorage.setItem('openai_enabled', 'false');
+            }
+            
+            // Voice Settings
+            const voiceEngine = document.querySelector('input[name="gameVoiceEngine"]:checked').value;
+            elevenLabsConfig.enabled = voiceEngine === 'elevenlabs';
+            
+            if (elevenLabsConfig.enabled) {
+                elevenLabsConfig.apiKey = document.getElementById('game-elevenlabs-api-key').value.trim();
+                elevenLabsConfig.voiceId = document.getElementById('game-elevenlabs-voice-id').value;
+                elevenLabsConfig.stability = parseFloat(document.getElementById('game-voice-stability').value) / 100;
+                elevenLabsConfig.clarity = parseFloat(document.getElementById('game-voice-clarity').value) / 100;
+                
+                // Save to localStorage
+                localStorage.setItem('elevenlabs_api_key', elevenLabsConfig.apiKey);
+                localStorage.setItem('elevenlabs_voice_id', elevenLabsConfig.voiceId);
+                localStorage.setItem('elevenlabs_stability', elevenLabsConfig.stability);
+                localStorage.setItem('elevenlabs_clarity', elevenLabsConfig.clarity);
+                localStorage.setItem('voice_engine', 'elevenlabs');
+            } else {
+                localStorage.setItem('voice_engine', 'browser');
+            }
+            
+            // Game Preferences
+            const autoSaveEnabled = document.getElementById('game-auto-save-enabled').checked;
+            setAutoSave(autoSaveEnabled);
+            
+            openAIConfig.useCampaignContext = document.getElementById('game-use-campaign-context').checked;
+            openAIConfig.useReferenceData = document.getElementById('game-use-reference-data').checked;
+            localStorage.setItem('openai_use_context', openAIConfig.useCampaignContext);
+            localStorage.setItem('openai_use_reference', openAIConfig.useReferenceData);
+            
+            // Save to current campaign
+            if (window.currentCampaign) {
+                saveCurrentCampaignData();
+            }
+            
+            // Update UI elements
+            updateDMVoiceToggle();
+            
+            // Close modal
+            document.getElementById('game-settings-modal').style.display = 'none';
+            
+            // Show success message
+            showNotification('Settings saved successfully!', 'success', 3000);
+            
+            console.log('✅ Game settings saved:', {
+                openai: openAIConfig.enabled,
+                elevenlabs: elevenLabsConfig.enabled,
+                autoSave: autoSaveEnabled
+            });
+        }
+        
+        // Update DM Voice toggle button text
+        function updateDMVoiceToggle() {
+            const toggle = document.getElementById('dm-voice-toggle');
+            if (toggle) {
+                if (elevenLabsConfig.enabled && elevenLabsConfig.apiKey) {
+                    toggle.textContent = '🔊 DM Voice: ElevenLabs';
+                } else {
+                    toggle.textContent = '🔊 DM Voice: Browser';
+                }
+            }
+        }
+
         // ===============================
         // AI DM CONVERSATION SYSTEM
         // ===============================
@@ -2549,33 +4104,6 @@
             updateGameStatus(campaign?.startingRegion || 'Ancient Forest', 'Morning', 'Clear skies');
         }
         
-        // Start a new story beat
-        function startNewStoryBeat() {
-            const newScenePrompts = [
-                "A new challenge presents itself...",
-                "The adventure takes an unexpected turn...",
-                "Something stirs in the shadows...",
-                "A distant sound catches your attention...",
-                "The path ahead reveals new possibilities..."
-            ];
-            
-            const randomPrompt = newScenePrompts[Math.floor(Math.random() * newScenePrompts.length)];
-            
-            const newScene = `
-                <div class="dm-message">
-                    <div class="message-header">
-                        <strong>🎭 Dungeon Master</strong>
-                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div class="message-content">
-                        <p><em>${randomPrompt}</em></p>
-                        <p class="dm-prompt">What would you like to do?</p>
-                    </div>
-                </div>
-            `;
-            
-            appendToConversation(newScene);
-        }
         
         // Send player action
         function sendPlayerAction() {
@@ -2734,24 +4262,37 @@
 
         // Auto-detect NPCs mentioned in DM responses
         function detectAndTrackNPCs(dmResponse) {
-            // Look for common NPC introduction patterns
-            const npcPatterns = [
-                /(?:a|an|the)\s+(\w+)\s+(?:dwarf|elf|human|halfling|orc|goblin|merchant|guard|innkeeper|bartender|knight|warrior|mage|wizard|priest|cleric)/i,
-                /(?:named?|called)\s+([A-Z]\w+)/g,
-                /([A-Z]\w+)(?:\s+(?:the|a|an)\s+\w+)?\s+(?:says?|grumbles?|whispers?|shouts?|replies?)/g,
-                /"[^"]*"\s+(?:says?|grumbles?)\s+([A-Z]\w+)/g
-            ];
+            if (!dmResponse || typeof dmResponse !== 'string') {
+                console.warn('Invalid DM response for NPC detection:', dmResponse);
+                return;
+            }
             
-            for (const pattern of npcPatterns) {
-                const matches = dmResponse.matchAll ? [...dmResponse.matchAll(pattern)] : [];
-                for (const match of matches) {
-                    const npcName = match[1];
-                    if (npcName && npcName.length > 2 && npcName !== 'What') { // Filter out common false positives
-                        const description = extractNPCDescription(dmResponse, npcName);
-                        addNPCToScene(npcName, description);
-                        console.log(`Auto-detected NPC: ${npcName}`);
+            try {
+                // Look for common NPC introduction patterns
+                const npcPatterns = [
+                    /(?:a|an|the)\s+(\w+)\s+(?:dwarf|elf|human|halfling|orc|goblin|merchant|guard|innkeeper|bartender|knight|warrior|mage|wizard|priest|cleric)/gi,
+                    /(?:named?|called)\s+([A-Z]\w+)/g,
+                    /([A-Z]\w+)(?:\s+(?:the|a|an)\s+\w+)?\s+(?:says?|grumbles?|whispers?|shouts?|replies?)/g,
+                    /"[^"]*"\s+(?:says?|grumbles?)\s+([A-Z]\w+)/g
+                ];
+                
+                for (const pattern of npcPatterns) {
+                    try {
+                        const matches = [...dmResponse.matchAll(pattern)];
+                        for (const match of matches) {
+                            const npcName = match[1];
+                            if (npcName && npcName.length > 2 && npcName !== 'What') { // Filter out common false positives
+                                const description = extractNPCDescription(dmResponse, npcName);
+                                addNPCToScene(npcName, description);
+                                console.log(`Auto-detected NPC: ${npcName}`);
+                            }
+                        }
+                    } catch (patternError) {
+                        console.warn('Error processing NPC pattern:', pattern, patternError);
                     }
                 }
+            } catch (error) {
+                console.error('Error in detectAndTrackNPCs:', error);
             }
         }
 
@@ -2946,6 +4487,12 @@
             
             // Build the system prompt with enhanced context
             let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master. IMPORTANT: Maintain scene continuity and don't randomly change locations or ignore NPCs without player direction.`;
+            
+            // Add combat rules enforcement
+            if (combatState.active) {
+                systemPrompt += ` COMBAT RULES ENFORCEMENT: The party is currently in combat. Each character gets ONE action, ONE bonus action (if applicable), and movement per turn. Players cannot attack multiple times or take multiple actions unless they have specific abilities that allow it. If a player tries to do more than their action economy allows, remind them of the rules and ask them to choose one action. Track initiative order and ensure proper turn-based combat. `;
+                systemPrompt += ` Current turn: ${combatState.combatants[combatState.currentTurn]?.name || 'Unknown'}. Round: ${combatState.round}. `;
+            }
             
             // Add current scene context
             systemPrompt += ` Current location: ${DM_STATE.currentLocation}. `;
@@ -3846,7 +5393,722 @@
             document.getElementById('current-time').textContent = time;
             document.getElementById('current-weather').textContent = weather;
         }
+
+        // ===============================
+        // COMBAT SYSTEM - D&D 5E RULES
+        // ===============================
+        
+        // Combat state management
+        let combatState = {
+            active: false,
+            combatants: [],
+            currentTurn: 0,
+            round: 1,
+            mapZoom: 1,
+            actionEconomy: {
+                action: true,
+                bonusAction: true,
+                movement: 30,
+                reaction: true
+            }
+        };
+
+        // Modified initiateAction function to properly handle combat
+        function initiateAction(actionType) {
+            if (actionType === 'combat') {
+                // Check if already in combat
+                if (combatState.active) {
+                    switchScreen('combat');
+                    return;
+                }
+                
+                // Start combat encounter
+                startCombatEncounter();
+            } else {
+                const actions = {
+                    explore: "I want to explore the area more thoroughly.",
+                    rest: "I want to take a rest to recover.",
+                    inventory: "I want to check my inventory and equipment."
+                };
+
+                if (actions[actionType]) {
+                    document.getElementById('player-input').value = actions[actionType];
+                    sendPlayerAction();
+                }
+            }
+        }
+
+        // Start a combat encounter
+        function startCombatEncounter() {
+            // Initialize combat with party characters and some enemies
+            const partyMembers = window.partyCharacters || [];
+            const enemies = generateEnemies();
+            
+            combatState.combatants = [
+                ...partyMembers.map(char => ({
+                    ...char,
+                    type: 'player',
+                    initiative: 0,
+                    position: { x: 100 + Math.random() * 100, y: 200 + Math.random() * 100 },
+                    conditions: []
+                })),
+                ...enemies
+            ];
+            
+            // Roll initiative for all combatants
+            rollInitiative();
+            
+            // Show combat screen
+            combatState.active = true;
+            switchScreen('combat');
+            
+            // Initialize battle map
+            initializeBattleMap();
+            
+            // Add combat message
+            addCombatMessage('Combat has begun! Rolling initiative...', 'system');
+        }
+
+        // Generate random enemies for the encounter
+        function generateEnemies() {
+            const enemyTemplates = [
+                { name: 'Goblin', hp: 7, ac: 15, initiative: 0, type: 'enemy' },
+                { name: 'Orc', hp: 15, ac: 13, initiative: 0, type: 'enemy' },
+                { name: 'Bandit', hp: 11, ac: 12, initiative: 0, type: 'enemy' }
+            ];
+            
+            const numEnemies = Math.min(3, Math.max(1, (window.partyCharacters?.length || 1)));
+            const enemies = [];
+            
+            for (let i = 0; i < numEnemies; i++) {
+                const template = enemyTemplates[Math.floor(Math.random() * enemyTemplates.length)];
+                enemies.push({
+                    ...template,
+                    name: template.name + (numEnemies > 1 ? ` ${i + 1}` : ''),
+                    position: { x: 300 + Math.random() * 200, y: 150 + Math.random() * 200 },
+                    conditions: [],
+                    combat: {
+                        hitPoints: { current: template.hp, max: template.hp },
+                        armorClass: template.ac
+                    }
+                });
+            }
+            
+            return enemies;
+        }
+
+        // Roll initiative for all combatants
+        function rollInitiative() {
+            combatState.combatants.forEach(combatant => {
+                // Roll d20 + DEX modifier
+                const dexMod = Math.floor((combatant.abilities?.dexterity?.score || 10) / 2) - 5;
+                combatant.initiative = Math.floor(Math.random() * 20) + 1 + dexMod;
+            });
+            
+            // Sort by initiative (highest first)
+            combatState.combatants.sort((a, b) => {
+                if (b.initiative !== a.initiative) {
+                    return b.initiative - a.initiative;
+                }
+                // Tie-breaker: higher DEX score wins
+                const aDex = a.abilities?.dexterity?.score || 10;
+                const bDex = b.abilities?.dexterity?.score || 10;
+                return bDex - aDex;
+            });
+            
+            combatState.currentTurn = 0;
+            updateInitiativeDisplay();
+            updateActionEconomy();
+        }
+
+        // Update the initiative tracker display
+        function updateInitiativeDisplay() {
+            const initiativeList = document.getElementById('initiative-list');
+            if (!initiativeList) return;
+            
+            initiativeList.innerHTML = '';
+            
+            combatState.combatants.forEach((combatant, index) => {
+                const entry = document.createElement('div');
+                entry.className = `initiative-entry ${combatant.type}`;
+                if (index === combatState.currentTurn) {
+                    entry.classList.add('current-turn');
+                }
+                
+                const hpDisplay = combatant.combat?.hitPoints ? 
+                    `${combatant.combat.hitPoints.current}/${combatant.combat.hitPoints.max} HP` : '';
+                
+                entry.innerHTML = `
+                    <div>
+                        <div class="initiative-name">${combatant.name}</div>
+                        <div style="font-size: 0.8rem; color: var(--color-text-secondary);">${hpDisplay}</div>
+                    </div>
+                    <div class="initiative-value">${combatant.initiative}</div>
+                `;
+                
+                initiativeList.appendChild(entry);
+            });
+        }
+
+        // Update action economy display
+        function updateActionEconomy() {
+            const currentCombatant = combatState.combatants[combatState.currentTurn];
+            if (!currentCombatant || currentCombatant.type !== 'player') {
+                // Hide action economy for non-player turns
+                return;
+            }
+            
+            document.getElementById('action-status').textContent = 
+                combatState.actionEconomy.action ? 'Available' : 'Used';
+            document.getElementById('action-status').className = 
+                combatState.actionEconomy.action ? 'available' : 'used';
+                
+            document.getElementById('bonus-action-status').textContent = 
+                combatState.actionEconomy.bonusAction ? 'Available' : 'Used';
+            document.getElementById('bonus-action-status').className = 
+                combatState.actionEconomy.bonusAction ? 'available' : 'used';
+                
+            document.getElementById('movement-status').textContent = 
+                `${combatState.actionEconomy.movement} ft`;
+            document.getElementById('movement-status').className = 
+                combatState.actionEconomy.movement > 0 ? 'available' : 'used';
+                
+            document.getElementById('reaction-status').textContent = 
+                combatState.actionEconomy.reaction ? 'Available' : 'Used';
+            document.getElementById('reaction-status').className = 
+                combatState.actionEconomy.reaction ? 'available' : 'used';
+        }
+
+        // Handle combat actions with D&D 5e rules
+        function combatAction(actionType) {
+            const currentCombatant = combatState.combatants[combatState.currentTurn];
+            
+            if (!currentCombatant || currentCombatant.type !== 'player') {
+                addCombatMessage("It's not your turn!", 'system');
+                return;
+            }
+            
+            switch (actionType) {
+                case 'attack':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    handleAttackAction(currentCombatant);
+                    combatState.actionEconomy.action = false;
+                    break;
+                    
+                case 'dodge':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    currentCombatant.conditions = currentCombatant.conditions || [];
+                    currentCombatant.conditions.push('dodging');
+                    addCombatMessage(`${currentCombatant.name} takes the Dodge action. Attacks against you have disadvantage until your next turn.`, 'system');
+                    combatState.actionEconomy.action = false;
+                    break;
+                    
+                case 'dash':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    const speed = currentCombatant.speed || 30;
+                    combatState.actionEconomy.movement += speed;
+                    addCombatMessage(`${currentCombatant.name} takes the Dash action. Movement increased by ${speed} ft.`, 'system');
+                    combatState.actionEconomy.action = false;
+                    break;
+                    
+                case 'help':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    addCombatMessage(`${currentCombatant.name} uses the Help action. Choose an ally to give them advantage on their next ability check or attack.`, 'system');
+                    combatState.actionEconomy.action = false;
+                    break;
+                    
+                case 'hide':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    const stealthRoll = Math.floor(Math.random() * 20) + 1;
+                    const stealthMod = Math.floor((currentCombatant.abilities?.dexterity?.score || 10) / 2) - 5;
+                    const total = stealthRoll + stealthMod;
+                    addCombatMessage(`${currentCombatant.name} attempts to hide. Stealth check: ${stealthRoll} + ${stealthMod} = ${total}`, 'system');
+                    combatState.actionEconomy.action = false;
+                    break;
+                    
+                case 'ready':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    addCombatMessage(`${currentCombatant.name} readies an action. Describe your trigger and action.`, 'system');
+                    combatState.actionEconomy.action = false;
+                    break;
+                    
+                case 'disengage':
+                    if (!combatState.actionEconomy.action) {
+                        addCombatMessage("You've already used your action this turn!", 'system');
+                        return;
+                    }
+                    addCombatMessage(`${currentCombatant.name} takes the Disengage action. You can move without provoking opportunity attacks.`, 'system');
+                    combatState.actionEconomy.action = false;
+                    break;
+            }
+            
+            updateActionEconomy();
+        }
+
+        // Handle attack action with proper D&D 5e mechanics
+        function handleAttackAction(attacker) {
+            // Find available targets (enemies for players, players for enemies)
+            const targets = combatState.combatants.filter(c => 
+                c.type !== attacker.type && 
+                (c.combat?.hitPoints?.current || 0) > 0
+            );
+            
+            if (targets.length === 0) {
+                addCombatMessage("No valid targets for attack!", 'system');
+                return;
+            }
+            
+            // For simplicity, attack the first available target
+            const target = targets[0];
+            
+            // Roll attack
+            const attackRoll = Math.floor(Math.random() * 20) + 1;
+            const attackBonus = Math.floor((attacker.abilities?.strength?.score || 10) / 2) - 5 + 2; // +2 proficiency
+            const totalAttack = attackRoll + attackBonus;
+            
+            const targetAC = target.combat?.armorClass || 10;
+            
+            if (attackRoll === 20) {
+                // Critical hit!
+                const damage = Math.floor(Math.random() * 8) + 1 + Math.floor(Math.random() * 8) + 1; // 2d8 for crit
+                const strMod = Math.floor((attacker.abilities?.strength?.score || 10) / 2) - 5;
+                const totalDamage = Math.max(1, damage + strMod);
+                
+                target.combat.hitPoints.current = Math.max(0, target.combat.hitPoints.current - totalDamage);
+                
+                addCombatMessage(`CRITICAL HIT! ${attacker.name} rolls a natural 20 and deals ${totalDamage} damage to ${target.name}!`, 'attack');
+            } else if (attackRoll === 1) {
+                // Critical miss!
+                addCombatMessage(`CRITICAL MISS! ${attacker.name} rolls a natural 1 and misses spectacularly!`, 'attack');
+            } else if (totalAttack >= targetAC) {
+                // Hit!
+                const damage = Math.floor(Math.random() * 8) + 1; // 1d8
+                const strMod = Math.floor((attacker.abilities?.strength?.score || 10) / 2) - 5;
+                const totalDamage = Math.max(1, damage + strMod);
+                
+                target.combat.hitPoints.current = Math.max(0, target.combat.hitPoints.current - totalDamage);
+                
+                addCombatMessage(`${attacker.name} hits ${target.name} for ${totalDamage} damage! (AC ${targetAC}, rolled ${totalAttack})`, 'attack');
+            } else {
+                // Miss!
+                addCombatMessage(`${attacker.name} attacks ${target.name} but misses! (AC ${targetAC}, rolled ${totalAttack})`, 'attack');
+            }
+            
+            // Check if target is defeated
+            if (target.combat.hitPoints.current <= 0) {
+                addCombatMessage(`${target.name} is defeated!`, 'system');
+                target.conditions = target.conditions || [];
+                target.conditions.push('defeated');
+            }
+            
+            updateInitiativeDisplay();
+            updateBattleMap();
+        }
+
+        // Advance to next turn
+        function nextTurn() {
+            if (!combatState.active) return;
+            
+            // Reset action economy
+            combatState.actionEconomy = {
+                action: true,
+                bonusAction: true,
+                movement: 30,
+                reaction: true
+            };
+            
+            // Clear temporary conditions
+            const currentCombatant = combatState.combatants[combatState.currentTurn];
+            if (currentCombatant.conditions) {
+                currentCombatant.conditions = currentCombatant.conditions.filter(c => c !== 'dodging');
+            }
+            
+            // Advance turn
+            combatState.currentTurn++;
+            if (combatState.currentTurn >= combatState.combatants.length) {
+                combatState.currentTurn = 0;
+                combatState.round++;
+                addCombatMessage(`--- Round ${combatState.round} ---`, 'system');
+            }
+            
+            const newCombatant = combatState.combatants[combatState.currentTurn];
+            addCombatMessage(`${newCombatant.name}'s turn!`, 'system');
+            
+            updateInitiativeDisplay();
+            updateActionEconomy();
+            updateBattleMap();
+            
+            // Handle AI turns for non-player characters
+            if (newCombatant.type !== 'player') {
+                setTimeout(() => handleAITurn(newCombatant), 1000);
+            }
+        }
+
+        // Handle AI turns for enemies and allies
+        function handleAITurn(combatant) {
+            if ((combatant.combat?.hitPoints?.current || 0) <= 0) {
+                addCombatMessage(`${combatant.name} is defeated and cannot act.`, 'system');
+                nextTurn();
+                return;
+            }
+            
+            // Simple AI: attack if possible, otherwise do nothing
+            const targets = combatState.combatants.filter(c => 
+                c.type !== combatant.type && 
+                (c.combat?.hitPoints?.current || 0) > 0
+            );
+            
+            if (targets.length > 0) {
+                handleAttackAction(combatant);
+            } else {
+                addCombatMessage(`${combatant.name} has no valid targets.`, 'system');
+            }
+            
+            setTimeout(() => nextTurn(), 1500);
+        }
+
+        // Initialize the battle map
+        function initializeBattleMap() {
+            const map = document.getElementById('battle-map');
+            const combatantsLayer = document.getElementById('combatants-layer');
+            
+            if (!map || !combatantsLayer) return;
+            
+            // Clear existing tokens
+            combatantsLayer.innerHTML = '';
+            
+            // Add combatant tokens
+            combatState.combatants.forEach((combatant, index) => {
+                const token = document.createElement('div');
+                token.className = `combatant-token ${combatant.type}`;
+                token.textContent = combatant.name.charAt(0).toUpperCase();
+                token.title = combatant.name;
+                token.style.left = combatant.position.x + 'px';
+                token.style.top = combatant.position.y + 'px';
+                token.dataset.combatantIndex = index;
+                
+                if (index === combatState.currentTurn) {
+                    token.classList.add('current-turn');
+                }
+                
+                // Add drag functionality for player characters on their turn
+                if (combatant.type === 'player' && index === combatState.currentTurn) {
+                    token.draggable = true;
+                    token.style.cursor = 'move';
+                    
+                    token.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', index);
+                        token.style.opacity = '0.5';
+                    });
+                    
+                    token.addEventListener('dragend', (e) => {
+                        token.style.opacity = '1';
+                    });
+                }
+                
+                combatantsLayer.appendChild(token);
+            });
+            
+            // Add drop zone functionality to the battle map
+            map.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            map.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const combatantIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                const mapRect = map.getBoundingClientRect();
+                const newX = e.clientX - mapRect.left - 20; // Center the token
+                const newY = e.clientY - mapRect.top - 20;
+                
+                // Calculate movement distance
+                const combatant = combatState.combatants[combatantIndex];
+                const oldX = combatant.position.x;
+                const oldY = combatant.position.y;
+                const distance = Math.sqrt((newX - oldX) ** 2 + (newY - oldY) ** 2);
+                const feetMoved = Math.round(distance / 10) * 5; // Convert pixels to 5-foot squares
+                
+                if (feetMoved <= combatState.actionEconomy.movement) {
+                    // Valid move
+                    combatant.position.x = Math.max(0, Math.min(newX, map.clientWidth - 40));
+                    combatant.position.y = Math.max(0, Math.min(newY, map.clientHeight - 40));
+                    combatState.actionEconomy.movement -= feetMoved;
+                    
+                    addCombatMessage(`${combatant.name} moves ${feetMoved} feet. ${combatState.actionEconomy.movement} feet of movement remaining.`, 'system');
+                    updateBattleMap();
+                    updateActionEconomy();
+                } else {
+                    // Invalid move - not enough movement
+                    addCombatMessage(`${combatant.name} doesn't have enough movement! Distance: ${feetMoved} ft, Available: ${combatState.actionEconomy.movement} ft.`, 'system');
+                    updateBattleMap(); // Reset position
+                }
+            });
+        }
+
+        // Update battle map (refresh token positions and states)
+        function updateBattleMap() {
+            initializeBattleMap();
+        }
+
+        // Add message to combat log
+        function addCombatMessage(message, type = 'system') {
+            const messagesContainer = document.getElementById('combat-messages');
+            if (!messagesContainer) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `combat-message ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            messageDiv.innerHTML = `
+                ${message}
+                <span class="timestamp">${timestamp}</span>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Map controls
+        function zoomMap(direction) {
+            const map = document.getElementById('battle-map');
+            if (!map) return;
+            
+            if (direction === 'in') {
+                combatState.mapZoom = Math.min(2, combatState.mapZoom + 0.2);
+            } else {
+                combatState.mapZoom = Math.max(0.5, combatState.mapZoom - 0.2);
+            }
+            
+            map.style.transform = `scale(${combatState.mapZoom})`;
+        }
+
+        function centerMap() {
+            const map = document.getElementById('battle-map');
+            if (!map) return;
+            
+            combatState.mapZoom = 1;
+            map.style.transform = 'scale(1)';
+            map.scrollLeft = 0;
+            map.scrollTop = 0;
+        }
+
+        // End combat
+        function endCombat() {
+            combatState.active = false;
+            combatState.combatants = [];
+            combatState.currentTurn = 0;
+            combatState.round = 1;
+            
+            addCombatMessage('Combat has ended!', 'system');
+            
+            // Return to game screen
+            switchScreen('game');
+        }
     </script>
+
+    <!-- Game Settings Modal -->
+    <div id="game-settings-modal" class="modal" style="display: none;">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>⚙️ Game Settings</h3>
+                <button class="modal-close" onclick="this.closest('.modal').style.display='none'">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-button active" onclick="showSettingsTab('ai-settings')">🤖 AI Dungeon Master</button>
+                    <button class="tab-button" onclick="showSettingsTab('voice-settings')">🎤 Voice & Audio</button>
+                    <button class="tab-button" onclick="showSettingsTab('game-preferences')">🎮 Preferences</button>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- AI DM Settings Tab -->
+                    <div id="ai-settings-tab" class="settings-tab active">
+                        <div class="ai-engine-selection">
+                            <h4>AI Engine</h4>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="gameAiEngine" value="template" checked>
+                                    Template Responses (Free, Basic)
+                                </label>
+                                <label>
+                                    <input type="radio" name="gameAiEngine" value="openai">
+                                    OpenAI (Premium, Advanced)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="game-openai-settings" class="openai-settings" style="display: none;">
+                            <h4>OpenAI Configuration</h4>
+                            <div class="form-group">
+                                <label for="game-openai-api-key">API Key:</label>
+                                <div class="form-row">
+                                    <input type="password" id="game-openai-api-key" placeholder="sk-..." 
+                                           value="" class="api-key-input">
+                                    <button type="button" onclick="testOpenAIInSettings()" class="test-button">Test</button>
+                                </div>
+                                <div id="game-openai-test-result" class="test-result"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-ai-model">Model:</label>
+                                <select id="game-ai-model">
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, Cheaper)</option>
+                                    <option value="gpt-4">GPT-4 (Smarter, More Expensive)</option>
+                                    <option value="gpt-4-turbo-preview">GPT-4 Turbo (Latest)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-ai-creativity">Creativity: <span id="game-ai-creativity-display">70%</span></label>
+                                <input type="range" id="game-ai-creativity" min="0" max="100" value="70" step="10">
+                                <small>Lower = More predictable, Higher = More creative</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-ai-response-length">Response Length:</label>
+                                <select id="game-ai-response-length">
+                                    <option value="short">Short (50-100 words)</option>
+                                    <option value="normal" selected>Normal (100-200 words)</option>
+                                    <option value="long">Long (200-300 words)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Settings Tab -->
+                    <div id="voice-settings-tab" class="settings-tab">
+                        <div class="voice-engine-selection">
+                            <h4>Voice Engine</h4>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="gameVoiceEngine" value="browser" checked>
+                                    Browser Text-to-Speech (Free, Basic)
+                                </label>
+                                <label>
+                                    <input type="radio" name="gameVoiceEngine" value="elevenlabs">
+                                    ElevenLabs (Premium, High Quality)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="game-elevenlabs-settings" class="elevenlabs-settings" style="display: none;">
+                            <h4>ElevenLabs Configuration</h4>
+                            <div class="form-group">
+                                <label for="game-elevenlabs-api-key">API Key:</label>
+                                <div class="form-row">
+                                    <input type="password" id="game-elevenlabs-api-key" placeholder="Enter your ElevenLabs API key" 
+                                           value="" class="api-key-input">
+                                    <button type="button" onclick="testElevenLabsInSettings()" class="test-button">Test</button>
+                                </div>
+                                <div id="game-elevenlabs-test-result" class="test-result"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-elevenlabs-voice-id">DM Voice:</label>
+                                <select id="game-elevenlabs-voice-id">
+                                    <option value="">Loading voices...</option>
+                                </select>
+                                <button type="button" onclick="loadElevenLabsVoicesInSettings()" class="secondary-button">Refresh Voices</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-voice-stability">Stability: <span id="game-voice-stability-display">50%</span></label>
+                                <input type="range" id="game-voice-stability" min="0" max="100" value="50" step="5">
+                                <small>Lower = More variable, Higher = More stable</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-voice-clarity">Clarity: <span id="game-voice-clarity-display">75%</span></label>
+                                <input type="range" id="game-voice-clarity" min="0" max="100" value="75" step="5">
+                                <small>Lower = More similar to original, Higher = Enhanced clarity</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" onclick="testElevenLabsVoiceInSettings()" class="primary-button">Test Voice</button>
+                            </div>
+                        </div>
+
+                        <!-- Browser TTS Settings -->
+                        <div id="game-browser-tts-settings" class="browser-tts-settings">
+                            <h4>Browser Text-to-Speech</h4>
+                            <div class="form-group">
+                                <label for="game-browser-voice">Voice:</label>
+                                <select id="game-browser-voice">
+                                    <option value="">Default System Voice</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-voice-rate">Speech Rate: <span id="game-voice-rate-display">1.0x</span></label>
+                                <input type="range" id="game-voice-rate" min="0.5" max="2" value="1" step="0.1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="game-voice-pitch">Pitch: <span id="game-voice-pitch-display">1.0x</span></label>
+                                <input type="range" id="game-voice-pitch" min="0.5" max="2" value="1" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Preferences Tab -->
+                    <div id="game-preferences-tab" class="settings-tab">
+                        <h4>Auto-Save</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="game-auto-save-enabled" checked>
+                                Enable auto-save every 5 minutes
+                            </label>
+                        </div>
+                        
+                        <h4>Campaign Preferences</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="game-use-campaign-context" checked>
+                                Include campaign context in AI responses
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="game-use-reference-data" checked>
+                                Use D&D reference data for AI responses
+                            </label>
+                        </div>
+                        
+                        <h4>Interface</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="game-show-timestamps" checked>
+                                Show timestamps on messages
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary-button" onclick="this.closest('.modal').style.display='none'">Cancel</button>
+                <button class="primary-button" onclick="saveGameSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Initialize Application -->
     <script type="module">

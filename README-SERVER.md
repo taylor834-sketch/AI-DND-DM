@@ -10,8 +10,10 @@ If you get "Error: Failed to initialize application" when double-clicking `index
 1. Open a terminal/command prompt in the project directory
 2. Run one of these commands:
    ```bash
-   # Python 3
+   # Python 3 (try different ports if 8000 is busy)
    python -m http.server 8000
+   python -m http.server 8080
+   python -m http.server 3000
    
    # Or Python 2
    python -m SimpleHTTPServer 8000
@@ -19,7 +21,25 @@ If you get "Error: Failed to initialize application" when double-clicking `index
    # Or use the provided script
    python start-server.py
    ```
-3. Open your browser and go to: `http://localhost:8000`
+3. Open your browser and go to: `http://localhost:8000` (or whatever port you used)
+
+### Troubleshooting Port Issues
+If you get `ERR_EMPTY_RESPONSE` or connection refused:
+1. **Port Already in Use**: Try a different port (8080, 3000, 9000)
+2. **Multiple Servers Running**: Kill existing Python processes or restart your computer
+3. **Check if Server Started**: Look for message like "Serving HTTP on 0.0.0.0 port 8080"
+4. **Test Connection**: Try `curl http://localhost:8080` in another terminal
+
+### Quick Fix Commands
+```bash
+# Kill any existing Python servers
+taskkill /F /IM python.exe
+# Or restart computer
+
+# Start fresh server
+cd "C:\Users\taylo\dnd-voice-adventure"
+python -m http.server 8080
+```
 
 ### Option 2: Node.js Server
 1. Install a simple server: `npm install -g http-server`

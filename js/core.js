@@ -36,6 +36,8 @@ class DNDVoiceCore {
             ['interactionHistory', './js/interaction-history.js'],
             ['aiDMIntegration', './js/ai-dm-integration.js'],
             ['aiDMInterface', './js/ai-dm-interface.js'],
+            ['autoSaveSystem', './js/auto-save-system.js'],
+            ['sessionContinuation', './js/session-continuation.js'],
             ['voiceIntegration', './js/voice-integration.js'],
             ['voiceTestSuite', './js/voice-test-suite.js'],
             ['combatSystem', './js/combat-system.js'],

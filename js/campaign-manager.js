@@ -518,4 +518,471 @@ export default class CampaignManager {
             return false;
         }
     }
+
+    // ===== LOCATION TRACKING =====
+
+    /**
+     * Get current campaign
+     */
+    getCurrentCampaign() {
+        return this.activeCampaign;
+    }
+
+    /**
+     * Get current location from active campaign
+     */
+    getCurrentLocation() {
+        if (!this.activeCampaign) {
+            return null;
+        }
+
+        // Check if there's a stored current location in gameState
+        if (this.activeCampaign.gameState?.currentLocation) {
+            const locationId = this.activeCampaign.gameState.currentLocation;
+            
+            // If it's just a string, convert it to a proper location object
+            if (typeof locationId === 'string') {
+                return this.getLocationByName(locationId) || this.createBasicLocationObject(locationId);
+            }
+            
+            // If it's already a location object, return it
+            if (typeof locationId === 'object' && locationId.id) {
+                return locationId;
+            }
+        }
+
+        // Check if there's a dmState current location (from the old index.html system)
+        if (this.activeCampaign.gameState?.dmState?.currentLocation) {
+            const locationName = this.activeCampaign.gameState.dmState.currentLocation;
+            return this.getLocationByName(locationName) || this.createBasicLocationObject(locationName);
+        }
+
+        // Fallback to starting location based on region
+        const region = this.activeCampaign.startingRegion;
+        return this.getRegionBaseLocation(region);
+    }
+
+    /**
+     * Set current location and persist to campaign
+     */
+    setCurrentLocation(locationId) {
+        if (!this.activeCampaign) {
+            console.warn('No active campaign to set location for');
+            return false;
+        }
+
+        // Initialize gameState if it doesn't exist
+        if (!this.activeCampaign.gameState) {
+            this.activeCampaign.gameState = {};
+        }
+
+        // Store the location ID
+        this.activeCampaign.gameState.currentLocation = locationId;
+
+        // Save the campaign with updated location
+        this.saveCampaign(this.activeCampaign);
+
+        // Emit event for other systems to react
+        this.core.emit('location:changed', { 
+            newLocation: locationId,
+            campaign: this.activeCampaign 
+        });
+
+        console.log(`📍 Current location set to: ${typeof locationId === 'string' ? locationId : locationId.name || locationId.id}`);
+        return true;
+    }
+
+    /**
+     * Find location by name in campaign world
+     */
+    getLocationByName(locationName) {
+        if (!this.activeCampaign || !this.activeCampaign.world?.locations) {
+            return null;
+        }
+
+        // Search through campaign locations
+        for (const [locationId, location] of Object.entries(this.activeCampaign.world.locations)) {
+            if (location.name?.toLowerCase() === locationName.toLowerCase() ||
+                locationId.toLowerCase() === locationName.toLowerCase()) {
+                return {
+                    id: locationId,
+                    ...location
+                };
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Create a basic location object for unknown locations
+     */
+    createBasicLocationObject(locationName) {
+        return {
+            id: `loc_${locationName.toLowerCase().replace(/\s+/g, '_')}`,
+            name: locationName,
+            type: 'unknown',
+            description: `You find yourself in ${locationName}.`,
+            connections: [],
+            npcs: [],
+            monsters: [],
+            factions: []
+        };
+    }
+
+    /**
+     * Add or update location in campaign world
+     */
+    addLocation(locationData) {
+        if (!this.activeCampaign) {
+            console.warn('No active campaign to add location to');
+            return false;
+        }
+
+        // Initialize world structure if needed
+        if (!this.activeCampaign.world) {
+            this.activeCampaign.world = { locations: {}, npcs: {}, factions: {} };
+        }
+        if (!this.activeCampaign.world.locations) {
+            this.activeCampaign.world.locations = {};
+        }
+
+        // Ensure location has required properties
+        const location = {
+            type: 'location',
+            description: '',
+            connections: [],
+            npcs: [],
+            monsters: [],
+            factions: [],
+            ...locationData
+        };
+
+        // Add to campaign
+        this.activeCampaign.world.locations[location.id] = location;
+
+        // Save campaign
+        this.saveCampaign(this.activeCampaign);
+
+        console.log(`🏛️ Added location: ${location.name} (${location.id})`);
+        return location.id;
+    }
+
+    /**
+     * Get current objective or quest
+     */
+    getCurrentObjective() {
+        if (!this.activeCampaign) {
+            return null;
+        }
+
+        // Check for active quest
+        const activeQuests = this.activeCampaign.gameState?.activeQuests;
+        if (activeQuests && activeQuests.length > 0) {
+            return activeQuests[0]; // Return first active quest
+        }
+
+        // Check for story progress indicator
+        if (this.activeCampaign.gameState?.storyProgress !== undefined) {
+            return `Story Progress: ${this.activeCampaign.gameState.storyProgress}%`;
+        }
+
+        return null;
+    }
+
+    /**
+     * Update story context with location information
+     */
+    updateStoryContext(contextData) {
+        if (!this.activeCampaign) {
+            return false;
+        }
+
+        if (!this.activeCampaign.gameState) {
+            this.activeCampaign.gameState = {};
+        }
+
+        // Update various story context fields
+        if (contextData.location) {
+            this.setCurrentLocation(contextData.location);
+        }
+
+        if (contextData.scene) {
+            this.activeCampaign.gameState.currentScene = contextData.scene;
+        }
+
+        if (contextData.npcsNearby) {
+            this.activeCampaign.gameState.npcsNearby = contextData.npcsNearby;
+        }
+
+        if (contextData.lastPlayerAction) {
+            this.activeCampaign.gameState.lastPlayerAction = contextData.lastPlayerAction;
+        }
+
+        // Save updated campaign
+        this.saveCampaign(this.activeCampaign);
+
+        return true;
+    }
+
+    // ===== SESSION RECAP SYSTEM =====
+
+    /**
+     * Generate a session recap based on recent activity
+     */
+    async generateSessionRecap() {
+        if (!this.activeCampaign) {
+            return null;
+        }
+
+        const interactionHistory = this.core.getModule('interactionHistory');
+        const worldDatabase = this.core.getModule('worldDatabase');
+        
+        if (!interactionHistory) {
+            return this.generateBasicRecap();
+        }
+
+        // Get recent session activity (last 3 hours)
+        const sessionTimeWindow = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+        const recentActions = interactionHistory.getRecentActions({
+            timeRange: sessionTimeWindow,
+            limit: 20
+        });
+
+        const recentAIHistory = interactionHistory.getAIRelevantHistory({
+            timeWindow: sessionTimeWindow,
+            maxItems: 15
+        });
+
+        // Build recap
+        const currentLocation = this.getCurrentLocation();
+        const recap = {
+            sessionId: `session_${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            location: currentLocation,
+            summary: await this.buildRecapSummary(recentActions, recentAIHistory),
+            keyEvents: this.extractKeyEvents(recentActions),
+            npcsInteracted: this.extractNPCInteractions(recentActions),
+            questProgress: this.extractQuestProgress(recentActions),
+            partyStatus: this.getPartyStatusSnapshot()
+        };
+
+        // Save recap to campaign
+        if (!this.activeCampaign.sessionRecaps) {
+            this.activeCampaign.sessionRecaps = [];
+        }
+
+        this.activeCampaign.sessionRecaps.push(recap);
+        
+        // Keep only last 5 recaps to avoid bloat
+        if (this.activeCampaign.sessionRecaps.length > 5) {
+            this.activeCampaign.sessionRecaps = this.activeCampaign.sessionRecaps.slice(-5);
+        }
+
+        this.saveCampaign(this.activeCampaign);
+        
+        console.log('📜 Generated session recap:', recap.summary);
+        return recap;
+    }
+
+    /**
+     * Build a narrative summary of the session
+     */
+    async buildRecapSummary(actions, aiHistory) {
+        const currentLocation = this.getCurrentLocation();
+        const locationName = currentLocation?.name || 'an unknown location';
+        
+        if (actions.length === 0) {
+            return `Last session, you were in ${locationName}. The adventure continues from where you left off.`;
+        }
+
+        // Categorize actions
+        const combatActions = actions.filter(a => a.category === 'combat').length;
+        const dialogueActions = actions.filter(a => a.category === 'dialogue' || a.category === 'social').length;
+        const explorationActions = actions.filter(a => a.category === 'exploration').length;
+        const questActions = actions.filter(a => a.category === 'quest').length;
+
+        let summary = `Last session in ${locationName}, `;
+        
+        const summaryParts = [];
+        
+        if (questActions > 0) {
+            summaryParts.push('you made progress on your quests');
+        }
+        
+        if (combatActions > 0) {
+            summaryParts.push(`you engaged in ${combatActions > 1 ? 'several battles' : 'combat'}`);
+        }
+        
+        if (dialogueActions > 0) {
+            summaryParts.push('you had important conversations with NPCs');
+        }
+        
+        if (explorationActions > 0) {
+            summaryParts.push('you explored new areas');
+        }
+        
+        if (summaryParts.length === 0) {
+            summaryParts.push('you spent time in the area');
+        }
+
+        // Get the most recent significant action
+        const significantActions = actions.filter(a => a.importance >= 6);
+        if (significantActions.length > 0) {
+            const lastAction = significantActions[significantActions.length - 1];
+            summaryParts.push(`Your last notable action was: ${lastAction.description}`);
+        }
+
+        summary += summaryParts.join(', ') + '.';
+        
+        return summary;
+    }
+
+    /**
+     * Extract key events from actions
+     */
+    extractKeyEvents(actions) {
+        return actions
+            .filter(action => action.importance >= 7)
+            .map(action => ({
+                type: action.category,
+                description: action.description,
+                timestamp: action.timestamp,
+                importance: action.importance
+            }))
+            .slice(-5); // Last 5 key events
+    }
+
+    /**
+     * Extract NPC interactions
+     */
+    extractNPCInteractions(actions) {
+        const npcActions = actions.filter(action => 
+            action.category === 'dialogue' || action.category === 'social' ||
+            (action.target && action.target.includes('npc'))
+        );
+
+        const npcs = new Set();
+        npcActions.forEach(action => {
+            if (action.target) {
+                // Extract NPC names from target field
+                const npcMatch = action.target.match(/npc[_:]([^,\s]+)/i);
+                if (npcMatch) {
+                    npcs.add(npcMatch[1]);
+                }
+            }
+        });
+
+        return Array.from(npcs);
+    }
+
+    /**
+     * Extract quest progress
+     */
+    extractQuestProgress(actions) {
+        return actions
+            .filter(action => action.category === 'quest')
+            .map(action => ({
+                description: action.description,
+                result: action.result,
+                timestamp: action.timestamp
+            }))
+            .slice(-3); // Last 3 quest actions
+    }
+
+    /**
+     * Get current party status snapshot
+     */
+    getPartyStatusSnapshot() {
+        const characterSheet = this.core.getModule('characterSheet');
+        if (!characterSheet) {
+            return { status: 'unknown' };
+        }
+
+        const character = characterSheet.getCharacterData();
+        return {
+            level: character?.level || 1,
+            hp: character?.currentHP || 0,
+            maxHP: character?.maxHP || 0,
+            status: character?.currentHP >= character?.maxHP * 0.75 ? 'healthy' : 
+                   character?.currentHP >= character?.maxHP * 0.5 ? 'wounded' : 'badly hurt'
+        };
+    }
+
+    /**
+     * Generate basic recap when no interaction history is available
+     */
+    generateBasicRecap() {
+        const currentLocation = this.getCurrentLocation();
+        const locationName = currentLocation?.name || 'an unknown location';
+        
+        return {
+            sessionId: `basic_session_${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            location: currentLocation,
+            summary: `Welcome back! Your adventure continues in ${locationName}. What would you like to do?`,
+            keyEvents: [],
+            npcsInteracted: [],
+            questProgress: [],
+            partyStatus: { status: 'ready for adventure' }
+        };
+    }
+
+    /**
+     * Get the most recent session recap
+     */
+    getLastSessionRecap() {
+        if (!this.activeCampaign?.sessionRecaps || this.activeCampaign.sessionRecaps.length === 0) {
+            return null;
+        }
+
+        return this.activeCampaign.sessionRecaps[this.activeCampaign.sessionRecaps.length - 1];
+    }
+
+    /**
+     * Generate DM opening based on last session
+     */
+    generateSessionOpening() {
+        const lastRecap = this.getLastSessionRecap();
+        
+        if (!lastRecap) {
+            const currentLocation = this.getCurrentLocation();
+            return `Welcome, adventurers! Your story begins in ${currentLocation?.name || 'a realm of adventure'}. What would you like to do?`;
+        }
+
+        let opening = `Welcome back, brave adventurers! `;
+        opening += lastRecap.summary;
+        
+        if (lastRecap.keyEvents.length > 0) {
+            const lastEvent = lastRecap.keyEvents[lastRecap.keyEvents.length - 1];
+            opening += ` Remember that ${lastEvent.description.toLowerCase()}.`;
+        }
+        
+        opening += ` The adventure continues. What do you choose to do?`;
+        
+        return opening;
+    }
+
+    /**
+     * Save session and generate recap (called during saves)
+     */
+    async saveSessionWithRecap() {
+        // Generate recap before saving
+        const recap = await this.generateSessionRecap();
+        
+        // Save the campaign (which now includes the recap)
+        this.saveCampaign(this.activeCampaign);
+        
+        // Create session summary for interaction history
+        const interactionHistory = this.core.getModule('interactionHistory');
+        if (interactionHistory) {
+            interactionHistory.endSession({
+                sessionId: recap?.sessionId || `session_${Date.now()}`,
+                startTime: new Date(Date.now() - (3 * 60 * 60 * 1000)).toISOString() // 3 hours ago
+            });
+        }
+        
+        console.log('💾 Session saved with recap generated');
+        return recap;
+    }
 }

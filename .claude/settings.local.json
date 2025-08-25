@@ -9,7 +9,13 @@
       "Read(/C:\\c\\Users\\taylo/**)",
       "Bash(node:*)",
       "Bash(py --version)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebFetch(domain:elevenlabs.io)",
+      "Bash(rg:*)",
+      "Bash(dir)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

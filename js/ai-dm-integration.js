@@ -134,8 +134,17 @@ export default class AIDMIntegration {
         const currentLocation = this.getCurrentLocation();
         const partyStatus = this.getPartyStatus();
         const activeQuests = this.getActiveQuests();
+        const sessionRecap = this.getLastSessionRecap();
 
         return {
+            sessionContinuity: sessionRecap ? {
+                lastSessionSummary: sessionRecap.summary,
+                keyEvents: sessionRecap.keyEvents,
+                npcsInteracted: sessionRecap.npcsInteracted,
+                questProgress: sessionRecap.questProgress,
+                sessionTimestamp: sessionRecap.timestamp
+            } : null,
+
             currentLocation: currentLocation ? {
                 id: currentLocation.id,
                 name: currentLocation.name,
@@ -231,6 +240,36 @@ export default class AIDMIntegration {
         };
     }
 
+    // ===== STORY CONTINUITY SYSTEM =====
+
+    /**
+     * Process location continuity from AI response
+     */
+    async processLocationContinuity(aiResponse) {
+        // Look for location mentions in the response
+        const locationMentions = [
+            'sword_coast', 'sword coast',
+            'millhaven', 'millhaven village',
+            'phandalin', 
+            'neverwinter',
+            'waterdeep'
+        ];
+
+        for (const locationName of locationMentions) {
+            if (aiResponse.toLowerCase().includes(locationName.toLowerCase())) {
+                // Ensure this location is properly set up and current
+                const currentLocation = this.getCurrentLocation();
+                const mentionedLocationName = locationName.replace('_', ' ');
+                
+                if (!currentLocation || currentLocation.name.toLowerCase() !== mentionedLocationName.toLowerCase()) {
+                    console.log(`🌍 Setting up location continuity for: ${mentionedLocationName}`);
+                    this.setupKnownLocation(mentionedLocationName);
+                    break; // Only set one location per response
+                }
+            }
+        }
+    }
+
     // ===== ENTITY CREATION SYSTEM =====
 
     /**
@@ -249,6 +288,9 @@ export default class AIDMIntegration {
         };
 
         try {
+            // First, check for location mentions and ensure story continuity
+            await this.processLocationContinuity(aiResponse);
+
             // Extract and process entity creation tags
             const entityMatches = aiResponse.match(/\[NEW_(\w+):\s*([^\]]+)\]/g) || [];
             
@@ -452,6 +494,20 @@ export default class AIDMIntegration {
 
         const locationId = await this.worldDatabase.addEntity('locations', locationData);
 
+        // Also add to campaign manager for location tracking
+        if (this.campaignManager) {
+            this.campaignManager.addLocation({
+                id: locationId,
+                name,
+                type: type || 'area',
+                description: description || `A ${type.toLowerCase()} discovered during the adventure.`,
+                connections: [],
+                npcs: [],
+                monsters: [],
+                factions: []
+            });
+        }
+
         return {
             success: true,
             entityId: locationId,
@@ -585,7 +641,105 @@ export default class AIDMIntegration {
      * Get current location from campaign state
      */
     getCurrentLocation() {
-        return this.campaignManager?.getCurrentLocation() || null;
+        const location = this.campaignManager?.getCurrentLocation();
+        
+        // If no location is set but we need one, initialize a default
+        if (!location && this.campaignManager) {
+            return this.initializeDefaultLocation();
+        }
+        
+        return location;
+    }
+
+    /**
+     * Get last session recap for continuity
+     */
+    getLastSessionRecap() {
+        return this.campaignManager?.getLastSessionRecap() || null;
+    }
+
+    /**
+     * Initialize default location if none exists
+     */
+    initializeDefaultLocation() {
+        if (!this.campaignManager) return null;
+
+        // Check if we can infer location from campaign data
+        const campaign = this.campaignManager.getCurrentCampaign();
+        if (campaign?.startingRegion) {
+            const baseLocation = this.campaignManager.getRegionBaseLocation(campaign.startingRegion);
+            this.campaignManager.setCurrentLocation(baseLocation);
+            return baseLocation;
+        }
+
+        // Create a generic starting location
+        const defaultLocation = {
+            id: 'loc_adventure_start',
+            name: 'Adventure Starting Point',
+            type: 'settlement',
+            description: 'The place where your adventure begins.',
+            connections: [],
+            npcs: [],
+            monsters: [],
+            factions: []
+        };
+
+        this.campaignManager.addLocation(defaultLocation);
+        this.campaignManager.setCurrentLocation(defaultLocation.id);
+        return defaultLocation;
+    }
+
+    /**
+     * Set up known locations when mentioned in story
+     */
+    setupKnownLocation(locationName, locationType = 'settlement') {
+        if (!this.campaignManager) return null;
+
+        const knownLocations = {
+            'sword_coast': {
+                id: 'loc_sword_coast',
+                name: 'Sword Coast',
+                type: 'region',
+                description: 'A region of Faerûn along the western coast, known for its adventures and diverse settlements.'
+            },
+            'millhaven': {
+                id: 'loc_millhaven',
+                name: 'Millhaven Village',
+                type: 'village',
+                description: 'A small farming village known for its grain mills and peaceful countryside.'
+            },
+            'millhaven village': {
+                id: 'loc_millhaven',
+                name: 'Millhaven Village',
+                type: 'village',
+                description: 'A small farming village known for its grain mills and peaceful countryside.'
+            }
+        };
+
+        const locationKey = locationName.toLowerCase();
+        
+        if (knownLocations[locationKey]) {
+            const locationData = knownLocations[locationKey];
+            this.campaignManager.addLocation(locationData);
+            this.campaignManager.setCurrentLocation(locationData.id);
+            return locationData;
+        }
+
+        // Create a basic location for unknown places
+        const basicLocation = {
+            id: `loc_${locationName.toLowerCase().replace(/\s+/g, '_')}`,
+            name: locationName,
+            type: locationType,
+            description: `You find yourself in ${locationName}, a ${locationType} in the realm.`,
+            connections: [],
+            npcs: [],
+            monsters: [],
+            factions: []
+        };
+
+        this.campaignManager.addLocation(basicLocation);
+        this.campaignManager.setCurrentLocation(basicLocation.id);
+        return basicLocation;
     }
 
     /**
@@ -680,8 +834,26 @@ export default class AIDMIntegration {
      * Generate AI instructions based on situation type
      */
     buildAIInstructions(situationType) {
+        const currentLocation = this.getCurrentLocation();
+        const lastRecap = this.getLastSessionRecap();
+        
+        const locationContext = currentLocation ? 
+            `\n        CURRENT LOCATION: ${currentLocation.name} - ${currentLocation.description || 'A location in the adventure'}` : '';
+        
+        const sessionContext = lastRecap ? 
+            `\n        PREVIOUS SESSION: ${lastRecap.summary}` : '';
+
         const baseInstructions = `
         You are an AI Dungeon Master for a D&D 5e adventure. Use the provided context to make informed decisions.
+        ${locationContext}${sessionContext}
+        
+        STORY CONTINUITY RULES:
+        - ALWAYS maintain continuity with the current location and ongoing events
+        - If there's a previous session summary, reference it to maintain story continuity
+        - If the party is in a specific place (like "sword_coast" or "Millhaven village"), stay consistent with that setting
+        - Reference previous events, NPCs met, and quest progress when appropriate
+        - Don't randomly change locations unless the party explicitly travels
+        - Build upon what happened in previous sessions rather than starting fresh
         
         ENTITY CREATION: Use tags when creating new entities:
         - [NEW_CHARACTER: Name | Role | Description] - for NPCs
@@ -699,6 +871,8 @@ export default class AIDMIntegration {
         - Keep relationship changes reasonable (-20 to +20)
         - Reference existing world information when possible
         - Maintain consistency with established lore
+        - NEVER ignore the current location context - always reference where the party is
+        - Use session continuity information to build upon previous events
         `;
 
         const situationSpecific = {
