@@ -5,8 +5,15 @@ If you're seeing "Awakening ancient powers..." stuck forever, you're opening the
 
 ## ✅ Solution: Run a Local Server
 
+### First: Install Python (If You Don't Have It)
+If you get "Python is not installed" error:
+1. **Double-click `INSTALL-PYTHON.bat`** for easy installation guide
+2. **Install Python from Microsoft Store** (recommended) or python.org
+3. **Restart your computer** after installation
+4. **Then try the server options below**
+
 ### Option 1: Double-Click to Start (Windows)
-1. **Double-click `start-server.bat`**
+1. **Double-click `start-server-alternative.bat`** (tries multiple Python commands)
 2. A command window will open and start the server
 3. Your browser should open automatically
 4. If not, go to: http://localhost:8000
