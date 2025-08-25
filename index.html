@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="D&D Voice Adventure - A comprehensive tabletop RPG companion with voice integration, inspired by Baldur's Gate 3 and Gloomhaven.">
+    <meta name="keywords" content="D&D, Dungeons Dragons, RPG, tabletop, voice, adventure, campaign">
+    <meta name="author" content="D&D Voice Adventure">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://taylor834-sketch.github.io/DND-Game/">
+    <meta property="og:title" content="D&D Voice Adventure">
+    <meta property="og:description" content="Experience immersive tabletop RPG adventures with voice integration and atmospheric storytelling.">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://taylor834-sketch.github.io/DND-Game/"
+    <meta property="twitter:title" content="D&D Voice Adventure">
+    <meta property="twitter:description" content="Experience immersive tabletop RPG adventures with voice integration and atmospheric storytelling.">
+    
+    <title>D&D Voice Adventure</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="./css/main.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="./js/core.js" as="script">
+    <link rel="preload" href="./css/main.css" as="style">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="dragon-symbol">🐉</div>
+            <h1 class="loading-title">D&D Voice Adventure</h1>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+            <p class="loading-text" id="loading-text">Awakening ancient powers...</p>
+        </div>
+    </div>
+
+    <!-- Error Container for Critical Errors -->
+    <div id="error-container" class="error-container" style="display: none;"></div>
+
+    <!-- Main Application Container -->
+    <div id="app" class="app-container">
+        <!-- Main Menu Screen -->
+        <div id="mainMenu-screen" class="screen main-menu-screen active">
+            <!-- Background Elements -->
+            <div class="background-overlay"></div>
+            <div class="particle-container" id="particle-container"></div>
+            
+            <!-- Header -->
+            <header class="main-header">
+                <div class="title-container">
+                    <h1 class="main-title">
+                        <span class="title-primary">D&D Voice</span>
+                        <span class="title-secondary">Adventure</span>
+                    </h1>
+                    <p class="subtitle">Embark on Epic Journeys</p>
+                </div>
+            </header>
+
+            <!-- Main Menu Navigation -->
+            <nav class="main-menu">
+                <div class="menu-container">
+                    <button id="create-campaign-btn" class="menu-button primary-button">
+                        <span class="button-icon">⚔️</span>
+                        <span class="button-text">Create New Campaign</span>
+                        <span class="button-description">Begin a fresh adventure</span>
+                    </button>
+
+                    <button id="continue-campaign-btn" class="menu-button secondary-button">
+                        <span class="button-icon">📖</span>
+                        <span class="button-text">Continue Campaign</span>
+                        <span class="button-description">Resume your journey</span>
+                    </button>
+
+                    <button id="load-github-btn" class="menu-button secondary-button">
+                        <span class="button-icon">☁️</span>
+                        <span class="button-text">Load from GitHub</span>
+                        <span class="button-description">Sync your adventures</span>
+                    </button>
+
+                    <button id="world-archive-btn" class="menu-button secondary-button">
+                        <span class="button-icon">🌍</span>
+                        <span class="button-text">World Archive</span>
+                        <span class="button-description">Explore realms</span>
+                    </button>
+
+                    <button id="settings-btn" class="menu-button tertiary-button">
+                        <span class="button-icon">⚙️</span>
+                        <span class="button-text">Settings</span>
+                        <span class="button-description">Configure your experience</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Footer -->
+            <footer class="main-footer">
+                <div class="footer-content">
+                    <p class="version-info">Version <span id="app-version">1.0.0</span></p>
+                    <p class="github-link">
+                        <a href="https://github.com/taylor834-sketch/DND-Game" target="_blank" rel="noopener noreferrer">
+                            View on GitHub
+                        </a>
+                    </p>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen settings-screen">
+            <div class="settings-container">
+                <header class="screen-header">
+                    <h2>Settings</h2>
+                    <button class="close-button" onclick="DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
+                </header>
+                
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h3>Audio</h3>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="enable-audio"> Enable Audio Effects
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                Master Volume
+                                <input type="range" id="master-volume" min="0" max="100" value="70">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>Display</h3>
+                        <div class="setting-item">
+                            <label>
+                                <select id="theme-select">
+                                    <option value="dark">Dark Theme</option>
+                                    <option value="light">Light Theme</option>
+                                    <option value="auto">Auto (System)</option>
+                                </select>
+                                Theme
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="enable-particles" checked> Enable Particles
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>GitHub Integration</h3>
+                        <div class="setting-item">
+                            <label>
+                                GitHub Token
+                                <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx">
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                Repository
+                                <input type="text" id="github-repo" placeholder="username/dnd-campaigns">
+                            </label>
+                        </div>
+                        <button id="test-github-connection" class="secondary-button">Test Connection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="./js/core.js"></script>
+    
+    <!-- Initialize Application -->
+    <script>
+        // Application initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const loadingProgress = document.getElementById('loading-progress');
+            const loadingText = document.getElementById('loading-text');
+            const app = document.getElementById('app');
+            
+            // Loading simulation
+            const loadingSteps = [
+                { progress: 10, text: 'Loading ancient scrolls...' },
+                { progress: 30, text: 'Preparing the realm...' },
+                { progress: 50, text: 'Gathering the party...' },
+                { progress: 70, text: 'Rolling initiative...' },
+                { progress: 90, text: 'Ready for adventure...' },
+                { progress: 100, text: 'Welcome, adventurer!' }
+            ];
+            
+            for (const step of loadingSteps) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                loadingProgress.style.width = step.progress + '%';
+                loadingText.textContent = step.text;
+            }
+            
+            // Initialize the core application
+            try {
+                await DNDCore.init();
+                
+                // Hide loading screen and show app
+                setTimeout(() => {
+                    loadingScreen.classList.add('fade-out');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        app.style.opacity = '1';
+                    }, 500);
+                }, 500);
+                
+            } catch (error) {
+                loadingText.textContent = 'Error: Failed to initialize application';
+                console.error('Application initialization failed:', error);
+            }
+        });
+        
+        // Service Worker Registration for PWA support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+        
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            if (DNDCore) {
+                DNDCore.handleCriticalError(event.error);
+            }
+        });
+        
+        // Prevent default drag and drop to avoid accidental navigation
+        document.addEventListener('dragover', e => e.preventDefault());
+        document.addEventListener('drop', e => e.preventDefault());
+    </script>
+</body>
+</html>

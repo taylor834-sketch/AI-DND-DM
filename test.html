@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foundation Test - D&D Voice Adventure</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #0D1117; 
+            color: #F0E6D2; 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #30363D; 
+            border-radius: 8px; 
+        }
+        .success { border-color: #238636; background: rgba(35, 134, 54, 0.1); }
+        .error { border-color: #DA3633; background: rgba(218, 54, 51, 0.1); }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 D&D Voice Adventure - Foundation Test</h1>
+    
+    <div class="test-section">
+        <h2>Core Module Loading Test</h2>
+        <div id="core-test">Testing...</div>
+        <button onclick="testCoreModule()">Test Core Module</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Database Module Test</h2>
+        <div id="database-test">Testing...</div>
+        <button onclick="testDatabaseModule()">Test Database</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>UI Module Test</h2>
+        <div id="ui-test">Testing...</div>
+        <button onclick="testUIModule()">Test UI</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Event System Test</h2>
+        <div id="event-test">Testing...</div>
+        <button onclick="testEventSystem()">Test Events</button>
+    </div>
+
+    <script type="module">
+        // Import core module
+        import('./js/core.js').then(() => {
+            document.getElementById('core-test').innerHTML = '✅ Core module loaded successfully';
+            document.getElementById('core-test').parentElement.className = 'test-section success';
+        }).catch(error => {
+            document.getElementById('core-test').innerHTML = '❌ Core module failed to load: ' + error.message;
+            document.getElementById('core-test').parentElement.className = 'test-section error';
+        });
+        
+        window.testCoreModule = async () => {
+            try {
+                await DNDCore.init();
+                document.getElementById('core-test').innerHTML = '✅ Core initialized successfully';
+                document.getElementById('core-test').parentElement.className = 'test-section success';
+            } catch (error) {
+                document.getElementById('core-test').innerHTML = '❌ Core initialization failed: ' + error.message;
+                document.getElementById('core-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testDatabaseModule = () => {
+            try {
+                const database = DNDCore.getModule('database');
+                if (database) {
+                    // Test save and load
+                    const testCampaign = { id: 'test123', name: 'Test Campaign', data: { level: 1 } };
+                    const savedId = database.saveCampaign(testCampaign);
+                    const loaded = database.loadCampaign(savedId);
+                    
+                    if (loaded && loaded.name === 'Test Campaign') {
+                        document.getElementById('database-test').innerHTML = '✅ Database save/load working';
+                        document.getElementById('database-test').parentElement.className = 'test-section success';
+                        
+                        // Cleanup
+                        database.deleteCampaign(savedId);
+                    } else {
+                        throw new Error('Save/load test failed');
+                    }
+                } else {
+                    throw new Error('Database module not found');
+                }
+            } catch (error) {
+                document.getElementById('database-test').innerHTML = '❌ Database test failed: ' + error.message;
+                document.getElementById('database-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testUIModule = () => {
+            try {
+                const ui = DNDCore.getModule('ui');
+                if (ui) {
+                    // Test notification system
+                    ui.showNotification('Test notification', 'success', 2000);
+                    document.getElementById('ui-test').innerHTML = '✅ UI module working (check for notification)';
+                    document.getElementById('ui-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('UI module not found');
+                }
+            } catch (error) {
+                document.getElementById('ui-test').innerHTML = '❌ UI test failed: ' + error.message;
+                document.getElementById('ui-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testEventSystem = () => {
+            try {
+                let eventReceived = false;
+                
+                // Listen for test event
+                DNDCore.on('test:event', () => {
+                    eventReceived = true;
+                });
+                
+                // Emit test event
+                DNDCore.emit('test:event', { test: true });
+                
+                if (eventReceived) {
+                    document.getElementById('event-test').innerHTML = '✅ Event system working';
+                    document.getElementById('event-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('Event not received');
+                }
+            } catch (error) {
+                document.getElementById('event-test').innerHTML = '❌ Event test failed: ' + error.message;
+                document.getElementById('event-test').parentElement.className = 'test-section error';
+            }
+        };
+    </script>
+</body>
+</html>
