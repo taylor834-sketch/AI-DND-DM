@@ -1735,6 +1735,11 @@
             
             // Switch to game screen
             switchScreen('game');
+            
+            // Start the adventure with opening narration
+            setTimeout(() => {
+                startAdventureNarration();
+            }, 500);
         }
         
         // Populate game screen with party data
@@ -2521,6 +2526,274 @@
             return DM_STATE.reference.skill_checks.dc_guidelines[difficulty] || 15;
         }
 
+        // ===============================
+        // DYNAMIC STORY GENERATION SYSTEM
+        // ===============================
+        
+        // Story state tracking
+        const STORY_STATE = {
+            currentChapter: 'opening',
+            plotThreads: [],
+            activeQuests: [],
+            completedEvents: [],
+            worldState: {},
+            narrativeTension: 1,
+            storyBeats: []
+        };
+
+        // Generate dynamic story hooks based on context
+        function generateStoryHook() {
+            const hooks = [
+                {
+                    type: 'mystery',
+                    hooks: [
+                        "Strange disappearances have plagued the nearby village - livestock vanishing without a trace, and now people...",
+                        "An ancient map was discovered in the wall of the old tavern during renovations, marking a location that shouldn't exist...",
+                        "Every full moon, ghostly music echoes from the abandoned manor on the hill. Last night wasn't a full moon..."
+                    ]
+                },
+                {
+                    type: 'danger',
+                    hooks: [
+                        "Smoke rises on the horizon - the peaceful hamlet you were heading to appears to be under attack!",
+                        "A blood-curdling scream pierces the night, followed by an unnatural silence that sets your teeth on edge...",
+                        "The bridge ahead has been destroyed, and fresh tracks suggest it wasn't an accident. Someone doesn't want you to cross..."
+                    ]
+                },
+                {
+                    type: 'opportunity',
+                    hooks: [
+                        "A wealthy merchant's caravan lies overturned beside the road, goods scattered but no bodies in sight...",
+                        "You stumble upon a hidden entrance behind a waterfall, ancient runes glowing faintly around its edges...",
+                        "A dying knight presses a sealed letter into your hands, gasping 'The king... must not... know...' before expiring..."
+                    ]
+                },
+                {
+                    type: 'social',
+                    hooks: [
+                        "Two rival factions approach your group simultaneously, each demanding you choose a side in their conflict...",
+                        "A mysterious figure in fine robes has been asking about you by name in every tavern in town...",
+                        "The local lord has heard of your exploits and 'requests' your presence at court immediately..."
+                    ]
+                }
+            ];
+            
+            const selectedType = hooks[Math.floor(Math.random() * hooks.length)];
+            const selectedHook = selectedType.hooks[Math.floor(Math.random() * selectedType.hooks.length)];
+            
+            return {
+                type: selectedType.type,
+                description: selectedHook
+            };
+        }
+
+        // Create opening narration based on campaign scenario
+        function startAdventureNarration() {
+            const campaign = window.currentCampaign || {};
+            const scenario = campaign.scenario || 'forgotten_realms';
+            const party = window.partyCharacters || [];
+            
+            // Build personalized opening based on scenario
+            let opening = "";
+            let voiceOpening = "";
+            
+            // Scenario-specific openings
+            const scenarioOpenings = {
+                forgotten_realms: {
+                    text: "The sun rises over the Sword Coast as your party gathers at the crossroads outside Waterdeep. The morning mist clings to the cobblestones, and merchants are already hawking their wares.",
+                    voice: "Welcome, brave adventurers, to the Forgotten Realms! The sun rises over the Sword Coast as your party gathers at the crossroads outside Waterdeep. The morning mist clings to the ancient cobblestones, and merchants are already hawking their wares. The city of splendors awaits, but your destiny lies elsewhere..."
+                },
+                ravenloft: {
+                    text: "The mists part reluctantly, revealing a land shrouded in perpetual twilight. Barovia stretches before you, a realm where hope itself seems a distant memory.",
+                    voice: "Welcome... to Barovia. The mists have chosen you, though whether for salvation or damnation remains to be seen. The land itself watches your every move, and somewhere in the distance, a wolf howls - or was it something worse? You stand at the gates of a realm where nightmares walk freely..."
+                },
+                eberron: {
+                    text: "The lightning rail hisses to a stop at Sharn Station. The City of Towers stretches impossibly high above and deep below, magical lights dancing between the spires.",
+                    voice: "Welcome to Eberron, where magic and technology intertwine! The lightning rail hisses to a stop at Sharn Station. The City of Towers stretches impossibly high above you and deep below, with bridges of magical force connecting the massive spires. Adventure awaits in every shadow of this city of wonders!"
+                },
+                spelljammer: {
+                    text: "Your spelljamming vessel drifts through the phlogiston, the rainbow-colored chaotic matter swirling outside the crystal sphere. A new world awaits.",
+                    voice: "Greetings, spacefarers! Your spelljamming vessel glides through the rainbow chaos of the phlogiston. The helm thrums with magical energy beneath your feet, and through the viewport, you can see a new crystal sphere approaching. What wonders and terrors await in this uncharted realm of wildspace?"
+                },
+                custom: {
+                    text: "Your adventure begins at a crossroads, both literal and metaphorical. The path ahead promises danger, glory, and discoveries beyond imagination.",
+                    voice: "Welcome, heroes, to a world of infinite possibilities! Your journey begins here, at this fateful moment when ordinary lives transform into legend. The very air seems to thrum with potential. What tale will you write in the annals of history?"
+                }
+            };
+            
+            const selectedOpening = scenarioOpenings[scenario] || scenarioOpenings.custom;
+            opening = selectedOpening.text;
+            voiceOpening = selectedOpening.voice;
+            
+            // Add a story hook
+            const hook = generateStoryHook();
+            opening += ` ${hook.description}`;
+            voiceOpening += ` ${hook.description}`;
+            
+            // Add party-specific flavor
+            if (party.length > 0) {
+                const partySize = party.length === 1 ? "alone" : `as a party of ${party.length}`;
+                const partyClasses = party.map(c => c.class).join(", ");
+                opening += ` You stand ${partySize}, ready to face whatever comes.`;
+                voiceOpening += ` You stand ${partySize} - ${partyClasses} - ready to face whatever destiny awaits. What do you do?`;
+            } else {
+                opening += " What will you do?";
+                voiceOpening += " The choice, as always, is yours. What do you do?";
+            }
+            
+            // Display the opening narration
+            const openingMessage = `
+                <div class="dm-message voice-message opening-narration">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="voice-indicator-small">🔊</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p class="opening-text">${opening}</p>
+                        <p class="dm-prompt"><em>What do you do?</em></p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(openingMessage);
+            
+            // Store the hook in story state
+            STORY_STATE.plotThreads.push(hook);
+            STORY_STATE.currentChapter = 'adventure_start';
+            
+            // Speak the opening
+            setTimeout(() => {
+                speakAsDM(voiceOpening);
+            }, 500);
+        }
+
+        // Generate dynamic story developments based on player actions
+        function generateStoryDevelopment(playerAction, context = {}) {
+            const action = playerAction.toLowerCase();
+            const currentTension = STORY_STATE.narrativeTension;
+            
+            // Check if action relates to existing plot threads
+            const relevantThread = STORY_STATE.plotThreads.find(thread => 
+                action.includes(thread.type) || 
+                thread.keywords?.some(keyword => action.includes(keyword))
+            );
+            
+            // Generate consequences that build on previous events
+            if (STORY_STATE.completedEvents.length > 0) {
+                const lastEvent = STORY_STATE.completedEvents[STORY_STATE.completedEvents.length - 1];
+                
+                // Create callbacks to previous events
+                if (Math.random() < 0.3) { // 30% chance of callback
+                    return {
+                        text: `Your actions remind you of ${lastEvent.description}. The consequences of that choice echo here...`,
+                        voice: `Interesting... your current choice mirrors what happened when ${lastEvent.description}. The threads of fate are weaving together. How will you handle it differently this time?`,
+                        continuity: true
+                    };
+                }
+            }
+            
+            // Escalate tension naturally
+            if (currentTension < 5 && Math.random() < 0.4) {
+                STORY_STATE.narrativeTension++;
+                return generateComplication();
+            }
+            
+            // Resolution opportunities at high tension
+            if (currentTension >= 7 && Math.random() < 0.5) {
+                return generateClimax();
+            }
+            
+            // Default to contextual development
+            return generateContextualDevelopment(playerAction, context);
+        }
+
+        // Generate complications to raise stakes
+        function generateComplication() {
+            const complications = [
+                {
+                    text: "Suddenly, things take an unexpected turn! A new threat emerges from an unforeseen direction.",
+                    voice: "Wait! Something's not right here. You notice movement in the shadows - you're not alone! This just became much more dangerous. How do you respond to this new threat?"
+                },
+                {
+                    text: "Your action has unintended consequences! The situation grows more complex.",
+                    voice: "Oh, this is interesting! Your action has triggered something unexpected. The simple task has become a web of complications. What started as straightforward is now anything but! What's your next move?"
+                },
+                {
+                    text: "A moral dilemma presents itself - the right choice is no longer clear.",
+                    voice: "Hold on... this situation is more complex than it appeared. You're faced with a choice where any action could have serious consequences for innocent people. There's no perfect solution here. What will you prioritize?"
+                }
+            ];
+            
+            return complications[Math.floor(Math.random() * complications.length)];
+        }
+
+        // Generate climactic moments
+        function generateClimax() {
+            const climaxes = [
+                {
+                    text: "This is it - the moment of truth! Everything has led to this critical juncture.",
+                    voice: "THIS IS IT! The moment of truth has arrived! Everything you've done has led to this crucial moment. The fate of everyone involved hangs in the balance. This is your chance to be heroes! What do you do?"
+                },
+                {
+                    text: "The tension reaches its breaking point! The situation demands immediate decisive action.",
+                    voice: "The tension snaps like a bowstring! No more time for deliberation - the moment demands action NOW! Success or failure, glory or disaster, it all comes down to this. Make your choice!"
+                }
+            ];
+            
+            STORY_STATE.narrativeTension = Math.max(1, STORY_STATE.narrativeTension - 3); // Reset tension after climax
+            return climaxes[Math.floor(Math.random() * climaxes.length)];
+        }
+
+        // Generate contextual story based on action type
+        function generateContextualDevelopment(playerAction, context) {
+            // This will evolve the story based on what the player does
+            const developments = {
+                explore: [
+                    "Your exploration reveals more than expected - the plot thickens!",
+                    "As you investigate, you uncover clues that connect to earlier events.",
+                    "Your discovery opens new possibilities and raises new questions."
+                ],
+                combat: [
+                    "The battle reveals the true stakes - this is bigger than you thought!",
+                    "Victory brings new information, but also new enemies.",
+                    "The fight changes everything - alliances shift and secrets are revealed."
+                ],
+                social: [
+                    "Your words have more impact than expected - relationships permanently change.",
+                    "The conversation reveals hidden motivations and secret alliances.",
+                    "Your diplomatic approach opens unexpected doors - or closes them forever."
+                ],
+                puzzle: [
+                    "Solving this reveals a piece of a larger mystery.",
+                    "The solution brings knowledge, but knowledge can be dangerous.",
+                    "Your success here cascades into new opportunities elsewhere."
+                ]
+            };
+            
+            // Determine action category
+            let category = 'explore'; // default
+            if (playerAction.includes('attack') || playerAction.includes('fight')) category = 'combat';
+            if (playerAction.includes('talk') || playerAction.includes('persuade')) category = 'social';
+            if (playerAction.includes('solve') || playerAction.includes('figure')) category = 'puzzle';
+            
+            const options = developments[category];
+            const selected = options[Math.floor(Math.random() * options.length)];
+            
+            // Add it to story beats
+            STORY_STATE.storyBeats.push({
+                action: playerAction,
+                development: selected,
+                timestamp: Date.now()
+            });
+            
+            return {
+                text: selected,
+                voice: `${selected} What do you do next?`,
+                category: category
+            };
+        }
+
         // Generate voice-enabled DM response with real DM personality
         function generateVoiceDMResponse(playerAction) {
             const action = playerAction.toLowerCase();
@@ -2682,6 +2955,13 @@
             } else if (campaign.scenario === 'spelljammer' && Math.random() < 0.3) {
                 selected.response += " The stars above seem to shift slightly...";
                 selected.voice += " The cosmic void around your ship seems to pulse with energy...";
+            }
+            
+            // Incorporate dynamic story development
+            const storyDev = generateStoryDevelopment(playerAction);
+            if (storyDev && Math.random() < 0.6) { // 60% chance to add story development
+                selected.response += ` ${storyDev.text}`;
+                selected.voice += ` ${storyDev.voice}`;
             }
             
             // Handle dice rolls
