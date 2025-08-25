@@ -1094,7 +1094,9 @@
                             <label for="elevenlabs-api-key">API Key:</label>
                             <input type="password" id="elevenlabs-api-key" placeholder="Enter your ElevenLabs API key" 
                                    value="${localStorage.getItem('elevenlabs_api_key') || ''}">
+                            <button type="button" onclick="testElevenLabsAPI()" class="secondary-button">Test API Key</button>
                             <small>Your API key is stored locally and never sent to our servers</small>
+                            <div id="elevenlabs-test-result"></div>
                         </div>
                         
                         <div class="form-group">
@@ -2177,28 +2179,48 @@
         
         // Load available ElevenLabs voices
         async function loadElevenLabsVoices() {
-            const apiKey = document.getElementById('elevenlabs-api-key').value || elevenLabsConfig.apiKey;
+            const apiKeyInput = document.getElementById('elevenlabs-api-key');
+            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : elevenLabsConfig.apiKey;
             const voiceSelect = document.getElementById('elevenlabs-voice-id');
             
-            if (!apiKey) {
-                voiceSelect.innerHTML = '<option value="">Enter API key first</option>';
+            if (!voiceSelect) {
+                console.error('Voice select element not found');
                 return;
             }
+            
+            if (!apiKey || apiKey.length < 10) {
+                voiceSelect.innerHTML = '<option value="">Enter valid API key first</option>';
+                return;
+            }
+            
+            console.log('Loading ElevenLabs voices with API key:', apiKey.substring(0, 8) + '...');
             
             try {
                 voiceSelect.innerHTML = '<option value="">Loading voices...</option>';
                 
                 const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+                    method: 'GET',
                     headers: {
-                        'xi-api-key': apiKey
+                        'xi-api-key': apiKey,
+                        'Content-Type': 'application/json'
                     }
                 });
                 
+                console.log('ElevenLabs API response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('ElevenLabs API error:', errorText);
+                    throw new Error(`API Error ${response.status}: ${errorText}`);
                 }
                 
                 const data = await response.json();
+                console.log('ElevenLabs response data:', data);
+                
+                if (!data.voices || !Array.isArray(data.voices)) {
+                    throw new Error('Invalid response format - no voices array');
+                }
+                
                 voiceSelect.innerHTML = '<option value="">Select a voice...</option>';
                 
                 data.voices.forEach(voice => {
@@ -2211,12 +2233,75 @@
                     voiceSelect.appendChild(option);
                 });
                 
-                console.log('Loaded', data.voices.length, 'ElevenLabs voices');
+                console.log('Successfully loaded', data.voices.length, 'ElevenLabs voices');
                 
             } catch (error) {
                 console.error('Error loading ElevenLabs voices:', error);
-                voiceSelect.innerHTML = '<option value="">Error loading voices</option>';
-                alert('Error loading voices. Please check your API key.');
+                voiceSelect.innerHTML = '<option value="">Error loading voices - check console</option>';
+                
+                // Show more helpful error messages
+                if (error.message.includes('401')) {
+                    alert('Invalid API key. Please check your ElevenLabs API key.');
+                } else if (error.message.includes('403')) {
+                    alert('Access forbidden. Please check your ElevenLabs subscription.');
+                } else if (error.message.includes('429')) {
+                    alert('Rate limit exceeded. Please wait and try again.');
+                } else if (error.message.includes('CORS')) {
+                    alert('CORS error - ElevenLabs API may not be accessible from this domain.');
+                } else {
+                    alert(`Error loading voices: ${error.message}`);
+                }
+            }
+        }
+
+        // Test ElevenLabs API key specifically
+        async function testElevenLabsAPI() {
+            const apiKeyInput = document.getElementById('elevenlabs-api-key');
+            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+            const resultDiv = document.getElementById('elevenlabs-test-result');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an API key first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span style="color: blue;">Testing API key...</span>';
+            
+            try {
+                const response = await fetch('https://api.elevenlabs.io/v1/user', {
+                    method: 'GET',
+                    headers: {
+                        'xi-api-key': apiKey
+                    }
+                });
+                
+                console.log('ElevenLabs user API response:', response.status);
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    resultDiv.innerHTML = '<span style="color: green;">✅ API key valid! Loading voices...</span>';
+                    console.log('User data:', userData);
+                    
+                    // Automatically load voices after successful API test
+                    setTimeout(() => {
+                        loadElevenLabsVoices();
+                    }, 1000);
+                    
+                } else {
+                    const errorText = await response.text();
+                    console.error('ElevenLabs API test error:', errorText);
+                    
+                    if (response.status === 401) {
+                        resultDiv.innerHTML = '<span style="color: red;">❌ Invalid API key</span>';
+                    } else if (response.status === 403) {
+                        resultDiv.innerHTML = '<span style="color: red;">❌ Access forbidden - check subscription</span>';
+                    } else {
+                        resultDiv.innerHTML = `<span style="color: red;">❌ Error ${response.status}: ${errorText}</span>`;
+                    }
+                }
+            } catch (error) {
+                console.error('API key test failed:', error);
+                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
             }
         }
         
