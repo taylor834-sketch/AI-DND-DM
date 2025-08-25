@@ -22,6 +22,9 @@ export default class UIManager {
             this.currentScreen = screenName;
             this.core.updateState({ currentScreen: screenName });
             
+            // Emit event for other modules to react to screen changes
+            this.core.emit('ui:screenShown', { screen: screenName });
+            
             console.log(`📺 Showing screen: ${screenName}`);
         } else {
             console.warn(`⚠️ Screen not found: ${screenName}`);
@@ -55,7 +58,7 @@ export default class UIManager {
             'create-campaign-btn': () => this.handleCreateCampaign(),
             'continue-campaign-btn': () => this.handleContinueCampaign(),
             'load-github-btn': () => this.handleLoadFromGitHub(),
-            'world-archive-btn': () => this.handleWorldArchive(),
+            'world-browser-btn': () => this.handleWorldBrowser(),
             'settings-btn': () => this.handleSettings()
         };
 
@@ -70,8 +73,7 @@ export default class UIManager {
 
     handleCreateCampaign() {
         console.log('🆕 Creating new campaign...');
-        this.core.emit('campaign:create');
-        this.showNotification('Starting new campaign creation...', 'info');
+        this.showScreen('campaignCreation');
     }
 
     handleContinueCampaign() {
@@ -85,9 +87,9 @@ export default class UIManager {
         this.showNotification('Connecting to GitHub...', 'info');
     }
 
-    handleWorldArchive() {
-        console.log('🌍 Opening world archive...');
-        this.showNotification('World Archive coming soon...', 'info');
+    handleWorldBrowser() {
+        console.log('🌍 Opening world browser...');
+        this.showScreen('worldBrowser');
     }
 
     handleSettings() {

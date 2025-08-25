@@ -34,6 +34,63 @@
     <!-- Main Stylesheet -->
     <link rel="stylesheet" href="./css/main.css">
     
+    <!-- Error Styles -->
+    <style>
+        .critical-error {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #1a1a1a;
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Crimson Text', serif;
+        }
+        .critical-error h2 {
+            color: #ff6666;
+            margin-top: 0;
+        }
+        .error-help {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .error-help h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        .error-help code {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .error-actions {
+            margin-top: 20px;
+        }
+        .error-actions button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .error-actions button:hover {
+            background: #45a049;
+        }
+        .error-actions button:nth-child(2) {
+            background: #2196F3;
+        }
+        .error-actions button:nth-child(2):hover {
+            background: #1976D2;
+        }
+    </style>
+    
     <!-- Preload critical resources -->
     <link rel="preload" href="./js/core.js" as="script">
     <link rel="preload" href="./css/main.css" as="style">
@@ -94,10 +151,10 @@
                         <span class="button-description">Sync your adventures</span>
                     </button>
 
-                    <button id="world-archive-btn" class="menu-button secondary-button">
+                    <button id="world-browser-btn" class="menu-button secondary-button">
                         <span class="button-icon">🌍</span>
-                        <span class="button-text">World Archive</span>
-                        <span class="button-description">Explore realms</span>
+                        <span class="button-text">World Browser</span>
+                        <span class="button-description">Explore NPCs, locations, and lore</span>
                     </button>
 
                     <button id="settings-btn" class="menu-button tertiary-button">
@@ -126,7 +183,7 @@
             <div class="settings-container">
                 <header class="screen-header">
                     <h2>Settings</h2>
-                    <button class="close-button" onclick="DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
+                    <button class="close-button" onclick="window.DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
                 </header>
                 
                 <div class="settings-content">
@@ -183,16 +240,659 @@
                 </div>
             </div>
         </div>
+
+        <!-- Campaign Creation Screen -->
+        <div id="campaignCreation-screen" class="screen campaign-creation-screen">
+            <div class="campaign-creation-container">
+                <header class="screen-header">
+                    <h2>Create New Campaign</h2>
+                    <button class="close-button" onclick="window.DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
+                </header>
+                
+                <form id="campaign-creation-form" class="campaign-form">
+                    <div class="form-section">
+                        <h3>Campaign Details</h3>
+                        
+                        <div class="form-group">
+                            <label for="campaign-name">Campaign Name *</label>
+                            <input type="text" id="campaign-name" name="campaignName" required 
+                                   placeholder="The Shattered Crown" maxlength="50">
+                            <small>Give your adventure a memorable name</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="world-seed">World Seed</label>
+                            <input type="text" id="world-seed" name="worldSeed" 
+                                   placeholder="mystical_forests_47291" maxlength="30">
+                            <small>Optional: Custom seed for world generation (leave blank for random)</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Campaign Style</h3>
+                        
+                        <div class="form-group">
+                            <label for="moral-complexity">Moral Complexity</label>
+                            <select id="moral-complexity" name="moralComplexity" required>
+                                <option value="simple">Simple - Clear good vs evil</option>
+                                <option value="nuanced" selected>Nuanced - Shades of gray with clear consequences</option>
+                                <option value="morally_gray">Morally Gray - Complex choices with no clear right answer</option>
+                            </select>
+                            <small>How complex should moral decisions be in your campaign?</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="starting-region">Starting Region</label>
+                            <select id="starting-region" name="startingRegion" required>
+                                <option value="sword_coast">Sword Coast - Classic D&D adventure region</option>
+                                <option value="underdark">Underdark - Dark underground realm</option>
+                                <option value="feywild">Feywild - Magical fey realm</option>
+                                <option value="shadowfell">Shadowfell - Dark reflection of the material plane</option>
+                                <option value="elemental_planes">Elemental Planes - Raw elemental forces</option>
+                                <option value="custom">Custom Region</option>
+                            </select>
+                            <small>Choose the starting location for your adventure</small>
+                        </div>
+
+                        <div class="form-group" id="custom-region-group" style="display: none;">
+                            <label for="custom-region-name">Custom Region Name</label>
+                            <input type="text" id="custom-region-name" name="customRegionName" 
+                                   placeholder="The Forgotten Realms" maxlength="40">
+                            <small>Name your custom starting region</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Starting Scenario</h3>
+                        <div class="scenario-selection">
+                            <div class="scenario-option" data-scenario="mysterious_caravan">
+                                <div class="scenario-header">
+                                    <h4>🚚 The Mysterious Caravan</h4>
+                                    <span class="scenario-difficulty">Beginner</span>
+                                </div>
+                                <p>A merchant caravan has gone missing on the trade routes. Investigate their disappearance and uncover a web of intrigue.</p>
+                                <div class="scenario-features">
+                                    <span class="feature">Investigation</span>
+                                    <span class="feature">Social Encounters</span>
+                                    <span class="feature">Mystery</span>
+                                </div>
+                            </div>
+
+                            <div class="scenario-option" data-scenario="goblin_raids">
+                                <div class="scenario-header">
+                                    <h4>⚔️ Goblin Raids</h4>
+                                    <span class="scenario-difficulty">Beginner</span>
+                                </div>
+                                <p>Goblin raiders threaten a peaceful village. Rally the townsfolk and drive back the goblin menace.</p>
+                                <div class="scenario-features">
+                                    <span class="feature">Combat</span>
+                                    <span class="feature">Tactics</span>
+                                    <span class="feature">Community</span>
+                                </div>
+                            </div>
+
+                            <div class="scenario-option" data-scenario="ancient_ruins">
+                                <div class="scenario-header">
+                                    <h4>🏛️ The Ancient Ruins</h4>
+                                    <span class="scenario-difficulty">Intermediate</span>
+                                </div>
+                                <p>Explore forgotten ruins filled with traps, puzzles, and ancient guardians protecting lost treasures.</p>
+                                <div class="scenario-features">
+                                    <span class="feature">Exploration</span>
+                                    <span class="feature">Puzzles</span>
+                                    <span class="feature">Treasure</span>
+                                </div>
+                            </div>
+
+                            <div class="scenario-option" data-scenario="political_intrigue">
+                                <div class="scenario-header">
+                                    <h4>👑 Court of Shadows</h4>
+                                    <span class="scenario-difficulty">Advanced</span>
+                                </div>
+                                <p>Navigate the dangerous waters of noble court politics, where words are weapons and alliances shift like shadows.</p>
+                                <div class="scenario-features">
+                                    <span class="feature">Roleplay</span>
+                                    <span class="feature">Intrigue</span>
+                                    <span class="feature">Politics</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selected-scenario" name="startingScenario" value="mysterious_caravan">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="secondary-button" onclick="window.DNDCore.getModule('ui').showScreen('mainMenu')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="primary-button">
+                            <span class="button-icon">✨</span>
+                            Create Campaign
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Character Setup Screen -->
+        <div id="characterSetup-screen" class="screen character-setup-screen">
+            <div class="character-setup-container">
+                <header class="screen-header">
+                    <h2>Character Setup</h2>
+                    <div class="header-actions">
+                        <button id="import-character-btn" class="secondary-button">Import from D&D Beyond</button>
+                        <button class="close-button" onclick="window.DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
+                    </div>
+                </header>
+
+                <!-- Import Character Modal -->
+                <div id="import-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Import D&D Beyond Character</h3>
+                            <button class="modal-close" onclick="this.closest('.modal').style.display='none'">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Copy and paste your character sheet text from D&D Beyond:</p>
+                            <textarea id="character-import-text" placeholder="Paste your D&D Beyond character sheet here..." rows="10"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="secondary-button" onclick="this.closest('.modal').style.display='none'">Cancel</button>
+                            <button id="parse-character-btn" class="primary-button">Parse Character</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Party Management -->
+                <div class="party-management">
+                    <h3>Party Members</h3>
+                    <div id="party-list" class="party-list">
+                        <div class="empty-party">
+                            <p>No characters in party. Import or create characters to get started.</p>
+                            <button class="primary-button" onclick="document.getElementById('import-modal').style.display='flex'">
+                                <span class="button-icon">👥</span>
+                                Add First Character
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Character Actions -->
+                <div class="character-actions" id="character-actions" style="display: none;">
+                    <button id="continue-to-game-btn" class="primary-button">
+                        <span class="button-icon">🎮</span>
+                        Continue to Game
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Character Sheet Screen -->
+        <div id="characterSheet-screen" class="screen character-sheet-screen">
+            <div class="character-sheet-container">
+                <header class="character-sheet-header">
+                    <div class="character-name-section">
+                        <h2 id="character-name">Character Name</h2>
+                        <div class="character-basics">
+                            <span id="character-class-level">Class Level</span>
+                            <span id="character-race">Race</span>
+                        </div>
+                    </div>
+                    <div class="party-switcher">
+                        <select id="character-switcher">
+                            <option>Select Character</option>
+                        </select>
+                    </div>
+                    <div class="header-actions">
+                        <button id="save-character-btn" class="secondary-button">Save</button>
+                        <button class="close-button" onclick="window.DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
+                    </div>
+                </header>
+
+                <!-- Character Sheet Tabs -->
+                <div class="character-tabs">
+                    <button class="tab-button active" data-tab="overview">Overview</button>
+                    <button class="tab-button" data-tab="abilities">Abilities</button>
+                    <button class="tab-button" data-tab="skills">Skills</button>
+                    <button class="tab-button" data-tab="inventory">Inventory</button>
+                    <button class="tab-button" data-tab="spells">Spells</button>
+                    <button class="tab-button" data-tab="features">Features</button>
+                    <button class="tab-button" data-tab="relationships">Relationships</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div id="overview-tab" class="tab-panel active">
+                        <div class="overview-grid">
+                            <div class="vital-stats">
+                                <h3>Vital Stats</h3>
+                                <div class="stat-row">
+                                    <label>Armor Class</label>
+                                    <span id="ac-value">10</span>
+                                </div>
+                                <div class="stat-row">
+                                    <label>Hit Points</label>
+                                    <div class="hp-section">
+                                        <input type="number" id="current-hp" min="0">
+                                        <span>/</span>
+                                        <span id="max-hp">1</span>
+                                    </div>
+                                </div>
+                                <div class="stat-row">
+                                    <label>Speed</label>
+                                    <span id="speed-value">30 ft</span>
+                                </div>
+                                <div class="stat-row">
+                                    <label>Proficiency Bonus</label>
+                                    <span id="prof-bonus">+2</span>
+                                </div>
+                            </div>
+
+                            <div class="ability-overview">
+                                <h3>Ability Scores</h3>
+                                <div class="ability-grid">
+                                    <div class="ability-score">
+                                        <div class="ability-name">STR</div>
+                                        <div class="ability-value" id="str-score">10</div>
+                                        <div class="ability-modifier" id="str-mod">+0</div>
+                                    </div>
+                                    <div class="ability-score">
+                                        <div class="ability-name">DEX</div>
+                                        <div class="ability-value" id="dex-score">10</div>
+                                        <div class="ability-modifier" id="dex-mod">+0</div>
+                                    </div>
+                                    <div class="ability-score">
+                                        <div class="ability-name">CON</div>
+                                        <div class="ability-value" id="con-score">10</div>
+                                        <div class="ability-modifier" id="con-mod">+0</div>
+                                    </div>
+                                    <div class="ability-score">
+                                        <div class="ability-name">INT</div>
+                                        <div class="ability-value" id="int-score">10</div>
+                                        <div class="ability-modifier" id="int-mod">+0</div>
+                                    </div>
+                                    <div class="ability-score">
+                                        <div class="ability-name">WIS</div>
+                                        <div class="ability-value" id="wis-score">10</div>
+                                        <div class="ability-modifier" id="wis-mod">+0</div>
+                                    </div>
+                                    <div class="ability-score">
+                                        <div class="ability-name">CHA</div>
+                                        <div class="ability-value" id="cha-score">10</div>
+                                        <div class="ability-modifier" id="cha-mod">+0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="character-info">
+                                <h3>Character Information</h3>
+                                <div class="info-row">
+                                    <label>Background:</label>
+                                    <span id="character-background">Unknown</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Alignment:</label>
+                                    <span id="character-alignment">Unknown</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Experience:</label>
+                                    <span id="character-xp">0 XP</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Abilities Tab -->
+                    <div id="abilities-tab" class="tab-panel">
+                        <div class="abilities-content">
+                            <div class="saving-throws">
+                                <h3>Saving Throws</h3>
+                                <div id="saving-throws-list" class="saves-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="ability-details">
+                                <h3>Ability Score Details</h3>
+                                <div id="ability-details-list" class="ability-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills Tab -->
+                    <div id="skills-tab" class="tab-panel">
+                        <h3>Skills</h3>
+                        <div id="skills-list" class="skills-list">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Inventory Tab -->
+                    <div id="inventory-tab" class="tab-panel">
+                        <div class="inventory-content">
+                            <div class="weapons-section">
+                                <h3>Weapons</h3>
+                                <div id="weapons-list" class="equipment-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="armor-section">
+                                <h3>Armor</h3>
+                                <div id="armor-list" class="equipment-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="items-section">
+                                <h3>Items</h3>
+                                <div id="items-list" class="equipment-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="currency-section">
+                                <h3>Currency</h3>
+                                <div class="currency-grid">
+                                    <div class="coin"><span class="coin-type">CP</span><span id="cp-amount">0</span></div>
+                                    <div class="coin"><span class="coin-type">SP</span><span id="sp-amount">0</span></div>
+                                    <div class="coin"><span class="coin-type">EP</span><span id="ep-amount">0</span></div>
+                                    <div class="coin"><span class="coin-type">GP</span><span id="gp-amount">0</span></div>
+                                    <div class="coin"><span class="coin-type">PP</span><span id="pp-amount">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spells Tab -->
+                    <div id="spells-tab" class="tab-panel">
+                        <div class="spells-content">
+                            <div class="spellcasting-info">
+                                <h3>Spellcasting</h3>
+                                <div class="spell-stats">
+                                    <div class="spell-stat">
+                                        <label>Spellcasting Ability</label>
+                                        <span id="spellcasting-ability">None</span>
+                                    </div>
+                                    <div class="spell-stat">
+                                        <label>Spell Save DC</label>
+                                        <span id="spell-save-dc">8</span>
+                                    </div>
+                                    <div class="spell-stat">
+                                        <label>Spell Attack Bonus</label>
+                                        <span id="spell-attack-bonus">+0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="spell-slots">
+                                <h3>Spell Slots</h3>
+                                <div id="spell-slots-list" class="slots-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="spells-known">
+                                <h3>Spells Known</h3>
+                                <div id="spells-list" class="spells-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features Tab -->
+                    <div id="features-tab" class="tab-panel">
+                        <h3>Features & Traits</h3>
+                        <div id="features-list" class="features-list">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Relationships Tab -->
+                    <div id="relationships-tab" class="tab-panel">
+                        <div class="relationships-content">
+                            <div class="backstory-section">
+                                <h3>Backstory</h3>
+                                <div class="backstory-item">
+                                    <label>Personality Traits:</label>
+                                    <div id="personality-traits" class="trait-list"></div>
+                                </div>
+                                <div class="backstory-item">
+                                    <label>Ideals:</label>
+                                    <div id="ideals" class="trait-list"></div>
+                                </div>
+                                <div class="backstory-item">
+                                    <label>Bonds:</label>
+                                    <div id="bonds" class="trait-list"></div>
+                                </div>
+                                <div class="backstory-item">
+                                    <label>Flaws:</label>
+                                    <div id="flaws" class="trait-list"></div>
+                                </div>
+                            </div>
+                            <div class="notes-section">
+                                <h3>Notes</h3>
+                                <textarea id="character-notes" placeholder="Character notes and relationships..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- World Browser Screen -->
+        <div id="worldBrowser-screen" class="screen world-browser-screen">
+            <div class="world-browser-container">
+                <header class="screen-header">
+                    <h2>World Browser</h2>
+                    <button class="close-button" onclick="window.DNDCore.getModule('ui').showScreen('mainMenu')">✕</button>
+                </header>
+
+                <!-- Search and Filters -->
+                <div class="world-browser-filters">
+                    <div class="search-section">
+                        <input type="text" id="world-search" placeholder="Search NPCs, locations, factions, events..." class="search-input">
+                        <button id="search-btn" class="search-button">🔍</button>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <label>Category:</label>
+                            <select id="category-filter">
+                                <option value="all">All</option>
+                                <option value="npcs">NPCs</option>
+                                <option value="locations">Locations</option>
+                                <option value="factions">Factions</option>
+                                <option value="events">Events</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Region:</label>
+                            <select id="region-filter">
+                                <option value="all">All Regions</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Status:</label>
+                            <select id="status-filter">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="hostile">Hostile</option>
+                                <option value="friendly">Friendly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- World Browser Tabs -->
+                <div class="world-browser-tabs">
+                    <button class="world-tab-button active" data-tab="all">All</button>
+                    <button class="world-tab-button" data-tab="npcs">NPCs</button>
+                    <button class="world-tab-button" data-tab="locations">Locations</button>
+                    <button class="world-tab-button" data-tab="factions">Factions</button>
+                    <button class="world-tab-button" data-tab="events">Events</button>
+                    <button class="world-tab-button" data-tab="timeline">Timeline</button>
+                    <button class="world-tab-button" data-tab="relationships">Relationships</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="world-tab-content">
+                    <!-- All Tab -->
+                    <div id="all-world-tab" class="world-tab-panel active">
+                        <div id="all-results" class="world-results-grid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- NPCs Tab -->
+                    <div id="npcs-world-tab" class="world-tab-panel">
+                        <div class="npc-section">
+                            <div class="section-header">
+                                <h3>Non-Player Characters</h3>
+                                <button id="add-npc-btn" class="add-button">+ Add NPC</button>
+                            </div>
+                            <div id="npc-results" class="npc-grid">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Locations Tab -->
+                    <div id="locations-world-tab" class="world-tab-panel">
+                        <div class="location-section">
+                            <div class="section-header">
+                                <h3>Locations</h3>
+                                <button id="add-location-btn" class="add-button">+ Add Location</button>
+                            </div>
+                            <div id="location-results" class="location-grid">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factions Tab -->
+                    <div id="factions-world-tab" class="world-tab-panel">
+                        <div class="faction-section">
+                            <div class="section-header">
+                                <h3>Factions</h3>
+                                <button id="add-faction-btn" class="add-button">+ Add Faction</button>
+                            </div>
+                            <div id="faction-results" class="faction-grid">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Events Tab -->
+                    <div id="events-world-tab" class="world-tab-panel">
+                        <div class="event-section">
+                            <div class="section-header">
+                                <h3>Events</h3>
+                                <button id="add-event-btn" class="add-button">+ Add Event</button>
+                            </div>
+                            <div id="event-results" class="event-list">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Tab -->
+                    <div id="timeline-world-tab" class="world-tab-panel">
+                        <div class="timeline-section">
+                            <h3>Campaign Timeline</h3>
+                            <div class="timeline-controls">
+                                <button id="timeline-filter-major" class="timeline-filter">Major Events</button>
+                                <button id="timeline-filter-all" class="timeline-filter active">All Events</button>
+                                <select id="timeline-date-range">
+                                    <option value="all">All Time</option>
+                                    <option value="recent">Last 30 Days</option>
+                                    <option value="session">Current Session</option>
+                                </select>
+                            </div>
+                            <div id="timeline-results" class="timeline-container">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relationships Tab -->
+                    <div id="relationships-world-tab" class="world-tab-panel">
+                        <div class="relationships-section">
+                            <h3>Relationship Map</h3>
+                            <div class="relationship-controls">
+                                <select id="relationship-focus">
+                                    <option value="all">Show All Relationships</option>
+                                    <option value="party">Party Connections</option>
+                                    <option value="factions">Faction Networks</option>
+                                    <option value="locations">Location Connections</option>
+                                </select>
+                                <button id="relationship-reset" class="secondary-button">Reset View</button>
+                            </div>
+                            <div id="relationship-map" class="relationship-map">
+                                <!-- Populated by JavaScript with visual relationship mapping -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- World Entity Detail Modal -->
+        <div id="world-detail-modal" class="modal">
+            <div class="modal-content world-detail-content">
+                <div class="modal-header">
+                    <h3 id="detail-title">Entity Details</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').style.display='none'">✕</button>
+                </div>
+                <div class="modal-body" id="detail-body">
+                    <!-- Populated by JavaScript based on entity type -->
+                </div>
+                <div class="modal-footer">
+                    <button id="edit-entity-btn" class="secondary-button">Edit</button>
+                    <button class="primary-button" onclick="this.closest('.modal').style.display='none'">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Entity Modal -->
+        <div id="entity-form-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="entity-form-title">Add Entity</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').style.display='none'">✕</button>
+                </div>
+                <div class="modal-body">
+                    <form id="entity-form">
+                        <div id="entity-form-fields">
+                            <!-- Populated dynamically based on entity type -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-button" onclick="this.closest('.modal').style.display='none'">Cancel</button>
+                    <button id="save-entity-btn" class="primary-button">Save</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Notification Container -->
     <div id="notification-container" class="notification-container"></div>
 
-    <!-- Scripts -->
-    <script type="module" src="./js/core.js"></script>
-    
     <!-- Initialize Application -->
-    <script>
+    <script type="module">
+        // Check browser compatibility first
+        const isModuleSupported = 'noModule' in HTMLScriptElement.prototype;
+        const isFileProtocol = window.location.protocol === 'file:';
+        
+        if (isFileProtocol) {
+            console.warn('⚠️ Running from file:// protocol. ES modules may not work properly.');
+            console.log('💡 For full functionality, serve this app from a web server (e.g., python -m http.server)');
+        }
+        
+        // Import the core module
+        import './js/core.js';
+        
         // Application initialization
         document.addEventListener('DOMContentLoaded', async () => {
             const loadingScreen = document.getElementById('loading-screen');
@@ -200,38 +900,123 @@
             const loadingText = document.getElementById('loading-text');
             const app = document.getElementById('app');
             
-            // Loading simulation
-            const loadingSteps = [
-                { progress: 10, text: 'Loading ancient scrolls...' },
-                { progress: 30, text: 'Preparing the realm...' },
-                { progress: 50, text: 'Gathering the party...' },
-                { progress: 70, text: 'Rolling initiative...' },
-                { progress: 90, text: 'Ready for adventure...' },
-                { progress: 100, text: 'Welcome, adventurer!' }
-            ];
-            
-            for (const step of loadingSteps) {
-                await new Promise(resolve => setTimeout(resolve, 300));
-                loadingProgress.style.width = step.progress + '%';
-                loadingText.textContent = step.text;
+            function updateProgress(progress, text) {
+                loadingProgress.style.width = progress + '%';
+                loadingText.textContent = text;
+                console.log(`📊 ${progress}%: ${text}`);
             }
             
-            // Initialize the core application
             try {
-                await DNDCore.init();
+                updateProgress(10, 'Loading ancient scrolls...');
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                updateProgress(20, 'Checking browser compatibility...');
+                // Browser checks
+                if (window.location.protocol === 'file:') {
+                    console.warn('🚨 File protocol detected - this may cause issues');
+                }
+                
+                updateProgress(30, 'Importing core modules...');
+                // Wait for DNDCore to be available globally
+                let attempts = 0;
+                while (!window.DNDCore && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    attempts++;
+                    if (attempts % 10 === 0) {
+                        updateProgress(30 + (attempts / 2), `Waiting for core module... (${attempts}/100)`);
+                    }
+                }
+                
+                if (!window.DNDCore) {
+                    throw new Error('DNDCore module failed to load after 5 seconds. This usually indicates a file:// protocol issue or JavaScript error.');
+                }
+                
+                updateProgress(60, 'Core module loaded successfully');
+                console.log('✅ DNDCore is available');
+                
+                updateProgress(70, 'Initializing application modules...');
+                
+                // Listen for core loading progress
+                window.DNDCore.on('core:loading_progress', (event) => {
+                    const { loaded, total, current } = event.detail;
+                    const moduleProgress = 70 + ((loaded / total) * 20);
+                    updateProgress(moduleProgress, `Loading ${current}... (${loaded}/${total})`);
+                });
+                
+                updateProgress(75, 'Starting core initialization...');
+                
+                // Initialize the core application with timeout
+                const initPromise = window.DNDCore.init();
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Initialization timed out after 30 seconds')), 30000);
+                });
+                
+                await Promise.race([initPromise, timeoutPromise]);
+                
+                updateProgress(95, 'Finalizing setup...');
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                updateProgress(100, 'Welcome, adventurer!');
+                console.log('🎉 Application initialized successfully');
                 
                 // Hide loading screen and show app
                 setTimeout(() => {
+                    console.log('🎬 Hiding loading screen');
                     loadingScreen.classList.add('fade-out');
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
                         app.style.opacity = '1';
+                        console.log('✅ Application fully loaded and visible');
                     }, 500);
-                }, 500);
+                }, 300);
                 
             } catch (error) {
-                loadingText.textContent = 'Error: Failed to initialize application';
+                loadingText.textContent = `Error: ${error.message}`;
                 console.error('Application initialization failed:', error);
+                
+                // Show detailed error in the error container
+                const errorContainer = document.getElementById('error-container');
+                if (errorContainer) {
+                    errorContainer.style.display = 'block';
+                    
+                    let helpText = '';
+                    if (window.location.protocol === 'file:') {
+                        helpText = `
+                            <div class="error-help">
+                                <h3>💡 Quick Fix</h3>
+                                <p>You're running this from a file:// URL, which causes security restrictions.</p>
+                                <p><strong>Solution:</strong> Run a local server:</p>
+                                <ol>
+                                    <li>Open terminal/command prompt in this folder</li>
+                                    <li>Run: <code>python -m http.server 8000</code></li>
+                                    <li>Open: <a href="http://localhost:8000" target="_blank">http://localhost:8000</a></li>
+                                </ol>
+                                <p>Or use the provided <code>start-server.py</code> script.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    errorContainer.innerHTML = `
+                        <div class="critical-error">
+                            <h2>⚠️ Initialization Error</h2>
+                            <p>The D&D Voice Adventure app failed to initialize.</p>
+                            ${helpText}
+                            <details>
+                                <summary>Technical Details</summary>
+                                <pre>${error.stack || error.message}</pre>
+                            </details>
+                            <div class="error-actions">
+                                <button onclick="location.reload()">🔄 Reload</button>
+                                <button onclick="window.open('README-SERVER.md', '_blank')">📖 Help Guide</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Hide loading screen after showing error
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 1000);
             }
         });
         
@@ -247,8 +1032,8 @@
         // Global error handler
         window.addEventListener('error', (event) => {
             console.error('Global error:', event.error);
-            if (DNDCore) {
-                DNDCore.handleCriticalError(event.error);
+            if (window.DNDCore) {
+                window.DNDCore.handleCriticalError(event.error);
             }
         });
         

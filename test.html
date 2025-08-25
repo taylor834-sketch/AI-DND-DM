@@ -48,6 +48,31 @@
         <div id="event-test">Testing...</div>
         <button onclick="testEventSystem()">Test Events</button>
     </div>
+    
+    <div class="test-section">
+        <h2>Campaign Manager Test</h2>
+        <div id="campaign-test">Testing...</div>
+        <button onclick="testCampaignManager()">Test Campaign Creation</button>
+        <button onclick="createSampleCampaign()">Create Sample Campaign</button>
+        <button onclick="listCampaigns()">List Campaigns</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Character Parser Test</h2>
+        <div id="character-test">Testing...</div>
+        <button onclick="testCharacterParser()">Test Character Parser</button>
+        <button onclick="testSampleCharacter()">Parse Sample Character</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Enhanced Inventory Test</h2>
+        <div id="inventory-test">Testing...</div>
+        <button onclick="testInventorySystem()">Test Inventory System</button>
+        <button onclick="loadSampleInventory()">Load Sample Inventory</button>
+        <button onclick="testDragAndDrop()">Test Drag & Drop</button>
+        <button onclick="testWeightCalculation()">Test Weight Calculation</button>
+        <button onclick="testItemSharing()">Test Item Sharing</button>
+    </div>
 
     <script type="module">
         // Import core module
@@ -135,6 +160,303 @@
             } catch (error) {
                 document.getElementById('event-test').innerHTML = '❌ Event test failed: ' + error.message;
                 document.getElementById('event-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testCampaignManager = () => {
+            try {
+                const campaignManager = DNDCore.getModule('campaignManager');
+                if (campaignManager) {
+                    document.getElementById('campaign-test').innerHTML = '✅ Campaign Manager loaded successfully';
+                    document.getElementById('campaign-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('Campaign Manager not found');
+                }
+            } catch (error) {
+                document.getElementById('campaign-test').innerHTML = '❌ Campaign Manager test failed: ' + error.message;
+                document.getElementById('campaign-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.createSampleCampaign = () => {
+            try {
+                const campaignManager = DNDCore.getModule('campaignManager');
+                if (!campaignManager) {
+                    throw new Error('Campaign Manager not found');
+                }
+                
+                // Create sample campaign data
+                const sampleCampaign = {
+                    meta: {
+                        id: `sample_${Date.now()}`,
+                        name: 'The Test Adventure',
+                        version: '1.0.0',
+                        created: new Date().toISOString(),
+                        lastModified: new Date().toISOString(),
+                        syncStatus: 'local'
+                    },
+                    settings: {
+                        worldSeed: 'test_realm_12345',
+                        moralComplexity: 'nuanced',
+                        startingRegion: 'sword_coast',
+                        startingScenario: 'mysterious_caravan'
+                    },
+                    gameState: {
+                        currentSession: 1,
+                        activeQuests: [{
+                            id: 'quest_001',
+                            title: 'Find the Missing Caravan',
+                            description: 'Investigate the disappearance of Gundren Rockseeker\'s caravan.',
+                            status: 'active'
+                        }],
+                        completedQuests: [],
+                        worldEvents: [],
+                        timeline: [{
+                            timestamp: new Date().toISOString(),
+                            event: 'Sample Campaign Created',
+                            description: 'This is a sample campaign for testing purposes.'
+                        }]
+                    },
+                    party: {
+                        characters: {},
+                        relationships: {},
+                        reputation: {}
+                    },
+                    world: {
+                        locations: {
+                            'loc_phandalin': {
+                                id: 'loc_phandalin',
+                                name: 'Phandalin',
+                                type: 'town',
+                                description: 'A small frontier town.',
+                                connections: []
+                            }
+                        },
+                        npcs: {
+                            'npc_gundren': {
+                                id: 'npc_gundren',
+                                name: 'Gundren Rockseeker',
+                                role: 'Merchant',
+                                description: 'A dwarf merchant who hired the party.',
+                                disposition: 'friendly'
+                            }
+                        },
+                        factions: {}
+                    }
+                };
+                
+                // Save the sample campaign
+                const campaignId = campaignManager.createCampaign(sampleCampaign);
+                
+                if (campaignId) {
+                    document.getElementById('campaign-test').innerHTML = `✅ Sample campaign created: ${campaignId}`;
+                    document.getElementById('campaign-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('Failed to create sample campaign');
+                }
+                
+            } catch (error) {
+                document.getElementById('campaign-test').innerHTML = '❌ Sample campaign creation failed: ' + error.message;
+                document.getElementById('campaign-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.listCampaigns = () => {
+            try {
+                const campaignManager = DNDCore.getModule('campaignManager');
+                if (!campaignManager) {
+                    throw new Error('Campaign Manager not found');
+                }
+                
+                const campaigns = campaignManager.listCampaigns();
+                const campaignCount = Object.keys(campaigns).length;
+                
+                document.getElementById('campaign-test').innerHTML = `✅ Found ${campaignCount} campaigns: ${Object.values(campaigns).map(c => c.name).join(', ')}`;
+                document.getElementById('campaign-test').parentElement.className = 'test-section success';
+                
+            } catch (error) {
+                document.getElementById('campaign-test').innerHTML = '❌ List campaigns failed: ' + error.message;
+                document.getElementById('campaign-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testCharacterParser = () => {
+            try {
+                const characterSheet = DNDCore.getModule('characterSheet');
+                if (characterSheet) {
+                    document.getElementById('character-test').innerHTML = '✅ Character Sheet Manager loaded successfully';
+                    document.getElementById('character-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('Character Sheet Manager not found');
+                }
+            } catch (error) {
+                document.getElementById('character-test').innerHTML = '❌ Character Parser test failed: ' + error.message;
+                document.getElementById('character-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testSampleCharacter = () => {
+            try {
+                const characterSheet = DNDCore.getModule('characterSheet');
+                if (!characterSheet) {
+                    throw new Error('Character Sheet Manager not found');
+                }
+                
+                const character = characterSheet.testParser();
+                
+                if (character && character.name) {
+                    document.getElementById('character-test').innerHTML = `✅ Sample character parsed: ${character.name} (${character.class} ${character.level})`;
+                    document.getElementById('character-test').parentElement.className = 'test-section success';
+                    console.log('Parsed character:', character);
+                } else {
+                    throw new Error('Failed to parse sample character');
+                }
+                
+            } catch (error) {
+                document.getElementById('character-test').innerHTML = '❌ Sample character parsing failed: ' + error.message;
+                document.getElementById('character-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testInventorySystem = () => {
+            try {
+                const inventorySystem = DNDCore.getModule('inventorySystem');
+                if (inventorySystem) {
+                    document.getElementById('inventory-test').innerHTML = '✅ Enhanced Inventory System loaded successfully';
+                    document.getElementById('inventory-test').parentElement.className = 'test-section success';
+                    
+                    // Test item database
+                    const itemCount = Object.keys(inventorySystem.itemDatabase).length;
+                    document.getElementById('inventory-test').innerHTML += `<br>📦 ${itemCount} items in database`;
+                } else {
+                    throw new Error('Inventory System not found');
+                }
+            } catch (error) {
+                document.getElementById('inventory-test').innerHTML = '❌ Inventory System test failed: ' + error.message;
+                document.getElementById('inventory-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.loadSampleInventory = () => {
+            try {
+                const inventorySystem = DNDCore.getModule('inventorySystem');
+                if (!inventorySystem) {
+                    throw new Error('Inventory System not found');
+                }
+                
+                const sampleCharacters = inventorySystem.loadSampleData();
+                
+                if (sampleCharacters && sampleCharacters.length > 0) {
+                    document.getElementById('inventory-test').innerHTML = `✅ Loaded ${sampleCharacters.length} sample characters with full inventory`;
+                    document.getElementById('inventory-test').parentElement.className = 'test-section success';
+                    
+                    // Show character details
+                    sampleCharacters.forEach((char, index) => {
+                        const itemCount = Object.values(char.equipment || {}).reduce((total, category) => {
+                            return total + (Array.isArray(category) ? category.length : 0);
+                        }, 0);
+                        document.getElementById('inventory-test').innerHTML += `<br>👤 ${char.name}: ${itemCount} items`;
+                    });
+                } else {
+                    throw new Error('Failed to create sample inventory');
+                }
+                
+            } catch (error) {
+                document.getElementById('inventory-test').innerHTML = '❌ Sample inventory loading failed: ' + error.message;
+                document.getElementById('inventory-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testDragAndDrop = () => {
+            try {
+                const inventorySystem = DNDCore.getModule('inventorySystem');
+                const characterSheet = DNDCore.getModule('characterSheet');
+                
+                if (!inventorySystem || !characterSheet) {
+                    throw new Error('Required modules not found');
+                }
+                
+                // Test drag and drop setup
+                const hasSetupMethod = typeof inventorySystem.setupDragAndDrop === 'function';
+                const hasMobileMethod = typeof inventorySystem.setupMobileHandlers === 'function';
+                
+                if (hasSetupMethod && hasMobileMethod) {
+                    document.getElementById('inventory-test').innerHTML = '✅ Drag & Drop functionality available for desktop and mobile';
+                    document.getElementById('inventory-test').parentElement.className = 'test-section success';
+                    
+                    // Test if we have sample data to drag
+                    if (characterSheet.party.length > 0) {
+                        document.getElementById('inventory-test').innerHTML += '<br>📱 Go to Character Sheet > Inventory tab to test drag & drop';
+                    }
+                } else {
+                    throw new Error('Drag and drop methods not available');
+                }
+                
+            } catch (error) {
+                document.getElementById('inventory-test').innerHTML = '❌ Drag & Drop test failed: ' + error.message;
+                document.getElementById('inventory-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testWeightCalculation = () => {
+            try {
+                const inventorySystem = DNDCore.getModule('inventorySystem');
+                const characterSheet = DNDCore.getModule('characterSheet');
+                
+                if (!inventorySystem || !characterSheet) {
+                    throw new Error('Required modules not found');
+                }
+                
+                if (characterSheet.party.length === 0) {
+                    throw new Error('No characters to test with. Load sample inventory first.');
+                }
+                
+                // Test weight calculation with first character
+                const testCharacter = characterSheet.party[0];
+                const encumbrance = inventorySystem.calculateEncumbrance(testCharacter.id);
+                
+                if (encumbrance && typeof encumbrance.totalWeight === 'number') {
+                    document.getElementById('inventory-test').innerHTML = `✅ Weight calculation working`;
+                    document.getElementById('inventory-test').innerHTML += `<br>⚖️ ${testCharacter.name}: ${encumbrance.totalWeight}/${encumbrance.maxWeight} lbs (${encumbrance.encumbranceStatus})`;
+                    document.getElementById('inventory-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('Weight calculation returned invalid data');
+                }
+                
+            } catch (error) {
+                document.getElementById('inventory-test').innerHTML = '❌ Weight calculation test failed: ' + error.message;
+                document.getElementById('inventory-test').parentElement.className = 'test-section error';
+            }
+        };
+        
+        window.testItemSharing = () => {
+            try {
+                const inventorySystem = DNDCore.getModule('inventorySystem');
+                const characterSheet = DNDCore.getModule('characterSheet');
+                
+                if (!inventorySystem || !characterSheet) {
+                    throw new Error('Required modules not found');
+                }
+                
+                if (characterSheet.party.length < 2) {
+                    throw new Error('Need at least 2 characters to test item sharing. Load sample inventory first.');
+                }
+                
+                // Test item sharing functionality
+                const hasShareMethod = typeof inventorySystem.shareWithParty === 'function';
+                const hasTransferMethod = typeof inventorySystem.transferItem === 'function';
+                
+                if (hasShareMethod && hasTransferMethod) {
+                    document.getElementById('inventory-test').innerHTML = `✅ Item sharing functionality available`;
+                    document.getElementById('inventory-test').innerHTML += `<br>👥 Can share items between ${characterSheet.party.length} party members`;
+                    document.getElementById('inventory-test').parentElement.className = 'test-section success';
+                } else {
+                    throw new Error('Item sharing methods not available');
+                }
+                
+            } catch (error) {
+                document.getElementById('inventory-test').innerHTML = '❌ Item sharing test failed: ' + error.message;
+                document.getElementById('inventory-test').parentElement.className = 'test-section error';
             }
         };
     </script>

@@ -5,7 +5,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Read(/C:\\c\\Users\\taylo/**)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

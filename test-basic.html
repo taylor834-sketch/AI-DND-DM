@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basic Test</title>
+</head>
+<body>
+    <h1>Basic JavaScript Test</h1>
+    <div id="status">Testing...</div>
+    
+    <!-- Test 1: Basic JavaScript -->
+    <script>
+        console.log('Basic script loaded');
+        document.getElementById('status').textContent = 'Basic JavaScript works!';
+    </script>
+    
+    <!-- Test 2: ES Modules -->
+    <script type="module">
+        console.log('ES Module script loaded');
+        
+        // Test if we can import anything
+        try {
+            // Try to import a simple module
+            const module = await import('./js/ui.js');
+            console.log('Module import successful:', module);
+            document.getElementById('status').textContent = 'ES Modules work!';
+        } catch (error) {
+            console.error('Module import failed:', error);
+            document.getElementById('status').textContent = 'ES Module Error: ' + error.message;
+            document.getElementById('status').style.color = 'red';
+        }
+    </script>
+</body>
+</html>
