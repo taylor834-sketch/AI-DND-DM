@@ -45,7 +45,7 @@ core.emit('relationships:updateRelationship', {
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/taylor834-sketch/DND-Game.git
+   git clone https://github.com/taylor834-sketch/AI-DND-DM.git
    cd dnd-voice-adventure
    ```
 
@@ -74,7 +74,7 @@ core.emit('relationships:updateRelationship', {
    - Source: Deploy from branch
    - Branch: main / (root)
 
-3. **Access your game** at `https://taylor834-sketch.github.io/DND-Game/`
+3. **Access your game** at `https://taylor834-sketch.github.io/AI-DND-DM/`
 
 ## 📁 Project Structure
 

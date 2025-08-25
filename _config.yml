@@ -5,7 +5,7 @@ baseurl: ""
 url: "https://taylor834-sketch.github.io"
 
 # Repository information
-repository: "taylor834-sketch/DND-Game"
+repository: "taylor834-sketch/AI-DND-DM"
 
 # Theme
 theme: minima
@@ -45,7 +45,7 @@ twitter:
 social:
   name: D&D Voice Adventure
   links:
-    - https://github.com/taylor834-sketch/DND-Game
+    - https://github.com/taylor834-sketch/AI-DND-DM
 
 # Collections (for future expansion)
 collections_dir: collections
