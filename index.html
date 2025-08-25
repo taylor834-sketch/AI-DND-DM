@@ -2438,61 +2438,183 @@
             }, 1000);
         }
         
-        // Generate voice-enabled DM response
+        // Enhanced DM personality and game state
+        const DM_STATE = {
+            combatActive: false,
+            currentLocation: null,
+            npcsNearby: [],
+            recentEvents: [],
+            tensionLevel: 1
+        };
+
+        // Generate voice-enabled DM response with real DM personality
         function generateVoiceDMResponse(playerAction) {
-            const responses = [
-                {
-                    condition: playerAction.toLowerCase().includes('left') || playerAction.toLowerCase().includes('forest'),
-                    response: "You venture deeper into the forest. The strange lights dance between the ancient trees, leading you to a hidden clearing where an old stone altar sits covered in glowing runes. A soft humming fills the air.",
-                    voice: "You venture deeper into the forest. The strange lights dance between the ancient trees, leading you to a hidden clearing where an old stone altar sits covered in glowing runes. A soft humming fills the air. What do you do next?"
-                },
-                {
-                    condition: playerAction.toLowerCase().includes('right') || playerAction.toLowerCase().includes('settlement'),
-                    response: "You approach the settlement, which turns out to be a small trading post. A weathered innkeeper greets you warmly, offering hot food and tales of recent strange happenings in the region.",
-                    voice: "You approach the settlement, which turns out to be a small trading post. A weathered innkeeper greets you warmly, offering hot food and tales of recent strange happenings in the region. What would you like to do?"
-                },
-                {
-                    condition: playerAction.toLowerCase().includes('investigate') || playerAction.toLowerCase().includes('examine') || playerAction.toLowerCase().includes('look'),
-                    response: "Your investigation reveals more than you initially expected. Let me roll for your Investigation check...",
-                    voice: "Your investigation reveals more than you initially expected. Let me roll for your Investigation check.",
+            const action = playerAction.toLowerCase();
+            const campaign = window.currentCampaign || {};
+            
+            // Combat responses - much more engaging
+            if (action.includes('attack') || action.includes('fight') || action.includes('combat') || action.includes('hit') || action.includes('strike')) {
+                const combatResponses = [
+                    {
+                        response: "Your blade flashes in the light as you move to strike! Roll for initiative - we're entering combat! What's your target?",
+                        voice: "Steel rings as weapons are drawn! Roll for initiative everyone! Who or what are you attacking, and describe your approach!",
+                        requiresDMRoll: true,
+                        rollType: 'initiative'
+                    },
+                    {
+                        response: "Violence erupts! The air crackles with tension as battle is joined! Everyone roll initiative!",
+                        voice: "The peaceful moment shatters into chaos! Weapons drawn, spells at the ready - roll for initiative! Describe your opening move!",
+                        requiresDMRoll: true,
+                        rollType: 'initiative'
+                    },
+                    {
+                        response: "Your hostile intent is clear! Combat begins - roll initiative and tell me your first action!",
+                        voice: "Battle is joined! The clash of combat echoes through the area! Roll initiative and tell me - how does your character react in this critical moment?",
+                        requiresDMRoll: true,
+                        rollType: 'initiative'
+                    }
+                ];
+                DM_STATE.combatActive = true;
+                return combatResponses[Math.floor(Math.random() * combatResponses.length)];
+            }
+            
+            // Investigation/Perception - more descriptive
+            if (action.includes('look') || action.includes('search') || action.includes('investigate') || action.includes('examine') || action.includes('inspect')) {
+                const investigateResponses = [
+                    {
+                        response: "Your trained eye scans the area methodically. Roll Investigation or Perception - d20 plus your modifier!",
+                        voice: "You focus intently, your senses sharpening as you examine every detail. Roll an Investigation or Perception check - what specifically draws your attention?",
+                        requiresDMRoll: true,
+                        rollType: 'perception'
+                    },
+                    {
+                        response: "Something about this place feels... different. Make an Investigation check to see what you discover!",
+                        voice: "The hairs on your neck stand up - something here deserves closer inspection. Roll Investigation and tell me where you're focusing your search!",
+                        requiresDMRoll: true,
+                        rollType: 'investigation'
+                    },
+                    {
+                        response: "You take a moment to carefully observe your surroundings. Roll Perception and add your Wisdom modifier!",
+                        voice: "Time seems to slow as you take in every detail around you. Roll a Perception check - are you looking for danger, treasure, or something else?",
+                        requiresDMRoll: true,
+                        rollType: 'perception'
+                    }
+                ];
+                return investigateResponses[Math.floor(Math.random() * investigateResponses.length)];
+            }
+            
+            // Social interactions - more nuanced
+            if (action.includes('talk') || action.includes('speak') || action.includes('say') || action.includes('ask') || action.includes('tell')) {
+                const socialResponses = [
+                    {
+                        response: "The figure turns to face you, eyebrow raised. Your words will matter here - make a Persuasion, Deception, or Intimidation check!",
+                        voice: "The figure's full attention locks onto you, weighing every word. How are you approaching this - with honeyed words, clever lies, or implied threats? Roll the appropriate Charisma check!",
+                        requiresDMRoll: true,
+                        rollType: 'charisma'
+                    },
+                    {
+                        response: "Your voice cuts through the tension. The NPC's reaction depends on your approach - roll a Charisma-based skill check!",
+                        voice: "Your words hang heavy in the air between you. I can see the gears turning in their mind. Are you being persuasive, deceptive, or intimidating? Make your roll and tell me your exact words!",
+                        requiresDMRoll: true,
+                        rollType: 'charisma'
+                    }
+                ];
+                return socialResponses[Math.floor(Math.random() * socialResponses.length)];
+            }
+            
+            // Movement and exploration - more atmospheric
+            if (action.includes('go') || action.includes('move') || action.includes('walk') || action.includes('enter') || action.includes('leave')) {
+                const moveResponses = [
+                    {
+                        response: "You move forward, each step taking you deeper into the unknown. The atmosphere shifts noticeably...",
+                        voice: "Your footsteps echo as you advance. The air grows thick with possibility. Are you moving cautiously or boldly? And keep your eyes open - this place holds secrets!",
+                        requiresDMRoll: false
+                    },
+                    {
+                        response: "The path ahead beckons. As you progress, new details emerge from the shadows. Roll Perception to see what you notice!",
+                        voice: "You press onward, the environment changing subtly around you. Roll a Perception check as you move - something here might be worth your attention. How quickly are you traveling?",
+                        requiresDMRoll: true,
+                        rollType: 'perception'
+                    }
+                ];
+                return moveResponses[Math.floor(Math.random() * moveResponses.length)];
+            }
+            
+            // Stealth actions - tension building
+            if (action.includes('sneak') || action.includes('hide') || action.includes('stealth') || action.includes('quiet')) {
+                return {
+                    response: "You become one with the shadows, moving like a ghost. Roll Stealth - d20 plus Dexterity modifier!",
+                    voice: "Silent as death itself, you slip into concealment. Your heart pounds but your movements are smooth. Roll a Stealth check and tell me - what are you trying to avoid being noticed by?",
                     requiresDMRoll: true,
-                    rollType: 'investigation'
+                    rollType: 'stealth'
+                };
+            }
+            
+            // Spellcasting - magical flair
+            if (action.includes('cast') || action.includes('spell') || action.includes('magic') || action.includes('cantrip')) {
+                return {
+                    response: "Arcane energy crackles around your fingers as you begin the incantation! What spell are you casting?",
+                    voice: "The Weave responds to your call! Mystical energy swirls around you as reality bends to your will! What spell are you casting, at what level, and who or what is your target? Describe the casting!",
+                    requiresDMRoll: false,
+                    spellcasting: true
+                };
+            }
+            
+            // Skill checks and abilities
+            if (action.includes('climb') || action.includes('jump') || action.includes('swim') || action.includes('lift')) {
+                return {
+                    response: "Your muscles tense as you attempt this physical feat. Roll Athletics - d20 plus Strength modifier!",
+                    voice: "Time to test your physical prowess! Your body coils like a spring ready to release. Roll an Athletics check and describe your technique - are you going for power or finesse?",
+                    requiresDMRoll: true,
+                    rollType: 'athletics'
+                };
+            }
+            
+            // Rest and recovery
+            if (action.includes('rest') || action.includes('sleep') || action.includes('camp')) {
+                return {
+                    response: "You find a suitable spot to rest. Are you taking a short rest (1 hour) or a long rest (8 hours)? Roll Perception to ensure the area is safe!",
+                    voice: "Exhaustion weighs on you, and rest is needed. You scout for a defensible position. Will this be a short rest to catch your breath, or a long rest to fully recover? Roll Perception to check for danger while you rest!",
+                    requiresDMRoll: true,
+                    rollType: 'perception'
+                };
+            }
+            
+            // Default responses - still engaging
+            const defaultResponses = [
+                {
+                    response: "That's an interesting approach! The world responds to your actions in unexpected ways. Tell me more about what you're trying to accomplish.",
+                    voice: "Now that's thinking outside the box! Your action sets events in motion that even I didn't anticipate. Give me more details about your plan - what's your end goal here?",
+                    requiresDMRoll: Math.random() < 0.4
                 },
                 {
-                    condition: playerAction.toLowerCase().includes('attack') || playerAction.toLowerCase().includes('fight') || playerAction.toLowerCase().includes('combat'),
-                    response: "Combat begins! Let me roll for initiative and determine what happens next!",
-                    voice: "Combat begins! Let me roll for initiative and determine what happens next!",
-                    requiresDMRoll: true,
-                    rollType: 'initiative'
+                    response: "Your choice ripples through the scene like a stone in still water. Something is about to happen...",
+                    voice: "Bold move! The consequences of your action are already beginning to manifest. The tension in the air is palpable. What are you prepared to do if this goes sideways?",
+                    requiresDMRoll: Math.random() < 0.5
                 },
                 {
-                    condition: playerAction.toLowerCase().includes('talk') || playerAction.toLowerCase().includes('speak') || playerAction.toLowerCase().includes('say'),
-                    response: "Your words carry weight in this moment. The NPC listens intently, their expression shifting as they consider your words carefully. Let me roll to see how they react...",
-                    voice: "Your words carry weight in this moment. The NPC listens intently, their expression shifting as they consider your words carefully. Let me roll to see how they react.",
-                    requiresDMRoll: true,
-                    rollType: 'persuasion'
+                    response: "The dice of fate are rolling behind the cosmic screen! Your action triggers a chain of events...",
+                    voice: "Ah, the plot thickens! Your decision opens new possibilities I hadn't considered. The story takes an interesting turn here. How committed are you to this course of action?",
+                    requiresDMRoll: Math.random() < 0.3
                 }
             ];
             
-            // Find matching response or use default
-            let selectedResponse = responses.find(r => r.condition) || {
-                response: "Interesting choice! The consequences of your action begin to unfold before you. The world reacts to your decision in ways both expected and surprising.",
-                voice: "Interesting choice! The consequences of your action begin to unfold before you. The world reacts to your decision in ways both expected and surprising. What do you do next?",
-                requiresDMRoll: Math.random() < 0.3 // 30% chance of requiring a roll
-            };
+            const selected = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
             
-            // Add some dynamic elements based on campaign
-            const campaign = window.currentCampaign;
-            if (campaign?.moralComplexity === 'morally_gray') {
-                selectedResponse.response += " The moral implications of this choice are not immediately clear...";
-                selectedResponse.voice += " The moral implications of this choice are not immediately clear.";
+            // Add campaign flavor
+            if (campaign.scenario === 'ravenloft' && Math.random() < 0.3) {
+                selected.response += " The mists seem to thicken around you...";
+                selected.voice += " And I should mention - the dark mists of Barovia seem to be taking notice of your actions...";
+            } else if (campaign.scenario === 'spelljammer' && Math.random() < 0.3) {
+                selected.response += " The stars above seem to shift slightly...";
+                selected.voice += " The cosmic void around your ship seems to pulse with energy...";
             }
             
-            // Handle DM dice rolling if required
-            if (selectedResponse.requiresDMRoll) {
-                handleDMDiceRoll(selectedResponse, playerAction);
+            // Handle dice rolls
+            if (selected.requiresDMRoll) {
+                handleDMDiceRoll(selected, playerAction);
             } else {
-                displayDMResponse(selectedResponse.response, selectedResponse.voice);
+                displayDMResponse(selected.response, selected.voice);
             }
         }
         
@@ -2536,26 +2658,87 @@
             }, 2000);
         }
         
-        // Generate response based on DM dice roll result
+        // Generate response based on DM dice roll result with proper D&D flair
         function generateRollBasedResponse(rollDescription, total, originalAction) {
             let followupResponse = "";
             let followupVoice = "";
+            const rollType = rollDescription.toLowerCase();
             
-            if (total >= 18) {
-                followupResponse = "Exceptional success! Your action succeeds beyond your wildest expectations, revealing hidden opportunities and advantages.";
-                followupVoice = "Exceptional success! Your action succeeds beyond your wildest expectations, revealing hidden opportunities and advantages. What do you do with this amazing result?";
-            } else if (total >= 15) {
-                followupResponse = "Great success! Your action works very well, achieving exactly what you hoped for and perhaps a little more.";
-                followupVoice = "Great success! Your action works very well, achieving exactly what you hoped for and perhaps a little more. How do you proceed?";
-            } else if (total >= 10) {
-                followupResponse = "Moderate success! Your action succeeds, though not without some complications or unexpected twists.";
-                followupVoice = "Moderate success! Your action succeeds, though not without some complications or unexpected twists. What's your next move?";
-            } else if (total >= 5) {
-                followupResponse = "Partial success with complications. Your action has some effect, but creates new challenges to overcome.";
-                followupVoice = "Partial success with complications. Your action has some effect, but creates new challenges to overcome. How do you adapt?";
-            } else {
-                followupResponse = "Things don't go as planned. Your action has unintended consequences that complicate the situation significantly.";
-                followupVoice = "Things don't go as planned. Your action has unintended consequences that complicate the situation significantly. How do you respond to this setback?";
+            // Natural 20 - Critical Success!
+            if (total === 20 || total >= 25) {
+                const criticalSuccesses = [
+                    {
+                        response: "NATURAL 20! Critical Success! The dice gods smile upon you! Your action succeeds spectacularly, creating an opportunity for advantage!",
+                        voice: "NATURAL TWENTY! Critical success! The fates themselves conspire in your favor! Not only does your action succeed brilliantly, but you've created an opening for something more! Describe your moment of triumph!"
+                    },
+                    {
+                        response: "CRIT! Legendary success! Your action succeeds so well that it becomes the stuff of tavern tales!",
+                        voice: "CRITICAL HIT on the skill check! This is the kind of moment bards write songs about! Your success is so complete it changes the situation entirely in your favor! How does your character celebrate this incredible moment?"
+                    }
+                ];
+                const crit = criticalSuccesses[Math.floor(Math.random() * criticalSuccesses.length)];
+                followupResponse = crit.response;
+                followupVoice = crit.voice;
+            }
+            // High Success (18-19)
+            else if (total >= 18) {
+                if (rollType.includes('stealth')) {
+                    followupResponse = "Like a shadow given form, you move completely undetected. You're practically invisible!";
+                    followupVoice = "You've become one with the shadows themselves! No one has any idea you're there. You have complete tactical advantage - what's your next move from the shadows?";
+                } else if (rollType.includes('perception') || rollType.includes('investigation')) {
+                    followupResponse = "Your keen senses reveal hidden details others would miss! You notice something very important...";
+                    followupVoice = "Your sharp eyes catch every detail! Not only do you see what you were looking for, but you notice something else entirely - something that changes everything! What catches your attention most?";
+                } else if (rollType.includes('persuasion') || rollType.includes('charisma')) {
+                    followupResponse = "Your words strike the perfect chord! The NPC is not just convinced - they're eager to help!";
+                    followupVoice = "Your silver tongue works its magic perfectly! The NPC's entire demeanor shifts - they're not just willing to help, they're enthusiastic about it! They lean in closer and say...";
+                } else if (rollType.includes('initiative')) {
+                    followupResponse = "Lightning reflexes! You act before anyone else can even blink! You have the drop on your enemies!";
+                    followupVoice = "Incredible reflexes! Time seems to slow as you spring into action before anyone else can react! You have complete control of the battlefield's opening moments - make them count!";
+                } else {
+                    followupResponse = "Exceptional success! Fortune favors the bold, and you've proven very bold indeed!";
+                    followupVoice = "Outstanding! Your skill and luck combine for a truly exceptional result! The dice love you today! How do you capitalize on this golden opportunity?";
+                }
+            }
+            // Good Success (15-17)
+            else if (total >= 15) {
+                if (rollType.includes('combat') || rollType.includes('attack')) {
+                    followupResponse = "Solid hit! Your attack finds its mark with satisfying impact!";
+                    followupVoice = "A clean hit! Your strike lands true, and you can see the effect immediately! Your enemy staggers - press the advantage!";
+                } else {
+                    followupResponse = "Success! Your action achieves exactly what you intended, clean and effective!";
+                    followupVoice = "Well done! Your approach works perfectly, achieving your goal with style! The path forward is clear - what's your next step?";
+                }
+            }
+            // Moderate Success (10-14)
+            else if (total >= 10) {
+                followupResponse = "You succeed, but it's not pretty. The job gets done with a few complications along the way.";
+                followupVoice = "Success, but barely! You manage to accomplish your goal, though not without drawing some unwanted attention or creating a new problem. How do you handle the complication?";
+            }
+            // Close Failure (5-9)
+            else if (total >= 5) {
+                followupResponse = "So close! You almost succeed, but fall just short. However, all is not lost - you might try a different approach.";
+                followupVoice = "Almost! You were so close to success, but not quite there. The good news is you learned something from the attempt. Want to try a different tactic, or double down on this one?";
+            }
+            // Natural 1 or Critical Failure
+            else if (total === 1 || total <= 4) {
+                const criticalFailures = [
+                    {
+                        response: "NATURAL 1! Critical failure! The dice betray you spectacularly! This is going to hurt...",
+                        voice: "OOF! Natural one! Critical failure! Not only does your action fail, but it fails in the most spectacular way possible! Something has gone terribly, hilariously wrong! How does your character react to this disaster?"
+                    },
+                    {
+                        response: "Catastrophic failure! Your action backfires completely, creating a whole new problem!",
+                        voice: "Oh no! That's a critical failure! Your attempt goes so wrong it actually makes things worse! The universe itself seems to be laughing at you! Quick, damage control - what do you do?"
+                    }
+                ];
+                const fail = criticalFailures[Math.floor(Math.random() * criticalFailures.length)];
+                followupResponse = fail.response;
+                followupVoice = fail.voice;
+            }
+            // Regular Failure
+            else {
+                followupResponse = "Failure. Your action doesn't work as intended, and the situation remains challenging.";
+                followupVoice = "That's a failure. Your attempt doesn't achieve what you hoped, and you'll need to reconsider your approach. The situation is getting tense - what's plan B?";
             }
             
             displayDMResponse(followupResponse, followupVoice);
