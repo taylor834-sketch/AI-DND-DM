@@ -48,9 +48,15 @@ export default class UIManager {
     }
 
     setupMainMenuHandlers() {
-        document.addEventListener('DOMContentLoaded', () => {
+        // Check if DOM is already loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.bindButtonEvents();
+            });
+        } else {
+            // DOM is already loaded, bind events immediately
             this.bindButtonEvents();
-        });
+        }
     }
 
     bindButtonEvents() {
