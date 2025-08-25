@@ -934,6 +934,9 @@
                                     <button class="voice-button secondary-button" onclick="openVoiceSettings()">
                                         ⚙️ Voice Settings
                                     </button>
+                                    <button class="voice-button secondary-button" onclick="openAIDMSettings()">
+                                        🤖 AI Settings
+                                    </button>
                                 </div>
                             </div>
                             
@@ -979,6 +982,86 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI DM Settings Modal -->
+        <div id="ai-dm-settings-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🤖 AI Dungeon Master Settings</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').style.display='none'">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="ai-engine-selection">
+                        <h4>AI Engine</h4>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="aiEngine" value="templates" checked>
+                                Template-Based (Free, Basic)
+                            </label>
+                            <label>
+                                <input type="radio" name="aiEngine" value="openai">
+                                OpenAI GPT (Premium, Dynamic)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="openai-settings" style="display: none;">
+                        <div class="form-group">
+                            <label for="openai-api-key">OpenAI API Key</label>
+                            <input type="password" id="openai-api-key" placeholder="sk-...">
+                            <small>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="openai-model">Model</label>
+                            <select id="openai-model">
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Fast, Economical)</option>
+                                <option value="gpt-4">GPT-4 (Best Quality)</option>
+                                <option value="gpt-4-turbo-preview">GPT-4 Turbo (Fast, High Quality)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ai-creativity">Creativity Level</label>
+                            <input type="range" id="ai-creativity" min="0" max="100" value="70">
+                            <span id="ai-creativity-display">70%</span>
+                            <small>Higher = more creative/unpredictable responses</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ai-response-length">Response Length</label>
+                            <select id="ai-response-length">
+                                <option value="brief">Brief (1-2 sentences)</option>
+                                <option value="normal" selected>Normal (2-4 sentences)</option>
+                                <option value="detailed">Detailed (4-6 sentences)</option>
+                                <option value="verbose">Verbose (6+ sentences)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ai-use-campaign-context" checked>
+                                Use Campaign Context (scenario, party, history)
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ai-use-reference-data" checked>
+                                Use D&D Reference Data (monsters, rules, items)
+                            </label>
+                        </div>
+                        
+                        <button class="secondary-button" onclick="testOpenAIConnection()">Test Connection</button>
+                        <div id="openai-test-result"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-button" onclick="this.closest('.modal').style.display='none'">Cancel</button>
+                    <button class="primary-button" onclick="saveAIDMSettings()">Save Settings</button>
                 </div>
             </div>
         </div>
@@ -2474,6 +2557,222 @@
         // Initialize DM reference on page load
         loadDMReference();
 
+        // ===============================
+        // OPENAI INTEGRATION
+        // ===============================
+        
+        // OpenAI configuration
+        const openAIConfig = {
+            enabled: false,
+            apiKey: localStorage.getItem('openai_api_key') || '',
+            model: localStorage.getItem('openai_model') || 'gpt-3.5-turbo',
+            creativity: parseInt(localStorage.getItem('openai_creativity') || '70'),
+            responseLength: localStorage.getItem('openai_response_length') || 'normal',
+            useCampaignContext: localStorage.getItem('openai_use_context') !== 'false',
+            useReferenceData: localStorage.getItem('openai_use_reference') !== 'false'
+        };
+
+        // Open AI DM Settings modal
+        function openAIDMSettings() {
+            const modal = document.getElementById('ai-dm-settings-modal');
+            
+            // Load current settings
+            const engineRadios = document.querySelectorAll('input[name="aiEngine"]');
+            engineRadios.forEach(radio => {
+                radio.checked = radio.value === (openAIConfig.enabled ? 'openai' : 'templates');
+            });
+            
+            // Set form values
+            document.getElementById('openai-api-key').value = openAIConfig.apiKey;
+            document.getElementById('openai-model').value = openAIConfig.model;
+            document.getElementById('ai-creativity').value = openAIConfig.creativity;
+            document.getElementById('ai-creativity-display').textContent = openAIConfig.creativity + '%';
+            document.getElementById('ai-response-length').value = openAIConfig.responseLength;
+            document.getElementById('ai-use-campaign-context').checked = openAIConfig.useCampaignContext;
+            document.getElementById('ai-use-reference-data').checked = openAIConfig.useReferenceData;
+            
+            // Toggle OpenAI settings visibility
+            toggleOpenAISettings();
+            
+            // Show modal
+            modal.style.display = 'flex';
+        }
+
+        // Toggle OpenAI settings visibility
+        function toggleOpenAISettings() {
+            const openaiRadio = document.querySelector('input[value="openai"]:checked');
+            const openaiSettings = document.getElementById('openai-settings');
+            
+            if (openaiRadio) {
+                openaiSettings.style.display = 'block';
+            } else {
+                openaiSettings.style.display = 'none';
+            }
+        }
+
+        // Save AI DM Settings
+        function saveAIDMSettings() {
+            const engineRadio = document.querySelector('input[name="aiEngine"]:checked');
+            openAIConfig.enabled = engineRadio.value === 'openai';
+            
+            if (openAIConfig.enabled) {
+                openAIConfig.apiKey = document.getElementById('openai-api-key').value;
+                openAIConfig.model = document.getElementById('openai-model').value;
+                openAIConfig.creativity = parseInt(document.getElementById('ai-creativity').value);
+                openAIConfig.responseLength = document.getElementById('ai-response-length').value;
+                openAIConfig.useCampaignContext = document.getElementById('ai-use-campaign-context').checked;
+                openAIConfig.useReferenceData = document.getElementById('ai-use-reference-data').checked;
+                
+                // Save to localStorage
+                localStorage.setItem('openai_enabled', 'true');
+                localStorage.setItem('openai_api_key', openAIConfig.apiKey);
+                localStorage.setItem('openai_model', openAIConfig.model);
+                localStorage.setItem('openai_creativity', openAIConfig.creativity);
+                localStorage.setItem('openai_response_length', openAIConfig.responseLength);
+                localStorage.setItem('openai_use_context', openAIConfig.useCampaignContext);
+                localStorage.setItem('openai_use_reference', openAIConfig.useReferenceData);
+            } else {
+                localStorage.setItem('openai_enabled', 'false');
+            }
+            
+            // Close modal
+            document.getElementById('ai-dm-settings-modal').style.display = 'none';
+            
+            alert('AI DM settings saved!');
+        }
+
+        // Test OpenAI connection
+        async function testOpenAIConnection() {
+            const apiKey = document.getElementById('openai-api-key').value;
+            const resultDiv = document.getElementById('openai-test-result');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<span style="color: red;">Please enter an API key</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span style="color: yellow;">Testing connection...</span>';
+            
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a helpful assistant. Respond with: "Connection successful!"'
+                            },
+                            {
+                                role: 'user',
+                                content: 'Test'
+                            }
+                        ],
+                        max_tokens: 10
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<span style="color: green;">✅ Connection successful! API key is valid.</span>';
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<span style="color: red;">❌ Error: ${error.error?.message || 'Invalid API key'}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red;">❌ Connection failed: ${error.message}</span>`;
+            }
+        }
+
+        // Generate DM response using OpenAI
+        async function generateOpenAIDMResponse(playerAction, context = {}) {
+            if (!openAIConfig.apiKey) {
+                console.warn('OpenAI API key not configured');
+                return null;
+            }
+            
+            // Build the system prompt
+            let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master. `;
+            
+            // Add campaign context if enabled
+            if (openAIConfig.useCampaignContext && window.currentCampaign) {
+                const campaign = window.currentCampaign;
+                systemPrompt += `Campaign: ${campaign.scenario || 'fantasy'}. `;
+                systemPrompt += `Tone: ${campaign.tone || 'balanced'}. `;
+                systemPrompt += `Party: ${window.partyCharacters?.length || 1} adventurers. `;
+            }
+            
+            // Add reference data context if enabled
+            if (openAIConfig.useReferenceData && DM_STATE.reference) {
+                systemPrompt += `You have access to D&D 5e rules, monsters, items, and encounters. `;
+            }
+            
+            // Add story state
+            if (STORY_STATE.plotThreads.length > 0) {
+                systemPrompt += `Active plot: ${STORY_STATE.plotThreads[0].description}. `;
+            }
+            
+            // Response length guidelines
+            const lengthGuides = {
+                brief: 'Keep responses to 1-2 sentences.',
+                normal: 'Keep responses to 2-4 sentences.',
+                detailed: 'Provide detailed responses of 4-6 sentences.',
+                verbose: 'Give rich, descriptive responses of 6+ sentences.'
+            };
+            systemPrompt += lengthGuides[openAIConfig.responseLength];
+            
+            systemPrompt += ` Always end with "What do you do?" or a similar prompt. Be vivid, engaging, and true to D&D mechanics.`;
+            
+            // Build the user message
+            let userMessage = `Player action: ${playerAction}`;
+            
+            // Add recent context if available
+            if (STORY_STATE.storyBeats.length > 0) {
+                const recentBeat = STORY_STATE.storyBeats[STORY_STATE.storyBeats.length - 1];
+                userMessage += `\nRecent context: ${recentBeat.development}`;
+            }
+            
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${openAIConfig.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: openAIConfig.model,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userMessage }
+                        ],
+                        temperature: openAIConfig.creativity / 100, // Convert to 0-1 scale
+                        max_tokens: 200
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const dmResponse = data.choices[0].message.content;
+                    
+                    return {
+                        response: dmResponse,
+                        voice: dmResponse,
+                        source: 'openai'
+                    };
+                } else {
+                    console.error('OpenAI API error:', await response.text());
+                    return null;
+                }
+            } catch (error) {
+                console.error('Failed to generate OpenAI response:', error);
+                return null;
+            }
+        }
+
         // Get a random encounter based on location and difficulty
         function getRandomEncounter(location = 'forest', difficulty = 'easy') {
             if (!DM_STATE.reference?.encounter_tables) return null;
@@ -2795,9 +3094,37 @@
         }
 
         // Generate voice-enabled DM response with real DM personality
-        function generateVoiceDMResponse(playerAction) {
+        async function generateVoiceDMResponse(playerAction) {
             const action = playerAction.toLowerCase();
             const campaign = window.currentCampaign || {};
+            
+            // Try OpenAI first if enabled and configured
+            if (openAIConfig.enabled && openAIConfig.apiKey) {
+                try {
+                    updateVoiceStatus('AI DM thinking...', 'processing');
+                    const aiResponse = await generateOpenAIDMResponse(playerAction);
+                    if (aiResponse) {
+                        // Add story development tracking
+                        if (Math.random() < 0.3) { // 30% chance to add story development
+                            const storyDev = generateStoryDevelopment(playerAction);
+                            if (storyDev) {
+                                STORY_STATE.completedEvents.push({
+                                    action: playerAction,
+                                    development: storyDev.text,
+                                    timestamp: Date.now()
+                                });
+                            }
+                        }
+                        
+                        displayDMResponse(aiResponse.response, aiResponse.voice);
+                        updateVoiceStatus('Ready to listen', 'ready');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('OpenAI generation failed, falling back to templates:', error);
+                    updateVoiceStatus('AI failed, using templates...', 'processing');
+                }
+            }
             
             // Combat responses - much more engaging
             if (action.includes('attack') || action.includes('fight') || action.includes('combat') || action.includes('hit') || action.includes('strike')) {
@@ -3399,6 +3726,29 @@
         // Prevent default drag and drop to avoid accidental navigation
         document.addEventListener('dragover', e => e.preventDefault());
         document.addEventListener('drop', e => e.preventDefault());
+
+        // Initialize AI DM settings after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load OpenAI config from localStorage
+            const enabled = localStorage.getItem('openai_enabled') === 'true';
+            if (enabled) {
+                openAIConfig.enabled = true;
+            }
+
+            // Add event listeners for AI engine radio buttons
+            const aiRadioButtons = document.querySelectorAll('input[name="aiEngine"]');
+            aiRadioButtons.forEach(radio => {
+                radio.addEventListener('change', toggleOpenAISettings);
+            });
+
+            // Add event listener for creativity slider
+            const creativitySlider = document.getElementById('ai-creativity');
+            if (creativitySlider) {
+                creativitySlider.addEventListener('input', function() {
+                    document.getElementById('ai-creativity-display').textContent = this.value + '%';
+                });
+            }
+        });
     </script>
 </body>
 </html>
