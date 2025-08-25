@@ -1488,6 +1488,12 @@
                 emptyParty.remove();
             }
             
+            // Remove existing "Add Another Character" button if it exists
+            const existingAddBtn = partyList.querySelector('.add-another-character');
+            if (existingAddBtn) {
+                existingAddBtn.remove();
+            }
+            
             // Create character card
             const characterCard = document.createElement('div');
             characterCard.className = 'character-card';
@@ -1500,10 +1506,22 @@
                 <div class="character-actions">
                     <button class="secondary-button" onclick="editCharacter('${character.name}')">Edit</button>
                     <button class="secondary-button" onclick="viewCharacterSheet('${character.name}')">View Sheet</button>
+                    <button class="danger-button" onclick="removeCharacter('${character.name}')">Remove</button>
                 </div>
             `;
             
             partyList.appendChild(characterCard);
+            
+            // Add "Add Another Character" button after all characters
+            const addAnotherBtn = document.createElement('div');
+            addAnotherBtn.className = 'add-another-character';
+            addAnotherBtn.innerHTML = `
+                <button class="secondary-button" onclick="document.getElementById('import-modal').style.display='flex'">
+                    <span class="button-icon">➕</span>
+                    Add Another Character
+                </button>
+            `;
+            partyList.appendChild(addAnotherBtn);
             
             // Show character actions section
             document.getElementById('character-actions').style.display = 'block';
@@ -1511,6 +1529,49 @@
             // Store character data (in a real app this would go to a database)
             if (!window.partyCharacters) window.partyCharacters = [];
             window.partyCharacters.push(character);
+        }
+        
+        // Remove character from party
+        function removeCharacter(characterName) {
+            if (confirm(`Remove ${characterName} from the party?`)) {
+                // Remove from party array
+                if (window.partyCharacters) {
+                    window.partyCharacters = window.partyCharacters.filter(c => c.name !== characterName);
+                }
+                
+                // Remove from DOM
+                const partyList = document.getElementById('party-list');
+                const characterCards = partyList.querySelectorAll('.character-card');
+                
+                characterCards.forEach(card => {
+                    const nameElement = card.querySelector('h4');
+                    if (nameElement && nameElement.textContent === characterName) {
+                        card.remove();
+                    }
+                });
+                
+                // If no characters left, show empty party message
+                if (!window.partyCharacters || window.partyCharacters.length === 0) {
+                    const addAnotherBtn = partyList.querySelector('.add-another-character');
+                    if (addAnotherBtn) {
+                        addAnotherBtn.remove();
+                    }
+                    
+                    const emptyParty = document.createElement('div');
+                    emptyParty.className = 'empty-party';
+                    emptyParty.innerHTML = `
+                        <p>No characters in party. Import or create characters to get started.</p>
+                        <button class="primary-button" onclick="document.getElementById('import-modal').style.display='flex'">
+                            <span class="button-icon">👥</span>
+                            Add First Character
+                        </button>
+                    `;
+                    partyList.appendChild(emptyParty);
+                    
+                    // Hide character actions
+                    document.getElementById('character-actions').style.display = 'none';
+                }
+            }
         }
         
         // View character sheet function

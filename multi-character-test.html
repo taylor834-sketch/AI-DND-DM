@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Character Test - D&D Voice Adventure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #2e7d32; }
+        .error { background: #c62828; }
+        .info { background: #1565c0; }
+        .party-simulation {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎲 Multi-Character Party Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Party Simulation</h2>
+            <div class="party-simulation">
+                <!-- Simulate the party setup interface -->
+                <div class="party-management">
+                    <h3>Party Members</h3>
+                    <div id="party-list" class="party-list">
+                        <div class="empty-party">
+                            <p>No characters in party. Import or create characters to get started.</p>
+                            <button class="primary-button" onclick="simulateAddCharacter()">
+                                <span class="button-icon">👥</span>
+                                Add First Character
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Actions</h2>
+            <button onclick="simulateAddCharacter()" class="secondary-button">Add Test Character</button>
+            <button onclick="resetParty()" class="danger-button">Reset Party</button>
+        </div>
+    </div>
+
+    <script>
+        const testResults = document.getElementById('test-results');
+        let characterCount = 0;
+        const testCharacters = [
+            { name: "Tater", class: "Barbarian", level: 4, species: "Stout Halfling" },
+            { name: "Elara", class: "Wizard", level: 3, species: "High Elf" },
+            { name: "Grimm", class: "Fighter", level: 5, species: "Mountain Dwarf" },
+            { name: "Luna", class: "Rogue", level: 2, species: "Half-Elf" }
+        ];
+        
+        if (!window.partyCharacters) window.partyCharacters = [];
+        
+        function addTestResult(message, type = 'info') {
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            testResults.appendChild(result);
+            console.log(`[TEST ${type.toUpperCase()}] ${message}`);
+        }
+
+        function simulateAddCharacter() {
+            if (characterCount >= testCharacters.length) {
+                addTestResult('All test characters added!', 'info');
+                return;
+            }
+
+            const character = testCharacters[characterCount];
+            character.combat = {
+                armorClass: 15 + Math.floor(Math.random() * 5),
+                hitPoints: { current: 30 + Math.floor(Math.random() * 20), max: 30 + Math.floor(Math.random() * 20) }
+            };
+            character.abilities = {
+                strength: { score: 10 + Math.floor(Math.random() * 8), modifier: "+2" }
+            };
+
+            addCharacterToParty(character);
+            characterCount++;
+            
+            addTestResult(`Added character: ${character.name} (${character.species} ${character.class})`, 'success');
+        }
+
+        function addCharacterToParty(character) {
+            const partyList = document.getElementById('party-list');
+            const emptyParty = partyList.querySelector('.empty-party');
+            
+            // Remove empty party message
+            if (emptyParty) {
+                emptyParty.remove();
+                addTestResult('Empty party message removed', 'info');
+            }
+            
+            // Remove existing "Add Another Character" button if it exists
+            const existingAddBtn = partyList.querySelector('.add-another-character');
+            if (existingAddBtn) {
+                existingAddBtn.remove();
+                addTestResult('Previous "Add Another" button removed', 'info');
+            }
+            
+            // Create character card
+            const characterCard = document.createElement('div');
+            characterCard.className = 'character-card';
+            characterCard.innerHTML = `
+                <div class="character-info">
+                    <h4>${character.name}</h4>
+                    <p>Level ${character.level} ${character.species} ${character.class}</p>
+                    <p>AC: ${character.combat.armorClass} | HP: ${character.combat.hitPoints.current}/${character.combat.hitPoints.max}</p>
+                </div>
+                <div class="character-actions">
+                    <button class="secondary-button" onclick="alert('Edit ${character.name}')">Edit</button>
+                    <button class="secondary-button" onclick="alert('View ${character.name} Sheet')">View Sheet</button>
+                    <button class="danger-button" onclick="removeCharacter('${character.name}')">Remove</button>
+                </div>
+            `;
+            
+            partyList.appendChild(characterCard);
+            addTestResult(`Character card created for ${character.name}`, 'success');
+            
+            // Add "Add Another Character" button after all characters
+            const addAnotherBtn = document.createElement('div');
+            addAnotherBtn.className = 'add-another-character';
+            addAnotherBtn.innerHTML = `
+                <button class="secondary-button" onclick="simulateAddCharacter()">
+                    <span class="button-icon">➕</span>
+                    Add Another Character
+                </button>
+            `;
+            partyList.appendChild(addAnotherBtn);
+            addTestResult('"Add Another Character" button added', 'success');
+            
+            // Store character data
+            if (!window.partyCharacters) window.partyCharacters = [];
+            window.partyCharacters.push(character);
+            addTestResult(`Party now has ${window.partyCharacters.length} characters`, 'info');
+        }
+
+        function removeCharacter(characterName) {
+            if (confirm(`Remove ${characterName} from the party?`)) {
+                // Remove from party array
+                if (window.partyCharacters) {
+                    window.partyCharacters = window.partyCharacters.filter(c => c.name !== characterName);
+                    addTestResult(`${characterName} removed from party array`, 'info');
+                }
+                
+                // Remove from DOM
+                const partyList = document.getElementById('party-list');
+                const characterCards = partyList.querySelectorAll('.character-card');
+                
+                characterCards.forEach(card => {
+                    const nameElement = card.querySelector('h4');
+                    if (nameElement && nameElement.textContent === characterName) {
+                        card.remove();
+                        addTestResult(`${characterName} card removed from DOM`, 'success');
+                    }
+                });
+                
+                // If no characters left, show empty party message
+                if (!window.partyCharacters || window.partyCharacters.length === 0) {
+                    const addAnotherBtn = partyList.querySelector('.add-another-character');
+                    if (addAnotherBtn) {
+                        addAnotherBtn.remove();
+                    }
+                    
+                    const emptyParty = document.createElement('div');
+                    emptyParty.className = 'empty-party';
+                    emptyParty.innerHTML = `
+                        <p>No characters in party. Import or create characters to get started.</p>
+                        <button class="primary-button" onclick="simulateAddCharacter()">
+                            <span class="button-icon">👥</span>
+                            Add First Character
+                        </button>
+                    `;
+                    partyList.appendChild(emptyParty);
+                    addTestResult('Empty party message restored', 'info');
+                    characterCount = 0;
+                }
+                
+                addTestResult(`Party now has ${window.partyCharacters.length} characters`, 'info');
+            }
+        }
+
+        function resetParty() {
+            window.partyCharacters = [];
+            characterCount = 0;
+            const partyList = document.getElementById('party-list');
+            partyList.innerHTML = `
+                <div class="empty-party">
+                    <p>No characters in party. Import or create characters to get started.</p>
+                    <button class="primary-button" onclick="simulateAddCharacter()">
+                        <span class="button-icon">👥</span>
+                        Add First Character
+                    </button>
+                </div>
+            `;
+            addTestResult('Party reset to empty state', 'info');
+        }
+
+        // Initialize test
+        addTestResult('Multi-character test initialized', 'info');
+        addTestResult('Test characters available: ' + testCharacters.map(c => c.name).join(', '), 'info');
+        addTestResult('Click "Add Test Character" to test adding multiple characters', 'info');
+    </script>
+</body>
+</html>
