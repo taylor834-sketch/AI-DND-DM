@@ -2444,8 +2444,82 @@
             currentLocation: null,
             npcsNearby: [],
             recentEvents: [],
-            tensionLevel: 1
+            tensionLevel: 1,
+            reference: null // Will hold the DM reference data
         };
+
+        // Load DM reference data
+        async function loadDMReference() {
+            try {
+                const response = await fetch('dm-reference.json');
+                if (response.ok) {
+                    DM_STATE.reference = await response.json();
+                    console.log('DM Reference loaded successfully');
+                    return true;
+                } else {
+                    console.warn('DM Reference file not found, using default responses');
+                    return false;
+                }
+            } catch (error) {
+                console.warn('Could not load DM reference:', error);
+                return false;
+            }
+        }
+
+        // Initialize DM reference on page load
+        loadDMReference();
+
+        // Get a random encounter based on location and difficulty
+        function getRandomEncounter(location = 'forest', difficulty = 'easy') {
+            if (!DM_STATE.reference?.encounter_tables) return null;
+            
+            const encounters = DM_STATE.reference.encounter_tables[location]?.[difficulty];
+            if (!encounters) return null;
+            
+            return encounters[Math.floor(Math.random() * encounters.length)];
+        }
+
+        // Generate a random NPC with personality
+        function generateNPC() {
+            if (!DM_STATE.reference?.npc_generation) return null;
+            
+            const npc = DM_STATE.reference.npc_generation;
+            return {
+                personality: npc.personalities[Math.floor(Math.random() * npc.personalities.length)],
+                motivation: npc.motivations[Math.floor(Math.random() * npc.motivations.length)],
+                quirk: npc.quirks[Math.floor(Math.random() * npc.quirks.length)]
+            };
+        }
+
+        // Get monster stats
+        function getMonsterStats(monsterName) {
+            if (!DM_STATE.reference?.monsters) return null;
+            
+            // Search through all CR categories
+            for (const crCategory of Object.values(DM_STATE.reference.monsters)) {
+                if (crCategory[monsterName]) {
+                    return crCategory[monsterName];
+                }
+            }
+            return null;
+        }
+
+        // Determine skill check DC based on difficulty
+        function getSkillCheckDC(difficulty = 'medium') {
+            if (!DM_STATE.reference?.skill_checks?.dc_guidelines) {
+                // Fallback DCs if reference not loaded
+                const fallbackDCs = {
+                    very_easy: 5,
+                    easy: 10,
+                    medium: 15,
+                    hard: 20,
+                    very_hard: 25
+                };
+                return fallbackDCs[difficulty] || 15;
+            }
+            
+            return DM_STATE.reference.skill_checks.dc_guidelines[difficulty] || 15;
+        }
 
         // Generate voice-enabled DM response with real DM personality
         function generateVoiceDMResponse(playerAction) {

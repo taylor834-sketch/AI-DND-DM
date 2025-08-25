@@ -1,0 +1,285 @@
+{
+  "dm_guidelines": {
+    "core_principles": [
+      "Always describe scenes using multiple senses (sight, sound, smell, touch, taste)",
+      "End responses with clear choices or 'What do you do?'",
+      "Apply D&D 5e rules accurately",
+      "Keep responses concise but vivid (2-4 sentences unless describing new areas)",
+      "React to nat 20s and nat 1s with excitement",
+      "Build tension through description and pacing",
+      "Reward creative thinking and roleplay"
+    ],
+    "response_styles": {
+      "combat": {
+        "initiation": [
+          "Steel rings as weapons are drawn! Roll for initiative!",
+          "Violence erupts! The air crackles with tension!",
+          "Battle is joined! Time seems to slow as combat begins!"
+        ],
+        "hits": [
+          "Your strike finds its mark!",
+          "A solid hit! Your enemy reels!",
+          "Your weapon bites deep!"
+        ],
+        "misses": [
+          "Your attack goes wide!",
+          "Your enemy dodges at the last second!",
+          "Your strike fails to connect!"
+        ]
+      },
+      "exploration": {
+        "descriptions": [
+          "The air grows thick with ancient dust and mystery",
+          "Shadows dance at the edge of your torchlight",
+          "An eerie silence blankets the area"
+        ]
+      },
+      "social": {
+        "npc_reactions": [
+          "The figure's eyes narrow as they consider your words",
+          "A long pause follows your statement",
+          "The NPC leans forward with interest"
+        ]
+      }
+    }
+  },
+  "skill_checks": {
+    "dc_guidelines": {
+      "very_easy": 5,
+      "easy": 10,
+      "medium": 15,
+      "hard": 20,
+      "very_hard": 25,
+      "nearly_impossible": 30
+    },
+    "common_checks": {
+      "perception": {
+        "trigger_words": ["look", "search", "notice", "spot", "observe"],
+        "dc_modifiers": {
+          "dim_light": 5,
+          "darkness": 10,
+          "hidden_object": 5,
+          "tiny_detail": 10
+        }
+      },
+      "investigation": {
+        "trigger_words": ["investigate", "examine", "study", "analyze", "inspect"],
+        "dc_modifiers": {
+          "complex_mechanism": 5,
+          "ancient_text": 5,
+          "hidden_compartment": 10
+        }
+      },
+      "persuasion": {
+        "trigger_words": ["persuade", "convince", "negotiate", "charm"],
+        "dc_modifiers": {
+          "hostile_npc": 10,
+          "friendly_npc": -5,
+          "reasonable_request": -5,
+          "outrageous_request": 10
+        }
+      },
+      "stealth": {
+        "trigger_words": ["sneak", "hide", "stealth", "quiet", "silent"],
+        "dc_modifiers": {
+          "heavy_armor": 5,
+          "noisy_environment": -5,
+          "alert_guards": 5
+        }
+      }
+    }
+  },
+  "combat_mechanics": {
+    "initiative": {
+      "description": "Roll d20 + Dexterity modifier",
+      "order": "Highest to lowest, ties broken by Dexterity score"
+    },
+    "actions": {
+      "attack": "Roll d20 + proficiency + ability modifier vs AC",
+      "dodge": "Disadvantage on attacks against you",
+      "dash": "Double movement speed",
+      "help": "Give advantage to ally's next check",
+      "hide": "Stealth check to become hidden",
+      "ready": "Prepare action with trigger"
+    },
+    "conditions": {
+      "blinded": "Can't see, auto-fail sight checks, disadvantage on attacks",
+      "charmed": "Can't attack charmer, charmer has advantage on social checks",
+      "frightened": "Disadvantage on checks while source in sight, can't move closer",
+      "grappled": "Speed becomes 0, can't benefit from speed bonus",
+      "poisoned": "Disadvantage on attacks and ability checks",
+      "prone": "Disadvantage on attacks, melee attacks against have advantage",
+      "stunned": "Incapacitated, can't move, auto-fail STR and DEX saves"
+    }
+  },
+  "monsters": {
+    "cr_0_to_1": {
+      "goblin": {
+        "ac": 15,
+        "hp": 7,
+        "speed": 30,
+        "attacks": ["Scimitar: +4 to hit, 1d6+2 slashing", "Shortbow: +4 to hit, 1d6+2 piercing"],
+        "special": "Nimble Escape: Disengage or Hide as bonus action",
+        "cr": 0.25
+      },
+      "wolf": {
+        "ac": 13,
+        "hp": 11,
+        "speed": 40,
+        "attacks": ["Bite: +4 to hit, 2d4+2 piercing, DC 11 STR or knocked prone"],
+        "special": "Pack Tactics: Advantage when ally within 5ft of target",
+        "cr": 0.25
+      },
+      "zombie": {
+        "ac": 8,
+        "hp": 22,
+        "speed": 20,
+        "attacks": ["Slam: +3 to hit, 1d6+1 bludgeoning"],
+        "special": "Undead Fortitude: DC 5+damage CON save to drop to 1 HP instead of 0",
+        "cr": 0.25
+      },
+      "bandit": {
+        "ac": 12,
+        "hp": 11,
+        "speed": 30,
+        "attacks": ["Scimitar: +3 to hit, 1d6+1 slashing", "Light Crossbow: +3 to hit, 1d8+1 piercing"],
+        "cr": 0.125
+      }
+    },
+    "cr_2_to_5": {
+      "ogre": {
+        "ac": 11,
+        "hp": 59,
+        "speed": 40,
+        "attacks": ["Greatclub: +6 to hit, 2d8+4 bludgeoning", "Javelin: +6 to hit, 2d6+4 piercing"],
+        "cr": 2
+      },
+      "owlbear": {
+        "ac": 13,
+        "hp": 59,
+        "speed": 40,
+        "attacks": ["Beak: +7 to hit, 1d10+5 piercing", "Claw: +7 to hit, 2d8+5 slashing"],
+        "special": "Keen Sight and Smell: Advantage on Perception",
+        "cr": 3
+      },
+      "troll": {
+        "ac": 15,
+        "hp": 84,
+        "speed": 30,
+        "attacks": ["Bite: +7 to hit, 1d6+4 piercing", "Claw: +7 to hit, 2d6+4 slashing"],
+        "special": "Regeneration: 10 HP at start of turn unless fire/acid damage",
+        "cr": 5
+      }
+    }
+  },
+  "encounter_tables": {
+    "forest": {
+      "easy": ["2d4 wolves", "1d4+1 goblins", "1 black bear"],
+      "medium": ["1 owlbear", "2d4 dire wolves", "1d4 bandits + 1 bandit captain"],
+      "hard": ["1 troll", "2 owlbears", "1 young green dragon"]
+    },
+    "dungeon": {
+      "easy": ["2d4 zombies", "1d6+2 skeletons", "2d4 giant rats"],
+      "medium": ["1 ogre", "2d4 ghouls", "1 minotaur skeleton"],
+      "hard": ["1 flesh golem", "1d4 wraiths", "1 bone devil"]
+    },
+    "urban": {
+      "easy": ["1d4 bandits", "2d4 thugs", "1 spy"],
+      "medium": ["1 assassin", "1d4 veterans", "1 knight + 2d4 guards"],
+      "hard": ["1 mage + 2d4 thugs", "1 vampire spawn", "1 invisible stalker"]
+    }
+  },
+  "treasure_tables": {
+    "individual": {
+      "cr_0_4": {
+        "coins": "5d6 copper, 3d6 silver, 2d6 gold",
+        "chance_magic": 0.1
+      },
+      "cr_5_10": {
+        "coins": "4d6x10 copper, 6d6x10 silver, 3d6x10 gold, 1d6 platinum",
+        "chance_magic": 0.25
+      }
+    },
+    "hoard": {
+      "cr_0_4": {
+        "coins": "6d6x100 copper, 3d6x100 silver, 2d6x10 gold",
+        "gems": "2d6 gems worth 10gp each",
+        "magic_items": "Roll 1d100: 01-50 nothing, 51-75 potion, 76-95 scroll, 96-100 minor item"
+      }
+    }
+  },
+  "magic_items": {
+    "common": {
+      "potions": ["Potion of Healing (2d4+2)", "Potion of Climbing", "Potion of Swimming"],
+      "scrolls": ["Spell Scroll (1st level)", "Scroll of Protection"],
+      "weapons": ["+1 Weapon", "Silvered Weapon", "Weapon of Warning"]
+    },
+    "uncommon": {
+      "potions": ["Potion of Greater Healing (4d4+4)", "Potion of Fire Breath", "Potion of Invisibility"],
+      "items": ["Bag of Holding", "Boots of Speed", "Cloak of Elvenkind", "Ring of Protection"]
+    }
+  },
+  "scenario_specific": {
+    "forgotten_realms": {
+      "deities": ["Tyr (Justice)", "Mystra (Magic)", "Kelemvor (Death)", "Tymora (Luck)"],
+      "locations": ["Waterdeep", "Baldur's Gate", "Neverwinter", "Undermountain"],
+      "factions": ["Harpers", "Zhentarim", "Lords' Alliance", "Emerald Enclave"]
+    },
+    "ravenloft": {
+      "domains": ["Barovia (Strahd)", "Darkon (Azalin)", "Lamordia (Adam)", "Mordent (Mordentshire)"],
+      "dark_powers": "The mists respond to evil acts",
+      "horror_checks": "DC 10-20 WIS save vs fear/madness"
+    },
+    "eberron": {
+      "dragonmarks": ["Mark of Making", "Mark of Passage", "Mark of Sentinel"],
+      "houses": ["House Cannith", "House Orien", "House Deneith"],
+      "technology": ["Lightning Rail", "Airships", "Warforged", "Elemental Binding"]
+    }
+  },
+  "npc_generation": {
+    "personalities": [
+      "Gruff but kind-hearted",
+      "Suspicious and paranoid",
+      "Cheerful and talkative",
+      "Mysterious and cryptic",
+      "Nervous and jumpy"
+    ],
+    "motivations": [
+      "Seeks revenge for past wrong",
+      "Protecting a secret",
+      "Looking for lost family",
+      "Pursuing wealth",
+      "Seeking redemption"
+    ],
+    "quirks": [
+      "Never makes eye contact",
+      "Constantly fidgets with a trinket",
+      "Speaks in rhymes",
+      "Has an unusual pet",
+      "Collects strange objects"
+    ]
+  },
+  "random_events": {
+    "travel": [
+      "Weather suddenly changes",
+      "Find abandoned campsite",
+      "Merchant caravan passes by",
+      "Bridge is out",
+      "Mysterious fog rolls in"
+    ],
+    "dungeon": [
+      "Torch goes out",
+      "Hear distant screaming",
+      "Find fresh blood trail",
+      "Door slams shut behind party",
+      "Floor gives way (DEX save)"
+    ],
+    "social": [
+      "Pickpocket attempt",
+      "Bar fight breaks out",
+      "Guards demand papers",
+      "Street performer blocks path",
+      "Child asks for help"
+    ]
+  }
+}
