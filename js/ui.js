@@ -60,6 +60,7 @@ export default class UIManager {
     }
 
     bindButtonEvents() {
+        console.log('🔗 Binding button events...');
         const buttons = {
             'create-campaign-btn': () => this.handleCreateCampaign(),
             'continue-campaign-btn': () => this.handleContinueCampaign(),
@@ -71,8 +72,16 @@ export default class UIManager {
         Object.entries(buttons).forEach(([id, handler]) => {
             const button = document.getElementById(id);
             if (button) {
-                button.addEventListener('click', handler);
-                button.addEventListener('mouseenter', this.playHoverSound.bind(this));
+                // Remove any existing listeners first
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Add new listeners
+                newButton.addEventListener('click', handler);
+                newButton.addEventListener('mouseenter', this.playHoverSound.bind(this));
+                console.log(`✅ Bound events to button: ${id}`);
+            } else {
+                console.warn(`⚠️ Button not found: ${id}`);
             }
         });
     }

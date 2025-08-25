@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test - D&D Voice Adventure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #2e7d32; }
+        .error { background: #c62828; }
+        .info { background: #1565c0; }
+        .screen {
+            display: none;
+            padding: 20px;
+            background: #333;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .screen.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎲 D&D Voice Adventure - Button Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Main Menu Buttons</h2>
+            <button id="create-campaign-btn" class="menu-button primary-button">
+                <span class="button-icon">⚔️</span>
+                <span class="button-text">Create New Campaign</span>
+            </button>
+            <button id="continue-campaign-btn" class="menu-button secondary-button">
+                <span class="button-icon">📖</span>
+                <span class="button-text">Continue Campaign</span>
+            </button>
+            <button id="load-github-btn" class="menu-button secondary-button">
+                <span class="button-icon">☁️</span>
+                <span class="button-text">Load from GitHub</span>
+            </button>
+            <button id="world-browser-btn" class="menu-button secondary-button">
+                <span class="button-icon">🌍</span>
+                <span class="button-text">World Browser</span>
+            </button>
+            <button id="settings-btn" class="menu-button secondary-button">
+                <span class="button-icon">⚙️</span>
+                <span class="button-text">Settings</span>
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h2>Screen Display</h2>
+            <div id="current-screen-info"></div>
+            
+            <!-- Mock screens for testing -->
+            <div id="mainMenu-screen" class="screen active">Main Menu Screen</div>
+            <div id="campaignCreation-screen" class="screen">Campaign Creation Screen</div>
+            <div id="worldBrowser-screen" class="screen">World Browser Screen</div>
+            <div id="settings-screen" class="screen">Settings Screen</div>
+        </div>
+    </div>
+
+    <script type="module">
+        const testResults = document.getElementById('test-results');
+        const screenInfo = document.getElementById('current-screen-info');
+        
+        function addTestResult(message, type = 'info') {
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            testResults.appendChild(result);
+            console.log(`[TEST ${type.toUpperCase()}] ${message}`);
+        }
+
+        function updateScreenInfo() {
+            const activeScreen = document.querySelector('.screen.active');
+            if (activeScreen) {
+                screenInfo.innerHTML = `<strong>Current Active Screen:</strong> ${activeScreen.id}`;
+            }
+        }
+
+        // Test 1: Check if buttons exist
+        addTestResult('Starting button tests...', 'info');
+        
+        const buttonIds = [
+            'create-campaign-btn',
+            'continue-campaign-btn', 
+            'load-github-btn',
+            'world-browser-btn',
+            'settings-btn'
+        ];
+        
+        buttonIds.forEach(id => {
+            const button = document.getElementById(id);
+            if (button) {
+                addTestResult(`✅ Button found: ${id}`, 'success');
+            } else {
+                addTestResult(`❌ Button not found: ${id}`, 'error');
+            }
+        });
+
+        // Test 2: Import and initialize core
+        addTestResult('Importing core module...', 'info');
+        
+        try {
+            // Import core
+            await import('./js/core.js');
+            
+            if (window.DNDCore) {
+                addTestResult('✅ DNDCore loaded successfully', 'success');
+                
+                // Initialize core
+                addTestResult('Initializing DNDCore...', 'info');
+                await window.DNDCore.init();
+                addTestResult('✅ DNDCore initialized', 'success');
+                
+                // Test 3: Check if UI module loaded
+                const uiModule = window.DNDCore.getModule('ui');
+                if (uiModule) {
+                    addTestResult('✅ UI module loaded', 'success');
+                    
+                    // Test 4: Check button event listeners
+                    buttonIds.forEach(id => {
+                        const button = document.getElementById(id);
+                        if (button) {
+                            // Add click test
+                            button.addEventListener('click', () => {
+                                addTestResult(`🖱️ Button clicked: ${id}`, 'info');
+                                updateScreenInfo();
+                            });
+                        }
+                    });
+                    
+                    addTestResult('✅ Event listeners attached', 'success');
+                } else {
+                    addTestResult('❌ UI module not found', 'error');
+                }
+            } else {
+                addTestResult('❌ DNDCore not available', 'error');
+            }
+        } catch (error) {
+            addTestResult(`❌ Error: ${error.message}`, 'error');
+            console.error(error);
+        }
+        
+        updateScreenInfo();
+        addTestResult('Test complete! Try clicking the buttons above.', 'info');
+    </script>
+</body>
+</html>
