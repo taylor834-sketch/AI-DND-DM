@@ -2529,9 +2529,13 @@
         // Enhanced DM personality and game state
         const DM_STATE = {
             combatActive: false,
-            currentLocation: null,
-            npcsNearby: [],
+            currentLocation: 'tavern', // Track current scene location
+            currentScene: 'social_interaction', // Track scene type
+            npcsNearby: [], // Track active NPCs
+            activeNPCs: new Map(), // Detailed NPC tracking with names and context
             recentEvents: [],
+            conversationHistory: [], // Track recent conversation for continuity
+            lastPlayerAction: '', // Remember what player just did
             tensionLevel: 1,
             reference: null // Will hold the DM reference data
         };
@@ -2556,6 +2560,162 @@
 
         // Initialize DM reference on page load
         loadDMReference();
+
+        // ===============================
+        // CONTEXT TRACKING SYSTEM
+        // ===============================
+        
+        // Add NPC to current scene
+        function addNPCToScene(name, description, personality = null) {
+            DM_STATE.activeNPCs.set(name.toLowerCase(), {
+                name: name,
+                description: description,
+                personality: personality,
+                firstMet: Date.now(),
+                lastInteraction: Date.now(),
+                relationshipLevel: 'neutral',
+                conversationTopics: []
+            });
+            
+            if (!DM_STATE.npcsNearby.includes(name)) {
+                DM_STATE.npcsNearby.push(name);
+            }
+        }
+
+        // Update scene context
+        function updateSceneContext(location, sceneType, description = '') {
+            DM_STATE.currentLocation = location;
+            DM_STATE.currentScene = sceneType;
+            
+            // Add to conversation history
+            if (description) {
+                addToConversationHistory('scene_change', description);
+            }
+        }
+
+        // Add to conversation history for continuity
+        function addToConversationHistory(type, content, speaker = null) {
+            DM_STATE.conversationHistory.push({
+                type: type, // 'player_action', 'dm_response', 'npc_dialogue', 'scene_change'
+                content: content,
+                speaker: speaker,
+                timestamp: Date.now(),
+                location: DM_STATE.currentLocation,
+                npcsPresent: [...DM_STATE.npcsNearby]
+            });
+            
+            // Keep only last 10 entries to avoid bloat
+            if (DM_STATE.conversationHistory.length > 10) {
+                DM_STATE.conversationHistory = DM_STATE.conversationHistory.slice(-10);
+            }
+        }
+
+        // Get recent context for AI prompts
+        function getRecentContext(maxEntries = 5) {
+            return DM_STATE.conversationHistory
+                .slice(-maxEntries)
+                .map(entry => {
+                    if (entry.type === 'player_action') {
+                        return `Player: ${entry.content}`;
+                    } else if (entry.type === 'dm_response') {
+                        return `DM: ${entry.content}`;
+                    } else if (entry.type === 'npc_dialogue') {
+                        return `${entry.speaker}: ${entry.content}`;
+                    } else if (entry.type === 'scene_change') {
+                        return `Scene: ${entry.content}`;
+                    }
+                    return `${entry.type}: ${entry.content}`;
+                }).join('\n');
+        }
+
+        // Check if player action should change scene
+        function shouldChangeScene(playerAction) {
+            const action = playerAction.toLowerCase();
+            
+            // Don't change scene if just talking to NPCs in current location
+            if (action.includes('say') || action.includes('ask') || action.includes('tell') || 
+                action.includes('talk') || action.includes('speak')) {
+                return false;
+            }
+            
+            // Only change scene if player explicitly moves or the action requires it
+            if (action.includes('go to') || action.includes('leave') || action.includes('exit') ||
+                action.includes('head to') || action.includes('travel')) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Auto-detect NPCs mentioned in DM responses
+        function detectAndTrackNPCs(dmResponse) {
+            // Look for common NPC introduction patterns
+            const npcPatterns = [
+                /(?:a|an|the)\s+(\w+)\s+(?:dwarf|elf|human|halfling|orc|goblin|merchant|guard|innkeeper|bartender|knight|warrior|mage|wizard|priest|cleric)/i,
+                /(?:named?|called)\s+([A-Z]\w+)/g,
+                /([A-Z]\w+)(?:\s+(?:the|a|an)\s+\w+)?\s+(?:says?|grumbles?|whispers?|shouts?|replies?)/g,
+                /"[^"]*"\s+(?:says?|grumbles?)\s+([A-Z]\w+)/g
+            ];
+            
+            for (const pattern of npcPatterns) {
+                const matches = dmResponse.matchAll ? [...dmResponse.matchAll(pattern)] : [];
+                for (const match of matches) {
+                    const npcName = match[1];
+                    if (npcName && npcName.length > 2 && npcName !== 'What') { // Filter out common false positives
+                        const description = extractNPCDescription(dmResponse, npcName);
+                        addNPCToScene(npcName, description);
+                        console.log(`Auto-detected NPC: ${npcName}`);
+                    }
+                }
+            }
+        }
+
+        // Extract NPC description from DM response
+        function extractNPCDescription(text, npcName) {
+            // Find sentences containing the NPC name and extract description
+            const sentences = text.split(/[.!?]+/);
+            for (const sentence of sentences) {
+                if (sentence.includes(npcName)) {
+                    // Look for descriptive words
+                    if (sentence.includes('dwarf')) return 'dwarf';
+                    if (sentence.includes('elf')) return 'elf';
+                    if (sentence.includes('human')) return 'human';
+                    if (sentence.includes('halfling')) return 'halfling';
+                    if (sentence.includes('merchant')) return 'merchant';
+                    if (sentence.includes('innkeeper')) return 'innkeeper';
+                    if (sentence.includes('bartender')) return 'bartender';
+                    if (sentence.includes('guard')) return 'guard';
+                    if (sentence.includes('grizzled')) return 'grizzled warrior';
+                    if (sentence.includes('burly')) return 'burly fighter';
+                }
+            }
+            return 'person';
+        }
+
+        // Update scene context based on DM response and player action
+        function updateSceneFromResponse(dmResponse, playerAction) {
+            const action = playerAction.toLowerCase();
+            const response = dmResponse.toLowerCase();
+            
+            // Don't change scene unless player action clearly indicates movement
+            if (shouldChangeScene(playerAction)) {
+                // Player wants to move - let the AI handle the scene change
+                if (action.includes('fight') && !response.includes('tavern') && !response.includes('inn')) {
+                    // Only if the response actually moved to combat
+                    if (response.includes('forest') || response.includes('outside') || response.includes('goblins')) {
+                        updateSceneContext('forest', 'combat', 'Moving to combat with goblins');
+                        DM_STATE.combatActive = true;
+                        DM_STATE.npcsNearby = []; // Clear NPCs when leaving location
+                    }
+                }
+            }
+            
+            // Detect if we're still in the same location with NPCs
+            if (response.includes('tavern') || response.includes('inn')) {
+                DM_STATE.currentLocation = 'tavern';
+                DM_STATE.currentScene = 'social_interaction';
+            }
+        }
 
         // ===============================
         // OPENAI INTEGRATION
@@ -2695,8 +2855,33 @@
                 return null;
             }
             
-            // Build the system prompt
-            let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master. `;
+            // Track this player action
+            addToConversationHistory('player_action', playerAction);
+            DM_STATE.lastPlayerAction = playerAction;
+            
+            // Build the system prompt with enhanced context
+            let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master. IMPORTANT: Maintain scene continuity and don't randomly change locations or ignore NPCs without player direction.`;
+            
+            // Add current scene context
+            systemPrompt += ` Current location: ${DM_STATE.currentLocation}. `;
+            systemPrompt += ` Scene type: ${DM_STATE.currentScene}. `;
+            
+            // Add active NPCs if any
+            if (DM_STATE.npcsNearby.length > 0) {
+                systemPrompt += `NPCs present: ${DM_STATE.npcsNearby.join(', ')}. `;
+                
+                // Add detailed NPC info
+                const npcDetails = [];
+                for (const npcName of DM_STATE.npcsNearby) {
+                    const npc = DM_STATE.activeNPCs.get(npcName.toLowerCase());
+                    if (npc) {
+                        npcDetails.push(`${npc.name} (${npc.description})`);
+                    }
+                }
+                if (npcDetails.length > 0) {
+                    systemPrompt += `NPC details: ${npcDetails.join('; ')}. `;
+                }
+            }
             
             // Add campaign context if enabled
             if (openAIConfig.useCampaignContext && window.currentCampaign) {
@@ -2725,15 +2910,15 @@
             };
             systemPrompt += lengthGuides[openAIConfig.responseLength];
             
-            systemPrompt += ` Always end with "What do you do?" or a similar prompt. Be vivid, engaging, and true to D&D mechanics.`;
+            systemPrompt += ` CRITICAL: Only change locations if the player explicitly says to move/leave/go somewhere. If talking to NPCs, keep the conversation going in the current location. Always end with "What do you do?" or similar engagement.`;
             
-            // Build the user message
-            let userMessage = `Player action: ${playerAction}`;
+            // Build the user message with recent context
+            let userMessage = `Current player action: ${playerAction}`;
             
-            // Add recent context if available
-            if (STORY_STATE.storyBeats.length > 0) {
-                const recentBeat = STORY_STATE.storyBeats[STORY_STATE.storyBeats.length - 1];
-                userMessage += `\nRecent context: ${recentBeat.development}`;
+            // Add conversation history for continuity
+            const recentContext = getRecentContext(4);
+            if (recentContext) {
+                userMessage += `\n\nRecent conversation:\n${recentContext}`;
             }
             
             try {
@@ -2757,6 +2942,15 @@
                 if (response.ok) {
                     const data = await response.json();
                     const dmResponse = data.choices[0].message.content;
+                    
+                    // Track the DM response for continuity
+                    addToConversationHistory('dm_response', dmResponse);
+                    
+                    // Auto-detect and track NPCs mentioned in the response
+                    detectAndTrackNPCs(dmResponse);
+                    
+                    // Update scene context if needed
+                    updateSceneFromResponse(dmResponse, playerAction);
                     
                     return {
                         response: dmResponse,
@@ -2960,6 +3154,10 @@
             // Store the hook in story state
             STORY_STATE.plotThreads.push(hook);
             STORY_STATE.currentChapter = 'adventure_start';
+            
+            // Initialize the starting scene context
+            DM_STATE.currentLocation = 'village';
+            DM_STATE.currentScene = 'quest_start';
             
             // Speak the opening
             setTimeout(() => {
