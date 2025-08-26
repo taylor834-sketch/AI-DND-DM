@@ -205,6 +205,70 @@ export default class CampaignManager {
         }
     }
 
+    saveCampaign(campaignData) {
+        if (!campaignData) {
+            campaignData = this.activeCampaign;
+        }
+        
+        if (!campaignData) {
+            console.warn('No campaign data to save');
+            return null;
+        }
+        
+        try {
+            // Gather battle map data before saving
+            const battleMapData = this.gatherBattleMapData();
+            if (battleMapData) {
+                campaignData.battleMapData = battleMapData;
+            }
+            
+            return this.saveCampaignToStorage(campaignData);
+        } catch (error) {
+            console.error('Failed to save campaign:', error);
+            return null;
+        }
+    }
+    
+    gatherBattleMapData() {
+        const tacticalBattleMap = this.core.getModule('tacticalBattleMap');
+        const battleMapRepository = this.core.getModule('battleMapRepository');
+        
+        if (!tacticalBattleMap || !battleMapRepository) {
+            return null;
+        }
+        
+        const saveData = tacticalBattleMap.getBattleMapSaveData();
+        const allMapIds = battleMapRepository.getAllMapIds();
+        
+        return {
+            currentMap: saveData,
+            allBattleMaps: allMapIds,
+            savedAt: new Date().toISOString()
+        };
+    }
+    
+    restoreBattleMapData(campaign) {
+        if (!campaign.battleMapData) {
+            return;
+        }
+        
+        const tacticalBattleMap = this.core.getModule('tacticalBattleMap');
+        if (!tacticalBattleMap) {
+            console.warn('Tactical Battle Map not available for restoration');
+            return;
+        }
+        
+        // Restore the current battle map if one was active
+        if (campaign.battleMapData.currentMap) {
+            try {
+                tacticalBattleMap.restoreBattleMapFromSave(campaign.battleMapData.currentMap);
+                console.log('🗺️ Restored battle map from campaign save');
+            } catch (error) {
+                console.error('Failed to restore battle map:', error);
+            }
+        }
+    }
+
     saveCampaignToStorage(campaignData) {
         try {
             const database = this.core.getModule('database');
@@ -488,6 +552,9 @@ export default class CampaignManager {
             const campaign = JSON.parse(campaignData);
             this.activeCampaign = campaign;
             this.core.updateState({ campaign });
+            
+            // Restore battle map data if available
+            this.restoreBattleMapData(campaign);
             
             this.core.emit('campaign:loaded', { campaignId, campaign });
             return campaign;

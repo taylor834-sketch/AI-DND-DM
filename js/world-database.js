@@ -83,6 +83,8 @@ export default class WorldDatabase {
         return {
             id: npcId,
             name: data.name || 'Unknown',
+            genericName: data.genericName || this.generateGenericName(data), // e.g. "Villager", "Guard", "Shopkeeper"
+            partyKnowsName: data.partyKnowsName || false, // Fog of war for names
             
             // Basic Information
             race: data.race || '',
@@ -537,6 +539,44 @@ export default class WorldDatabase {
     getCharacterNPCRelationship(characterId, npcId) {
         const key = this.getRelationshipKey(characterId, 'character', npcId, 'npc');
         return this.relationships.get(key) || this.createDefaultRelationship(characterId, 'character', npcId, 'npc');
+    }
+
+    // =================================
+    // Name Management & Fog of War
+    // =================================
+    
+    generateGenericName(data) {
+        // Generate generic names based on occupation, race, or type
+        if (data.occupation) {
+            return data.occupation.charAt(0).toUpperCase() + data.occupation.slice(1);
+        }
+        if (data.race && data.class) {
+            return `${data.race} ${data.class}`;
+        }
+        if (data.race) {
+            return data.race.charAt(0).toUpperCase() + data.race.slice(1);
+        }
+        return 'Stranger';
+    }
+    
+    revealNPCName(npcId) {
+        const npc = this.worldData.npcs[npcId];
+        if (npc && !npc.partyKnowsName) {
+            npc.partyKnowsName = true;
+            this.saveToStorage();
+            this.core.emit('world:nameRevealed', { 
+                id: npcId, 
+                name: npc.name,
+                previousName: npc.genericName 
+            });
+            console.log(`💬 Name revealed: ${npc.genericName} → ${npc.name}`);
+        }
+    }
+    
+    getDisplayName(npcId) {
+        const npc = this.worldData.npcs[npcId];
+        if (!npc) return 'Unknown';
+        return npc.partyKnowsName ? npc.name : npc.genericName;
     }
 
     // =================================

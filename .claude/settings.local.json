@@ -19,7 +19,12 @@
       "Bash(mkdir:*)",
       "Bash(robocopy:*)",
       "Bash(xcopy:*)",
-      "Bash(del \"C:\\Users\\taylo\\dnd-voice-adventure\\index-fallback.html\")"
+      "Bash(del \"C:\\Users\\taylo\\dnd-voice-adventure\\index-fallback.html\")",
+      "Bash(\"OPEN GAME.bat\")",
+      "Bash(del \"C:\\Users\\taylo\\dnd-voice-adventure\\OPEN GAME.bat\")",
+      "Bash(grep:*)",
+      "Bash(start index.html)",
+      "Bash(start test-embedded-map.html)"
     ],
     "deny": [],
     "ask": []

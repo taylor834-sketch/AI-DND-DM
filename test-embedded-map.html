@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Embedded Battle Map</title>
+    <style>
+        :root {
+            --color-background: #1a1a1a;
+            --color-background-secondary: #2a2a2a;
+            --color-background-primary: #0a0a0a;
+            --color-border: #444;
+            --color-text: #ffffff;
+            --color-text-secondary: #cccccc;
+            --color-success: #4CAF50;
+            --color-error: #f44336;
+            --color-warning: #ff9800;
+            --color-info: #2196f3;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --border-radius: 6px;
+        }
+        
+        body {
+            background: var(--color-background);
+            color: var(--color-text);
+            font-family: 'Crimson Text', serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .test-container {
+            display: flex;
+            gap: 20px;
+            height: 600px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background: var(--color-background-secondary);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 500px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--color-success);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--color-background-primary);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+        
+        .btn-danger {
+            background: var(--color-error);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Embedded Battle Map Test</h1>
+    
+    <div class="test-container">
+        <div class="left-panel">
+            <h3>🎲 Test Controls</h3>
+            <p>This panel simulates the left side of the game UI with text content.</p>
+            
+            <button class="btn btn-primary" onclick="testBattleMap()">🗺️ Initialize Battle Map</button>
+            <button class="btn btn-secondary" onclick="testMapGeneration()">🏗️ Generate Test Map</button>
+            <button class="btn btn-danger" onclick="clearMap()">🧹 Clear Map</button>
+            
+            <h4>📋 Test Results:</h4>
+            <div id="test-results" style="background: var(--color-background-primary); padding: 10px; border-radius: 4px; margin-top: 10px; font-family: monospace; font-size: 0.85rem;">
+                Ready to test...
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div id="embedded-battle-map-container" style="width: 100%; height: 100%; background: var(--color-background-secondary); border-radius: 8px;">
+                <div style="padding: 20px; text-align: center; color: var(--color-text-secondary);">
+                    <h3>🗺️ Battle Map Will Load Here</h3>
+                    <p>Click "Initialize Battle Map" to test the embedded functionality.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Core System -->
+    <script type="module">
+        import DNDVoiceCore from './js/core.js';
+        
+        window.core = new DNDVoiceCore();
+        
+        // Initialize core system
+        window.core.init().then(() => {
+            log('✅ Core system initialized');
+            log('📦 Available modules: ' + Array.from(window.core.modules.keys()).join(', '));
+        }).catch(error => {
+            log('❌ Core initialization failed: ' + error.message);
+        });
+        
+        // Test functions
+        window.testBattleMap = function() {
+            log('🧪 Testing battle map initialization...');
+            
+            const tacticalMap = window.core.getModule('tacticalBattleMap');
+            if (tacticalMap) {
+                log('✅ Tactical map module found');
+                
+                // Try to show the map
+                if (tacticalMap.mapContainer) {
+                    log('✅ Map container exists: ' + tacticalMap.mapContainer.className);
+                    tacticalMap.showBattleMap();
+                    log('✅ ShowBattleMap called');
+                } else {
+                    log('❌ Map container not found');
+                }
+            } else {
+                log('❌ Tactical map module not found');
+            }
+        };
+        
+        window.testMapGeneration = function() {
+            log('🧪 Testing map generation...');
+            
+            const battleMapRepo = window.core.getModule('battleMapRepository');
+            if (battleMapRepo) {
+                log('✅ Battle map repository found');
+                
+                // Generate a test village map
+                const testMap = battleMapRepo.generateMap({
+                    locationName: 'Test Village',
+                    locationType: 'village',
+                    size: { width: 15, height: 10 }
+                });
+                
+                log('✅ Generated test map: ' + testMap.name);
+                log('📊 Map details: ' + testMap.buildings.length + ' buildings, ' + testMap.terrain.length + ' terrain features');
+                
+                // Try to load this map
+                const tacticalMap = window.core.getModule('tacticalBattleMap');
+                if (tacticalMap && tacticalMap.loadMapData) {
+                    tacticalMap.loadMapData(testMap);
+                    log('✅ Map data loaded to tactical map');
+                } else {
+                    log('⚠️ Could not load map data to tactical map');
+                }
+            } else {
+                log('❌ Battle map repository not found');
+            }
+        };
+        
+        window.clearMap = function() {
+            log('🧪 Testing map clearing...');
+            
+            const tacticalMap = window.core.getModule('tacticalBattleMap');
+            if (tacticalMap && tacticalMap.clearBattleMap) {
+                tacticalMap.clearBattleMap();
+                log('✅ Battle map cleared');
+            } else {
+                log('❌ Could not clear battle map');
+            }
+        };
+        
+        function log(message) {
+            const results = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            results.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+            console.log(message);
+        }
+    </script>
+</body>
+</html>

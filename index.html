@@ -993,19 +993,20 @@
                     <div class="game-controls">
                         <button class="secondary-button" onclick="switchScreen('characterSheet')">📄 Character Sheet</button>
                         <button class="secondary-button" onclick="switchScreen('worldBrowser')">🌍 World Browser</button>
+                        <button class="secondary-button" onclick="showTacticalBattleMap()">🗺️ Battle Map</button>
                         <button class="secondary-button" onclick="openGameSettings()">⚙️ Settings</button>
                         <button class="secondary-button" onclick="saveAndExitToMainMenu()">💾 Save and Exit</button>
                     </div>
                 </header>
                 
-                <div class="game-content">
-                    <!-- AI DM Conversation Interface -->
-                    <div class="dm-conversation">
+                <div class="game-content" style="display: flex; gap: 20px; height: calc(100vh - 120px);">
+                    <!-- Left Side: AI DM Conversation Interface -->
+                    <div class="dm-conversation" style="flex: 1; display: flex; flex-direction: column; min-width: 400px;">
                         <div class="conversation-header">
                             <h3>🎲 Adventure Story</h3>
                         </div>
                         
-                        <div id="conversation-history" class="conversation-history">
+                        <div id="conversation-history" class="conversation-history" style="flex: 1; overflow-y: auto;">
                             <!-- Conversation history will be populated here -->
                         </div>
                         
@@ -1046,32 +1047,9 @@
                         </div>
                     </div>
                     
-                    <div class="game-sidebar">
-                        <div class="party-status">
-                            <h4>Party Status</h4>
-                            <div id="game-party-list" class="game-party-list">
-                                <!-- Party members will be populated here -->
-                            </div>
-                        </div>
-                        
-                        <div class="quick-actions">
-                            <h4>Quick Actions</h4>
-                            <div class="action-buttons">
-                                <button class="action-btn" onclick="initiateAction('combat')">⚔️ Combat</button>
-                                <button class="action-btn" onclick="initiateAction('explore')">🗺️ Explore</button>
-                                <button class="action-btn" onclick="initiateAction('rest')">🏕️ Rest</button>
-                                <button class="action-btn" onclick="initiateAction('inventory')">🎒 Inventory</button>
-                            </div>
-                        </div>
-                        
-                        <div class="game-state">
-                            <h4>Current Status</h4>
-                            <div id="game-status" class="status-info">
-                                <p><strong>Location:</strong> <span id="current-location">Starting Region</span></p>
-                                <p><strong>Time:</strong> <span id="current-time">Morning</span></p>
-                                <p><strong>Weather:</strong> <span id="current-weather">Clear</span></p>
-                            </div>
-                        </div>
+                    <!-- Right Side: Enhanced Tactical Battle Map -->
+                    <div id="embedded-battle-map-container" class="embedded-battle-map-container" style="flex: 1; display: flex; flex-direction: column; min-width: 500px; max-width: 60%; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border-radius: 10px; padding: 10px; box-sizing: border-box;">
+                        <!-- Map will be embedded here by the tactical battle map module -->
                     </div>
                 </div>
             </div>
@@ -2038,9 +2016,11 @@
                     STORY_STATE.storyBeats = gameState.storyState.storyBeats || [];
                 }
                 
-                // Restore conversation history to UI
+                // Don't restore conversation to UI - just keep it in memory for AI context
+                // The recap will be shown instead
                 if (gameState.conversationLog && gameState.conversationLog.length > 0) {
-                    restoreConversationHistory(gameState.conversationLog);
+                    console.log(`Loaded ${gameState.conversationLog.length} previous conversation entries for AI context`);
+                    // Don't call restoreConversationHistory - we want a fresh chat with just the recap
                 }
                 
                 console.log('Campaign session state restored');
@@ -2061,9 +2041,27 @@
             
             // Restore each message
             conversationLog.forEach(logEntry => {
-                const messageDiv = document.createElement('div');
-                messageDiv.innerHTML = logEntry.html;
-                historyDiv.appendChild(messageDiv.firstElementChild);
+                try {
+                    const messageDiv = document.createElement('div');
+                    
+                    // Handle both old format (string) and new format (object with html property)
+                    if (typeof logEntry === 'string') {
+                        // Old format - direct HTML string
+                        messageDiv.innerHTML = logEntry;
+                    } else if (logEntry && logEntry.html) {
+                        // New format - object with html property
+                        messageDiv.innerHTML = logEntry.html;
+                    } else {
+                        console.warn('Unknown conversation log format:', logEntry);
+                        return;
+                    }
+                    
+                    if (messageDiv.firstElementChild) {
+                        historyDiv.appendChild(messageDiv.firstElementChild);
+                    }
+                } catch (error) {
+                    console.error('Error restoring conversation entry:', error);
+                }
             });
             
             // Scroll to bottom
@@ -2477,32 +2475,37 @@ Remember this context for ALL future interactions. Maintain continuity with this
             
             console.log('Displaying session recap:', recap);
             
+            // IMPORTANT: Clear conversation history for the new session
+            // Players only see the recap, not old messages
+            const history = document.getElementById('conversation-history');
+            if (history) {
+                history.innerHTML = '';
+                console.log('Cleared old conversation from display (kept in memory for AI)');
+            }
+            
             // Create recap message and add to conversation
             const recapHTML = `
-                <div class="message dm-message session-recap">
+                <div class="dm-message voice-message episode-recap">
                     <div class="message-header">
-                        <span class="speaker">Dungeon Master</span>
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="voice-indicator-small">🔊</span>
                         <span class="timestamp">${new Date().toLocaleTimeString()}</span>
                     </div>
                     <div class="message-content">
-                        <div class="recap-header">
-                            <strong>📜 Session Recap</strong>
-                        </div>
-                        <div class="recap-content">
-                            ${recap}
-                        </div>
+                        <h3 class="recap-title">📜 Previously on Taylor's Epic D&D Time...</h3>
+                        <p class="recap-content">${recap}</p>
+                        <p class="recap-footer"><em>The adventure continues from where you left off...</em></p>
                     </div>
-                    ${getDMActionButtons()}
                 </div>
             `;
             
-            // Add recap to conversation history
+            // Add ONLY the recap to conversation (not old messages)
             appendToConversation(recapHTML);
             
-            // Play TTS if available
-            if (window.isTTSEnabled && recap) {
-                speakText(recap);
-            }
+            // Speak the recap automatically
+            setTimeout(() => {
+                speakAsDM(`Previously on Taylor's Epic D&D Time... ${recap} The adventure continues...`);
+            }, 500);
             
             // Add to DM conversation history for continuity
             addToConversationHistory('dm_response', recap);
@@ -3153,15 +3156,11 @@ Remember this context for ALL future interactions. Maintain continuity with this
                 // Initialize AI DM with complete campaign context
                 await initializeAIDMWithCampaignContext(campaign);
                 
+                // Load campaign state into memory (for AI context)
+                loadCampaignSession(campaign);
+                
                 // Show session recap (episode-style introduction)
                 await showSessionRecap(campaign);
-                
-                // Restore session and show recap
-                setTimeout(async () => {
-                    loadCampaignSession(campaign);
-                    const recap = await generateSessionRecap(campaign.gameState);
-                    displaySessionRecap(recap);
-                }, 500);
             } else {
                 console.log('Starting new session...');
                 
@@ -3203,19 +3202,39 @@ Remember this context for ALL future interactions. Maintain continuity with this
                 const campaign = window.currentCampaign;
                 const hasExistingSession = campaign && campaign.gameState && campaign.gameState.conversationLog && campaign.gameState.conversationLog.length > 0;
                 if (hasExistingSession) {
-                    console.log('Continuing existing session - loading conversation history');
-                    // For existing sessions, we need to restore the conversation but not create new opening
+                    console.log('Continuing existing session - showing recap only');
+                    // Don't show old chat history - just clear it for the new session
                     const history = document.getElementById('conversation-history');
-                    if (history && campaign.gameState.conversationLog) {
-                        // Restore previous conversation
-                        history.innerHTML = campaign.gameState.conversationLog.join('');
-                        history.scrollTop = history.scrollHeight;
+                    if (history) {
+                        history.innerHTML = '';
                     }
+                    
+                    // The recap will be shown by showSessionRecap() in continueToGame()
+                    // The AI DM has the context from DM_STATE.conversationHistory
+                    console.log('Previous conversation is stored in DM_STATE for AI context');
                 } else {
                     console.log('New session - initializing with proper scenario-based narration');
                     // Call initializeAdventure() for new campaigns to get proper goblin scenario narration
                     initializeAdventure();
                 }
+                
+                // Initialize battlemap system
+                setTimeout(() => {
+                    initializeBattlemap();
+                    
+                    // Add player tokens to map
+                    const party = window.partyCharacters || [];
+                    if (party.length > 0) {
+                        party.forEach((char, index) => {
+                            const startX = 10 + index; // Start players in center-ish area
+                            const startY = 10;
+                            addTokenToMap(char.name, 'player', startX, startY);
+                        });
+                    } else {
+                        // Single player
+                        addTokenToMap('Player', 'player', 10, 10);
+                    }
+                }, 1000);
             }, 500);
         }
         
@@ -4290,6 +4309,37 @@ Remember this context for ALL future interactions. Maintain continuity with this
         // ===============================
         
         // Open game settings modal
+        function showTacticalBattleMap() {
+            console.log('🗺️ Opening Tactical Battle Map...');
+            
+            if (window.core && window.core.getModule) {
+                const tacticalMap = window.core.getModule('tacticalBattleMap');
+                if (tacticalMap) {
+                    // Show the battle map
+                    if (tacticalMap.mapContainer) {
+                        tacticalMap.showBattleMap();
+                        console.log('✅ Battle map opened');
+                        
+                        // If no map is loaded, generate a test map
+                        if (!tacticalMap.currentMapData) {
+                            console.log('🚧 No map loaded, generating test village...');
+                            tacticalMap.testVillageMap();
+                        }
+                    } else {
+                        console.log('🚧 Battle map container not ready, trying test generation...');
+                        // Try to generate a test map which will also show the container
+                        tacticalMap.testVillageMap();
+                    }
+                } else {
+                    console.warn('❌ Tactical Battle Map module not available');
+                    alert('Battle Map is loading... Please try again in a moment.');
+                }
+            } else {
+                console.warn('❌ Core system not ready');
+                alert('Game is still loading... Please try again in a moment.');
+            }
+        }
+
         function openGameSettings() {
             const modal = document.getElementById('game-settings-modal');
             
@@ -4790,6 +4840,33 @@ Remember this context for ALL future interactions. Maintain continuity with this
                 return;
             }
             
+            // Check if we're waiting for initiative
+            if (DM_STATE.waitingForInitiative) {
+                processInitiativeResponse(action);
+                input.value = '';
+                return;
+            }
+            
+            // Process movement commands and show visual feedback
+            const movementResult = processMovementCommand(action);
+            if (movementResult) {
+                // Add movement confirmation to chat
+                const movementMessage = `
+                    <div class="system-message">
+                        <div class="message-header">
+                            <strong>🗺️ Battlemap</strong>
+                            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p>${movementResult}</p>
+                        </div>
+                    </div>
+                `;
+                appendToConversation(movementMessage);
+                input.value = '';
+                return; // Don't send to DM if it was just movement
+            }
+            
             // Add player message to conversation
             const playerMessage = `
                 <div class="player-message">
@@ -4814,6 +4891,1270 @@ Remember this context for ALL future interactions. Maintain continuity with this
             }, 1000);
         }
         
+        // Check if DM response indicates combat should start
+        function checkForCombatInitiation(dmResponse, playerAction) {
+            // Don't start combat if already in combat
+            if (combatState.active) return;
+            
+            const responseLower = dmResponse.toLowerCase();
+            
+            // Combat trigger phrases from DM
+            const combatTriggers = [
+                'roll for initiative',
+                'roll initiative', 
+                'initiative!',
+                'combat begins',
+                'battle is joined',
+                'weapons are drawn',
+                'attacks you',
+                'lunges at you',
+                'charges toward',
+                'hostile intent',
+                'combat has begun',
+                'fight breaks out'
+            ];
+            
+            // Check if DM is initiating combat
+            const dmInitiatingCombat = combatTriggers.some(trigger => responseLower.includes(trigger));
+            
+            if (dmInitiatingCombat) {
+                console.log('⚔️ Combat detected! Starting combat sequence...');
+                
+                // Extract enemies from the DM response (look for common enemy mentions)
+                const enemies = extractEnemiesFromResponse(dmResponse);
+                
+                // Start the combat initialization
+                initiateCombatWithEnemies(enemies);
+            }
+        }
+        
+        // Extract enemy information from DM response
+        function extractEnemiesFromResponse(dmResponse) {
+            const enemies = [];
+            const responseLower = dmResponse.toLowerCase();
+            
+            // Common enemy patterns
+            const enemyPatterns = [
+                { pattern: /(\d+)\s+(goblin|goblins)/i, name: 'Goblin', hp: 7, ac: 15 },
+                { pattern: /(\d+)\s+(orc|orcs)/i, name: 'Orc', hp: 15, ac: 13 },
+                { pattern: /(\d+)\s+(bandit|bandits)/i, name: 'Bandit', hp: 11, ac: 12 },
+                { pattern: /(\d+)\s+(wolf|wolves)/i, name: 'Wolf', hp: 11, ac: 13 },
+                { pattern: /(\d+)\s+(skeleton|skeletons)/i, name: 'Skeleton', hp: 13, ac: 13 },
+                { pattern: /(\d+)\s+(zombie|zombies)/i, name: 'Zombie', hp: 22, ac: 8 }
+            ];
+            
+            // Try to extract enemies from response
+            enemyPatterns.forEach(({ pattern, name, hp, ac }) => {
+                const match = dmResponse.match(pattern);
+                if (match) {
+                    const count = parseInt(match[1]) || 1;
+                    for (let i = 1; i <= count; i++) {
+                        enemies.push({
+                            name: count > 1 ? `${name} ${i}` : name,
+                            baseType: name,
+                            hp: hp,
+                            maxHp: hp,
+                            ac: ac,
+                            initiative: 0,
+                            type: 'enemy'
+                        });
+                    }
+                }
+            });
+            
+            // If no specific enemies found, create generic enemies
+            if (enemies.length === 0) {
+                enemies.push(
+                    { name: 'Enemy 1', hp: 10, maxHp: 10, ac: 13, initiative: 0, type: 'enemy' },
+                    { name: 'Enemy 2', hp: 10, maxHp: 10, ac: 13, initiative: 0, type: 'enemy' }
+                );
+            }
+            
+            return enemies;
+        }
+        
+        // Initiate combat with identified enemies
+        function initiateCombatWithEnemies(enemies) {
+            // Roll initiative for all enemies
+            enemies.forEach(enemy => {
+                const roll = Math.floor(Math.random() * 20) + 1;
+                const dexMod = enemy.baseType === 'Zombie' ? -1 : 
+                             enemy.baseType === 'Wolf' ? 2 : 
+                             enemy.baseType === 'Goblin' ? 2 : 0;
+                enemy.initiative = roll + dexMod;
+                console.log(`🎲 ${enemy.name} rolled ${roll} + ${dexMod} = ${enemy.initiative} for initiative`);
+            });
+            
+            // Store enemies temporarily
+            window.combatEnemies = enemies;
+            
+            // Now ask players for their initiative
+            const party = window.partyCharacters || [];
+            
+            if (party.length === 0) {
+                // Single player
+                askForPlayerInitiative();
+            } else {
+                // Multiple party members
+                askForPartyInitiative(party);
+            }
+        }
+        
+        // Ask single player for initiative
+        function askForPlayerInitiative() {
+            const promptHTML = `
+                <div class="dm-message combat-prompt">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p><strong>⚔️ Roll for Initiative!</strong></p>
+                        <p>Roll 1d20 and add your Dexterity modifier. What did you get?</p>
+                        <p class="example-text">Say: "I rolled 15" or "17 for initiative"</p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(promptHTML);
+            DM_STATE.waitingForInitiative = true;
+            DM_STATE.waitingForPlayer = 'single';
+        }
+        
+        // Ask multiple party members for initiative
+        function askForPartyInitiative(party) {
+            window.partyInitiatives = [];
+            window.currentInitiativeIndex = 0;
+            
+            // Ask for first character's initiative
+            askNextCharacterInitiative();
+        }
+        
+        // Ask for next character's initiative
+        function askNextCharacterInitiative() {
+            const party = window.partyCharacters || [];
+            const currentChar = party[window.currentInitiativeIndex];
+            
+            if (!currentChar) {
+                // All initiatives collected, start combat
+                finalizeCombatInitiatives();
+                return;
+            }
+            
+            const dexMod = Math.floor((currentChar.abilities?.dexterity?.score || 10) / 2) - 5;
+            
+            const promptHTML = `
+                <div class="dm-message combat-prompt">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p><strong>${currentChar.name}</strong>, roll for initiative!</p>
+                        <p>Roll 1d20 and add ${dexMod >= 0 ? '+' : ''}${dexMod} (DEX modifier)</p>
+                        <p class="example-text">Say: "I rolled 15" or "${currentChar.name} got 17"</p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(promptHTML);
+            DM_STATE.waitingForInitiative = true;
+            DM_STATE.waitingForPlayer = currentChar.name;
+        }
+        
+        // Process initiative response from player
+        function processInitiativeResponse(playerMessage) {
+            // Extract number from response
+            const match = playerMessage.match(/\d+/);
+            if (!match) {
+                appendToConversation(`
+                    <div class="dm-message">
+                        <div class="message-header">
+                            <strong>🎭 Dungeon Master</strong>
+                        </div>
+                        <div class="message-content">
+                            <p>I need a number for your initiative roll. What did you get?</p>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+            
+            const initiative = parseInt(match[0]);
+            
+            if (DM_STATE.waitingForPlayer === 'single') {
+                // Single player initiative
+                window.playerInitiative = initiative;
+                finalizeCombatInitiatives();
+            } else {
+                // Party member initiative
+                const party = window.partyCharacters || [];
+                const currentChar = party[window.currentInitiativeIndex];
+                
+                window.partyInitiatives.push({
+                    character: currentChar,
+                    initiative: initiative
+                });
+                
+                console.log(`📝 ${currentChar.name} initiative: ${initiative}`);
+                
+                // Move to next character
+                window.currentInitiativeIndex++;
+                askNextCharacterInitiative();
+            }
+        }
+        
+        // Finalize combat with all initiatives
+        function finalizeCombatInitiatives() {
+            const allCombatants = [];
+            
+            // Add enemies
+            if (window.combatEnemies) {
+                allCombatants.push(...window.combatEnemies);
+            }
+            
+            // Add party members
+            if (window.partyInitiatives && window.partyInitiatives.length > 0) {
+                window.partyInitiatives.forEach(pi => {
+                    allCombatants.push({
+                        ...pi.character,
+                        name: pi.character.name,
+                        initiative: pi.initiative,
+                        hp: pi.character.combat?.hitPoints?.current || 10,
+                        maxHp: pi.character.combat?.hitPoints?.max || 10,
+                        ac: pi.character.combat?.armorClass || 10,
+                        type: 'player'
+                    });
+                });
+            } else if (window.playerInitiative) {
+                // Single player
+                allCombatants.push({
+                    name: 'Player',
+                    initiative: window.playerInitiative,
+                    hp: 20,
+                    maxHp: 20,
+                    ac: 15,
+                    type: 'player'
+                });
+            }
+            
+            // Sort by initiative (highest first)
+            allCombatants.sort((a, b) => b.initiative - a.initiative);
+            
+            // Store in combat state
+            combatState.active = true;
+            combatState.combatants = allCombatants;
+            combatState.round = 1;
+            combatState.currentTurn = 0;
+            
+            // Display the initiative tracker
+            displayInitiativeTracker();
+            
+            // Clean up temporary variables
+            DM_STATE.waitingForInitiative = false;
+            DM_STATE.waitingForPlayer = null;
+            delete window.combatEnemies;
+            delete window.partyInitiatives;
+            delete window.currentInitiativeIndex;
+            delete window.playerInitiative;
+        }
+        
+        // Display visual initiative tracker
+        function displayInitiativeTracker() {
+            const trackerHTML = `
+                <div class="initiative-tracker-display">
+                    <div class="tracker-header">
+                        <h3>⚔️ Initiative Order - Round ${combatState.round}</h3>
+                    </div>
+                    <div class="tracker-list">
+                        ${combatState.combatants.map((c, index) => `
+                            <div class="tracker-entry ${c.type} ${index === combatState.currentTurn ? 'current-turn' : ''}">
+                                <div class="entry-info">
+                                    <span class="entry-name">${c.type === 'enemy' ? '👹' : '🛡️'} ${c.name}</span>
+                                    <span class="entry-hp">HP: ${c.hp}/${c.maxHp}</span>
+                                </div>
+                                <div class="entry-initiative">
+                                    <span class="init-value">${c.initiative}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="tracker-footer">
+                        <p>Current Turn: <strong>${combatState.combatants[combatState.currentTurn].name}</strong></p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(trackerHTML);
+            
+            // Also create a persistent tracker on the side
+            updatePersistentInitiativeTracker();
+            
+            // Announce combat start
+            const firstCombatant = combatState.combatants[0];
+            const startMessage = `
+                <div class="dm-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p><strong>Combat begins!</strong></p>
+                        <p>${firstCombatant.name} goes first with initiative ${firstCombatant.initiative}!</p>
+                        ${firstCombatant.type === 'player' ? 
+                            '<p>What do you do for your turn?</p>' : 
+                            '<p>The enemy prepares to attack...</p>'}
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(startMessage);
+        }
+        
+        // Update persistent initiative tracker (sidebar)
+        function updatePersistentInitiativeTracker() {
+            // Check if we have a combat sidebar element
+            let tracker = document.getElementById('persistent-initiative-tracker');
+            
+            if (!tracker) {
+                // Create it if it doesn't exist
+                const gameScreen = document.getElementById('game-screen');
+                if (gameScreen) {
+                    const trackerDiv = document.createElement('div');
+                    trackerDiv.id = 'persistent-initiative-tracker';
+                    trackerDiv.className = 'persistent-tracker';
+                    trackerDiv.style.cssText = `
+                        position: fixed;
+                        right: 20px;
+                        top: 100px;
+                        width: 250px;
+                        background: rgba(26, 26, 26, 0.95);
+                        border: 2px solid #8B4513;
+                        border-radius: 10px;
+                        padding: 15px;
+                        z-index: 100;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                    `;
+                    gameScreen.appendChild(trackerDiv);
+                    tracker = trackerDiv;
+                }
+            }
+            
+            if (tracker) {
+                tracker.innerHTML = `
+                    <h4 style="color: #FFD700; margin: 0 0 10px 0;">⚔️ Combat - Round ${combatState.round}</h4>
+                    <div class="mini-tracker-list">
+                        ${combatState.combatants.map((c, index) => `
+                            <div style="
+                                padding: 5px;
+                                margin: 2px 0;
+                                background: ${index === combatState.currentTurn ? '#4a4a2e' : 'rgba(0,0,0,0.3)'};
+                                border-radius: 5px;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                ${index === combatState.currentTurn ? 'border: 1px solid #FFD700;' : ''}
+                            ">
+                                <span style="color: ${c.type === 'enemy' ? '#ff6b6b' : '#4fc3f7'};">
+                                    ${c.name}
+                                </span>
+                                <span style="color: #FFD700; font-weight: bold;">
+                                    ${c.initiative}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="endCombat()" style="
+                        width: 100%;
+                        margin-top: 10px;
+                        padding: 5px;
+                        background: #8B4513;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">End Combat</button>
+                `;
+            }
+        }
+        
+        // End combat
+        function endCombat() {
+            combatState.active = false;
+            combatState.combatants = [];
+            combatState.round = 0;
+            combatState.currentTurn = 0;
+            
+            // Remove persistent tracker
+            const tracker = document.getElementById('persistent-initiative-tracker');
+            if (tracker) {
+                tracker.remove();
+            }
+            
+            appendToConversation(`
+                <div class="dm-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p><strong>Combat has ended.</strong></p>
+                        <p>The dust settles and calm returns to the area.</p>
+                    </div>
+                </div>
+            `);
+        }
+        
+        // Prompt players to roll initiative
+        function promptForInitiativeRolls() {
+            const party = window.partyCharacters || [];
+            
+            if (party.length === 0) {
+                alert('No party members found! Add characters to your party first.');
+                return;
+            }
+            
+            // Create initiative roll dialog
+            const initiativeHTML = `
+                <div class="initiative-dialog">
+                    <h3>🎲 Roll Initiative</h3>
+                    <p>Roll 1d20 + DEX modifier for each character:</p>
+                    <div class="initiative-rolls">
+                        ${party.map(char => {
+                            const dexMod = Math.floor((char.abilities?.dexterity?.score || 10) / 2) - 5;
+                            return `
+                                <div class="character-initiative">
+                                    <label>${char.name} (DEX ${dexMod >= 0 ? '+' : ''}${dexMod}):</label>
+                                    <input type="number" id="init-${char.id}" placeholder="Total roll" min="1" max="30">
+                                    <button onclick="rollInitiativeFor('${char.id}')">🎲 Roll</button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <button class="primary-button" onclick="submitInitiativeRolls()">Start Combat</button>
+                </div>
+            `;
+            
+            // Display as modal or in conversation
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    ${initiativeHTML}
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // Roll initiative for a specific character
+        function rollInitiativeFor(characterId) {
+            const char = window.partyCharacters.find(c => c.id === characterId);
+            if (!char) return;
+            
+            const dexMod = Math.floor((char.abilities?.dexterity?.score || 10) / 2) - 5;
+            const roll = Math.floor(Math.random() * 20) + 1;
+            const total = roll + dexMod;
+            
+            document.getElementById(`init-${characterId}`).value = total;
+            
+            // Show roll result
+            const rollMessage = `🎲 ${char.name} rolled ${roll} + ${dexMod} = ${total} for initiative`;
+            console.log(rollMessage);
+        }
+        
+        // Submit all initiative rolls and start combat
+        function submitInitiativeRolls() {
+            const party = window.partyCharacters || [];
+            const initiativeResults = [];
+            
+            // Collect all initiative values
+            party.forEach(char => {
+                const input = document.getElementById(`init-${char.id}`);
+                const initiative = parseInt(input?.value || 10);
+                initiativeResults.push({
+                    character: char,
+                    initiative: initiative
+                });
+            });
+            
+            // Close modal
+            document.querySelector('.modal-overlay')?.remove();
+            
+            // Start proper D&D combat with these initiatives
+            startProperCombat(initiativeResults);
+        }
+        
+        // Start combat with proper D&D rules
+        function startProperCombat(playerInitiatives) {
+            console.log('⚔️ Starting proper D&D combat with initiatives:', playerInitiatives);
+            
+            // Initialize combat state
+            combatState.active = true;
+            combatState.round = 1;
+            combatState.currentTurn = 0;
+            
+            // Add player characters with their rolled initiatives
+            combatState.combatants = playerInitiatives.map(pi => ({
+                ...pi.character,
+                type: 'player',
+                initiative: pi.initiative,
+                hp: pi.character.combat?.hitPoints?.current || 10,
+                maxHp: pi.character.combat?.hitPoints?.max || 10,
+                ac: pi.character.combat?.armorClass || 10,
+                conditions: []
+            }));
+            
+            // DM will add enemies with their initiatives
+            const combatStartMessage = `
+                <div class="dm-message">
+                    <div class="message-header">
+                        <strong>🎭 Dungeon Master</strong>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <p><strong>⚔️ Combat has begun!</strong></p>
+                        <p>Initiative order will be established once all combatants have rolled.</p>
+                        <p>Waiting for enemy initiatives...</p>
+                    </div>
+                </div>
+            `;
+            
+            appendToConversation(combatStartMessage);
+            
+            // Ask DM to roll for enemies
+            DM_STATE.waitingForEnemyInitiative = true;
+            
+            // Update DM state
+            DM_STATE.combatActive = true;
+            DM_STATE.combatPending = false;
+            DM_STATE.waitingForInitiative = false;
+        }
+
+        // ===============================
+        // DYNAMIC BATTLEMAP SYSTEM
+        // ===============================
+
+        const BATTLEMAP = {
+            canvas: null,
+            ctx: null,
+            scale: 1,
+            offsetX: 0,
+            offsetY: 0,
+            gridSize: 30,
+            showGrid: true,
+            tokens: new Map(),
+            currentMap: null,
+            mapData: {
+                type: 'town', // town, forest, dungeon, tavern, etc.
+                width: 20,
+                height: 20,
+                features: [] // walls, trees, buildings, etc.
+            }
+        };
+
+        // Initialize battlemap system
+        function initializeBattlemap() {
+            const canvas = document.getElementById('map-canvas');
+            if (!canvas) return;
+            
+            BATTLEMAP.canvas = canvas;
+            BATTLEMAP.ctx = canvas.getContext('2d');
+            
+            // Set proper canvas dimensions with extra space for token names
+            const container = document.getElementById('battlemap');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width - 4; // Account for border
+            canvas.height = rect.height - 4;
+            
+            // Ensure text rendering is crisp and visible
+            const ctx = BATTLEMAP.ctx;
+            ctx.textBaseline = 'alphabetic';
+            ctx.imageSmoothingEnabled = true;
+            ctx.textRenderingOptimization = 'optimizeQuality';
+            
+            // Debug: Log canvas setup
+            console.log('🗺️ Canvas setup:', { width: canvas.width, height: canvas.height, gridSize: BATTLEMAP.gridSize });
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                setTimeout(() => {
+                    const rect = container.getBoundingClientRect();
+                    canvas.width = rect.width - 4;
+                    canvas.height = rect.height - 4;
+                    drawMap();
+                }, 100);
+            });
+            
+            // Generate initial map based on story context
+            generateMap('village');
+            drawMap();
+            
+            console.log('🗺️ Battlemap system initialized');
+        }
+
+        // Generate map based on location type
+        function generateMap(locationType) {
+            BATTLEMAP.mapData.type = locationType;
+            BATTLEMAP.mapData.features = [];
+            
+            switch(locationType.toLowerCase()) {
+                case 'village':
+                case 'town':
+                case 'millhaven':
+                    generateTownMap();
+                    break;
+                case 'forest':
+                case 'woods':
+                    generateForestMap();
+                    break;
+                case 'dungeon':
+                case 'cave':
+                    generateDungeonMap();
+                    break;
+                case 'tavern':
+                case 'inn':
+                    generateTavernMap();
+                    break;
+                default:
+                    generateGenericMap();
+            }
+            
+            // Update map location display
+            document.getElementById('map-location-name').textContent = 
+                locationType.charAt(0).toUpperCase() + locationType.slice(1);
+        }
+
+        // Generate town/village map
+        function generateTownMap() {
+            BATTLEMAP.mapData.width = 20;
+            BATTLEMAP.mapData.height = 20;
+            
+            // Add buildings
+            const buildings = [
+                {type: 'building', x: 2, y: 3, width: 3, height: 3, name: 'Tavern'},
+                {type: 'building', x: 7, y: 2, width: 2, height: 4, name: 'Shop'},
+                {type: 'building', x: 12, y: 4, width: 4, height: 2, name: 'House'},
+                {type: 'building', x: 3, y: 8, width: 2, height: 2, name: 'House'},
+                {type: 'building', x: 14, y: 8, width: 3, height: 3, name: 'Temple'},
+                {type: 'building', x: 8, y: 12, width: 4, height: 3, name: 'Barracks'}
+            ];
+            
+            // Add roads/paths
+            const roads = [
+                {type: 'road', x: 0, y: 10, width: 20, height: 1}, // Main road
+                {type: 'road', x: 10, y: 0, width: 1, height: 20}, // Cross road
+            ];
+            
+            // Add some trees/decoration
+            const nature = [
+                {type: 'tree', x: 1, y: 1},
+                {type: 'tree', x: 18, y: 2},
+                {type: 'tree', x: 16, y: 16},
+                {type: 'tree', x: 2, y: 18}
+            ];
+            
+            BATTLEMAP.mapData.features = [...buildings, ...roads, ...nature];
+        }
+
+        // Generate forest map
+        function generateForestMap() {
+            BATTLEMAP.mapData.width = 20;
+            BATTLEMAP.mapData.height = 20;
+            
+            const features = [];
+            
+            // Random trees
+            for (let i = 0; i < 30; i++) {
+                features.push({
+                    type: 'tree',
+                    x: Math.floor(Math.random() * 18) + 1,
+                    y: Math.floor(Math.random() * 18) + 1
+                });
+            }
+            
+            // Some clearings
+            features.push({type: 'clearing', x: 8, y: 8, width: 4, height: 4});
+            features.push({type: 'clearing', x: 14, y: 3, width: 3, height: 3});
+            
+            BATTLEMAP.mapData.features = features;
+        }
+
+        // Generate dungeon map
+        function generateDungeonMap() {
+            BATTLEMAP.mapData.width = 15;
+            BATTLEMAP.mapData.height = 15;
+            
+            const features = [];
+            
+            // Walls around perimeter
+            for (let x = 0; x < 15; x++) {
+                features.push({type: 'wall', x: x, y: 0});
+                features.push({type: 'wall', x: x, y: 14});
+            }
+            for (let y = 0; y < 15; y++) {
+                features.push({type: 'wall', x: 0, y: y});
+                features.push({type: 'wall', x: 14, y: y});
+            }
+            
+            // Interior walls
+            features.push({type: 'wall', x: 5, y: 3, width: 1, height: 8});
+            features.push({type: 'wall', x: 9, y: 5, width: 1, height: 6});
+            
+            // Doors
+            features.push({type: 'door', x: 5, y: 7});
+            features.push({type: 'door', x: 9, y: 8});
+            
+            BATTLEMAP.mapData.features = features;
+        }
+
+        // Generate tavern interior
+        function generateTavernMap() {
+            BATTLEMAP.mapData.width = 12;
+            BATTLEMAP.mapData.height = 10;
+            
+            const features = [
+                // Walls
+                {type: 'wall', x: 0, y: 0, width: 12, height: 1},
+                {type: 'wall', x: 0, y: 9, width: 12, height: 1},
+                {type: 'wall', x: 0, y: 0, width: 1, height: 10},
+                {type: 'wall', x: 11, y: 0, width: 1, height: 10},
+                
+                // Bar
+                {type: 'furniture', x: 8, y: 2, width: 3, height: 1, name: 'Bar'},
+                
+                // Tables
+                {type: 'furniture', x: 2, y: 3, width: 1, height: 1, name: 'Table'},
+                {type: 'furniture', x: 5, y: 4, width: 1, height: 1, name: 'Table'},
+                {type: 'furniture', x: 2, y: 7, width: 1, height: 1, name: 'Table'},
+                
+                // Door
+                {type: 'door', x: 5, y: 9}
+            ];
+            
+            BATTLEMAP.mapData.features = features;
+        }
+
+        // Generate generic outdoor map
+        function generateGenericMap() {
+            BATTLEMAP.mapData.width = 16;
+            BATTLEMAP.mapData.height = 16;
+            
+            const features = [];
+            
+            // Some random terrain features
+            for (let i = 0; i < 8; i++) {
+                const featureType = ['tree', 'rock', 'bush'][Math.floor(Math.random() * 3)];
+                features.push({
+                    type: featureType,
+                    x: Math.floor(Math.random() * 14) + 1,
+                    y: Math.floor(Math.random() * 14) + 1
+                });
+            }
+            
+            BATTLEMAP.mapData.features = features;
+        }
+
+        // Draw the entire map
+        function drawMap() {
+            if (!BATTLEMAP.ctx) return;
+            
+            const ctx = BATTLEMAP.ctx;
+            const canvas = BATTLEMAP.canvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = getMapBackgroundColor();
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            if (BATTLEMAP.showGrid) {
+                drawGrid();
+            }
+            
+            // Draw map features
+            drawMapFeatures();
+            
+            // Draw tokens
+            drawTokens();
+        }
+
+        // Get background color based on map type
+        function getMapBackgroundColor() {
+            switch(BATTLEMAP.mapData.type) {
+                case 'forest': return '#2d4a2d';
+                case 'dungeon': return '#1a1a1a';
+                case 'tavern': return '#3d2f1f';
+                case 'town': case 'village': return '#4a4a3a';
+                default: return '#3a4a3a';
+            }
+        }
+
+        // Draw grid
+        function drawGrid() {
+            const ctx = BATTLEMAP.ctx;
+            const canvas = BATTLEMAP.canvas;
+            const gridSize = BATTLEMAP.gridSize * BATTLEMAP.scale;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // Vertical lines
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Horizontal lines
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Draw map features
+        function drawMapFeatures() {
+            const ctx = BATTLEMAP.ctx;
+            const features = BATTLEMAP.mapData.features;
+            
+            features.forEach(feature => {
+                drawFeature(feature);
+            });
+        }
+
+        // Draw individual feature
+        function drawFeature(feature) {
+            const ctx = BATTLEMAP.ctx;
+            const x = feature.x * BATTLEMAP.gridSize * BATTLEMAP.scale;
+            const y = feature.y * BATTLEMAP.gridSize * BATTLEMAP.scale;
+            const size = BATTLEMAP.gridSize * BATTLEMAP.scale;
+            const width = (feature.width || 1) * size;
+            const height = (feature.height || 1) * size;
+            
+            switch(feature.type) {
+                case 'building':
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(x, y, width, height);
+                    ctx.strokeStyle = '#654321';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x, y, width, height);
+                    break;
+                    
+                case 'wall':
+                    ctx.fillStyle = '#333333';
+                    ctx.fillRect(x, y, width, height);
+                    break;
+                    
+                case 'door':
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(x, y, size, size);
+                    break;
+                    
+                case 'tree':
+                    ctx.fillStyle = '#228B22';
+                    ctx.beginPath();
+                    ctx.arc(x + size/2, y + size/2, size/3, 0, 2 * Math.PI);
+                    ctx.fill();
+                    break;
+                    
+                case 'road':
+                    ctx.fillStyle = '#8B7D6B';
+                    ctx.fillRect(x, y, width, height);
+                    break;
+                    
+                case 'furniture':
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(x, y, width, height);
+                    break;
+                    
+                case 'rock':
+                    ctx.fillStyle = '#696969';
+                    ctx.fillRect(x, y, size, size);
+                    break;
+                    
+                case 'clearing':
+                    ctx.fillStyle = '#90EE90';
+                    ctx.fillRect(x, y, width, height);
+                    break;
+            }
+        }
+
+        // Draw tokens (players, NPCs, enemies)
+        function drawTokens() {
+            BATTLEMAP.tokens.forEach((token, id) => {
+                drawToken(token);
+            });
+        }
+
+        // Draw individual token
+        function drawToken(token) {
+            const ctx = BATTLEMAP.ctx;
+            const x = token.x * BATTLEMAP.gridSize * BATTLEMAP.scale;
+            const y = token.y * BATTLEMAP.gridSize * BATTLEMAP.scale;
+            const size = BATTLEMAP.gridSize * BATTLEMAP.scale;
+            
+            // Debug: Log token drawing
+            console.log('🪙 Drawing token:', { name: token.name, x: token.x, y: token.y, screenX: x, screenY: y, size: size });
+            
+            // Token background
+            ctx.fillStyle = getTokenColor(token.type);
+            ctx.beginPath();
+            ctx.arc(x + size/2, y + size/2, size/3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Token border
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Token initial letter
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${Math.floor(size/4)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(token.name.charAt(0).toUpperCase(), x + size/2, y + size/2 + size/12);
+            
+            // Token name underneath - make it MUCH more visible
+            const fontSize = Math.max(14, Math.floor(size/3)); // Much larger font
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            
+            // Position name well below token to avoid clipping
+            const nameY = y + size + fontSize + 8;
+            
+            // Draw thick black outline for better visibility
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.strokeText(token.name, x + size/2, nameY);
+            
+            // Draw bright white text on top
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(token.name, x + size/2, nameY);
+            
+            // Debug: Log name rendering
+            console.log('📝 Token name rendered:', { name: token.name, nameX: x + size/2, nameY: nameY, fontSize: fontSize });
+        }
+
+        // Get token color based on type
+        function getTokenColor(type) {
+            switch(type) {
+                case 'player': return '#4169E1';
+                case 'npc': return '#32CD32';
+                case 'enemy': return '#DC143C';
+                default: return '#808080';
+            }
+        }
+
+        // Add token to map
+        function addTokenToMap(name, type, x, y) {
+            const token = {
+                name: name,
+                type: type,
+                x: x,
+                y: y
+            };
+            BATTLEMAP.tokens.set(name, token);
+            console.log(`🪙 Added ${type} token: ${name} at (${x}, ${y})`, token);
+            console.log('🗺️ Current tokens:', Array.from(BATTLEMAP.tokens.entries()));
+            drawMap();
+        }
+
+        // Move token
+        function moveToken(name, newX, newY) {
+            const token = BATTLEMAP.tokens.get(name);
+            if (token) {
+                token.x = newX;
+                token.y = newY;
+                drawMap();
+                console.log(`🚶 Moved ${name} to (${newX}, ${newY})`);
+            }
+        }
+
+        // Remove token
+        function removeToken(name) {
+            BATTLEMAP.tokens.delete(name);
+            drawMap();
+            console.log(`🚫 Removed token: ${name}`);
+        }
+        
+        // Manual redraw function for debugging
+        function forceRedrawBattlemap() {
+            console.log('🔄 Force redrawing battlemap...');
+            console.log('📊 Current tokens:', Array.from(BATTLEMAP.tokens.entries()));
+            if (BATTLEMAP.ctx) {
+                drawMap();
+                console.log('✅ Battlemap redrawn');
+            } else {
+                console.log('❌ No canvas context available');
+            }
+        }
+        
+        // Make debugging functions globally accessible
+        window.forceRedrawBattlemap = forceRedrawBattlemap;
+        window.BATTLEMAP = BATTLEMAP;
+
+        // Map control functions
+        function zoomIn() {
+            BATTLEMAP.scale = Math.min(BATTLEMAP.scale * 1.2, 3);
+            drawMap();
+        }
+
+        function zoomOut() {
+            BATTLEMAP.scale = Math.max(BATTLEMAP.scale / 1.2, 0.5);
+            drawMap();
+        }
+
+        function resetMapView() {
+            BATTLEMAP.scale = 1;
+            BATTLEMAP.offsetX = 0;
+            BATTLEMAP.offsetY = 0;
+            drawMap();
+        }
+
+        function toggleGrid() {
+            BATTLEMAP.showGrid = document.getElementById('show-grid').checked;
+            drawMap();
+        }
+
+        // Update map based on story context
+        function updateMapFromStory(location, description) {
+            // Generate new map if location changed significantly
+            const currentType = BATTLEMAP.mapData.type;
+            let newType = determineMapType(location, description);
+            
+            if (newType !== currentType) {
+                generateMap(newType);
+                drawMap();
+                console.log(`🗺️ Generated new ${newType} map`);
+            }
+            
+            // Add/update NPCs and enemies based on description
+            updateTokensFromDescription(description);
+        }
+
+        // Determine map type from location and description
+        function determineMapType(location, description) {
+            const locationLower = location.toLowerCase();
+            const descriptionLower = description.toLowerCase();
+            
+            if (locationLower.includes('village') || locationLower.includes('town') || locationLower.includes('millhaven')) {
+                return 'village';
+            } else if (locationLower.includes('forest') || locationLower.includes('woods') || descriptionLower.includes('trees')) {
+                return 'forest';
+            } else if (locationLower.includes('tavern') || locationLower.includes('inn')) {
+                return 'tavern';
+            } else if (locationLower.includes('dungeon') || locationLower.includes('cave')) {
+                return 'dungeon';
+            }
+            
+            return 'generic';
+        }
+
+        // Update tokens based on description
+        function updateTokensFromDescription(description) {
+            // Look for enemy mentions and add tokens
+            const enemyMatches = [
+                { pattern: /(\d+)?\s*(goblin|goblins)/i, name: 'Goblin' },
+                { pattern: /(\d+)?\s*(orc|orcs)/i, name: 'Orc' },
+                { pattern: /(\d+)?\s*(bandit|bandits)/i, name: 'Bandit' }
+            ];
+            
+            enemyMatches.forEach(({ pattern, name }) => {
+                const match = description.match(pattern);
+                if (match) {
+                    const count = parseInt(match[1]) || 1;
+                    for (let i = 1; i <= count; i++) {
+                        const tokenName = count > 1 ? `${name} ${i}` : name;
+                        if (!BATTLEMAP.tokens.has(tokenName)) {
+                            // Place enemy at random location
+                            const x = Math.floor(Math.random() * (BATTLEMAP.mapData.width - 2)) + 1;
+                            const y = Math.floor(Math.random() * (BATTLEMAP.mapData.height - 2)) + 1;
+                            addTokenToMap(tokenName, 'enemy', x, y);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process movement commands from voice/text
+        function processMovementCommand(playerAction) {
+            const actionLower = playerAction.toLowerCase();
+            
+            // Look for movement patterns
+            const movePatterns = [
+                { pattern: /(?:i\s+)?move\s+(?:to|towards?)\s+(?:the\s+)?(.+)/i, type: 'move_to' },
+                { pattern: /(?:i\s+)?go\s+(?:to|towards?)\s+(?:the\s+)?(.+)/i, type: 'move_to' },
+                { pattern: /(?:i\s+)?approach\s+(?:the\s+)?(.+)/i, type: 'move_to' },
+                { pattern: /(?:i\s+)?walk\s+(?:to|towards?)\s+(?:the\s+)?(.+)/i, type: 'move_to' },
+                { pattern: /(?:i\s+)?move\s+(north|south|east|west|up|down|left|right)/i, type: 'move_direction' },
+                { pattern: /(?:i\s+)?go\s+(north|south|east|west|up|down|left|right)/i, type: 'move_direction' },
+                { pattern: /(?:i\s+)?step\s+(north|south|east|west|up|down|left|right|forward|back|backward)/i, type: 'move_direction' }
+            ];
+            
+            for (const { pattern, type } of movePatterns) {
+                const match = playerAction.match(pattern);
+                if (match) {
+                    if (type === 'move_to') {
+                        return handleMoveToTarget(match[1].trim());
+                    } else if (type === 'move_direction') {
+                        return handleMoveDirection(match[1].trim());
+                    }
+                }
+            }
+            
+            return null; // No movement command detected
+        }
+
+        // Handle move to target
+        function handleMoveToTarget(target) {
+            // For multi-character parties, try to determine which character is moving
+            const party = window.partyCharacters || [];
+            let playerToken = null;
+            
+            if (party.length > 1) {
+                // Check if any character name is mentioned in the command
+                playerToken = Array.from(BATTLEMAP.tokens.values()).find(t => 
+                    t.type === 'player' && 
+                    party.some(char => char.name.toLowerCase() === t.name.toLowerCase())
+                );
+            }
+            
+            // Default to first player token if not specified
+            if (!playerToken) {
+                playerToken = Array.from(BATTLEMAP.tokens.values()).find(t => t.type === 'player');
+            }
+            if (!playerToken) {
+                return "No player token found on the map.";
+            }
+            
+            const targetLower = target.toLowerCase();
+            
+            // Find target token
+            const targetToken = Array.from(BATTLEMAP.tokens.values()).find(t => 
+                t.name.toLowerCase().includes(targetLower) || 
+                targetLower.includes(t.name.toLowerCase())
+            );
+            
+            if (targetToken) {
+                // Calculate direction to move adjacent to target
+                const deltaX = targetToken.x - playerToken.x;
+                const deltaY = targetToken.y - playerToken.y;
+                
+                // Move one space toward the target
+                let newX = playerToken.x;
+                let newY = playerToken.y;
+                
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Move horizontally first
+                    newX = deltaX > 0 ? Math.min(playerToken.x + 1, BATTLEMAP.mapData.width - 1) : Math.max(playerToken.x - 1, 0);
+                } else if (deltaY !== 0) {
+                    // Move vertically
+                    newY = deltaY > 0 ? Math.min(playerToken.y + 1, BATTLEMAP.mapData.height - 1) : Math.max(playerToken.y - 1, 0);
+                }
+                
+                // If already adjacent, stay in place
+                const distance = Math.abs(deltaX) + Math.abs(deltaY);
+                if (distance <= 1) {
+                    return `${playerToken.name} is already next to ${targetToken.name}.`;
+                }
+                
+                moveToken(playerToken.name, newX, newY);
+                const newDistance = Math.abs(targetToken.x - newX) + Math.abs(targetToken.y - newY);
+                
+                if (newDistance <= 1) {
+                    return `🚶 ${playerToken.name} moves adjacent to ${targetToken.name}.`;
+                } else {
+                    return `🚶 ${playerToken.name} moves toward ${targetToken.name}.`;
+                }
+            }
+            
+            // Check for map features/buildings
+            const feature = BATTLEMAP.mapData.features.find(f => 
+                (f.name && f.name.toLowerCase().includes(targetLower)) ||
+                targetLower.includes(f.type)
+            );
+            
+            if (feature) {
+                const featureX = feature.x + Math.floor((feature.width || 1) / 2);
+                const featureY = feature.y + Math.floor((feature.height || 1) / 2);
+                
+                // Move toward the feature
+                const deltaX = featureX - playerToken.x;
+                const deltaY = featureY - playerToken.y;
+                
+                let newX = playerToken.x;
+                let newY = playerToken.y;
+                
+                if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX !== 0) {
+                    newX = deltaX > 0 ? Math.min(playerToken.x + 1, BATTLEMAP.mapData.width - 1) : Math.max(playerToken.x - 1, 0);
+                } else if (deltaY !== 0) {
+                    newY = deltaY > 0 ? Math.min(playerToken.y + 1, BATTLEMAP.mapData.height - 1) : Math.max(playerToken.y - 1, 0);
+                }
+                
+                moveToken(playerToken.name, newX, newY);
+                return `🚶 ${playerToken.name} moves toward the ${feature.name || feature.type}.`;
+            }
+            
+            return `❓ Could not find "${target}" to move toward.`;
+        }
+
+        // Handle directional movement
+        function handleMoveDirection(direction) {
+            const playerToken = Array.from(BATTLEMAP.tokens.values()).find(t => t.type === 'player');
+            if (!playerToken) {
+                return "No player token found on the map.";
+            }
+            
+            const oldX = playerToken.x;
+            const oldY = playerToken.y;
+            let newX = oldX;
+            let newY = oldY;
+            let directionName = direction.toLowerCase();
+            
+            switch(directionName) {
+                case 'north': case 'up': 
+                    newY = Math.max(0, newY - 1); 
+                    directionName = 'north';
+                    break;
+                case 'south': case 'down': 
+                    newY = Math.min(BATTLEMAP.mapData.height - 1, newY + 1); 
+                    directionName = 'south';
+                    break;
+                case 'east': case 'right': 
+                    newX = Math.min(BATTLEMAP.mapData.width - 1, newX + 1); 
+                    directionName = 'east';
+                    break;
+                case 'west': case 'left': 
+                    newX = Math.max(0, newX - 1); 
+                    directionName = 'west';
+                    break;
+                case 'forward':
+                    // Move north by default for forward
+                    newY = Math.max(0, newY - 1);
+                    directionName = 'forward (north)';
+                    break;
+                case 'back': case 'backward':
+                    // Move south by default for back
+                    newY = Math.min(BATTLEMAP.mapData.height - 1, newY + 1);
+                    directionName = 'back (south)';
+                    break;
+                default:
+                    return `❓ Unknown direction: ${direction}`;
+            }
+            
+            // Check if movement actually happened (wasn't blocked by map edge)
+            if (newX === oldX && newY === oldY) {
+                return `🚫 ${playerToken.name} cannot move ${directionName} - reached map boundary.`;
+            }
+            
+            moveToken(playerToken.name, newX, newY);
+            return `🚶 ${playerToken.name} moves ${directionName} to (${newX}, ${newY}).`;
+        }
+
         // Enhanced DM personality and game state
         const DM_STATE = {
             combatActive: false,
@@ -5178,10 +6519,30 @@ CRITICAL CONTEXT RULES:
 - Build on the immediately previous exchange - don't jump to new scenarios
 - The very first message established the setting - RESPECT IT`;
             
-            // Add combat rules enforcement
+            // Add combat detection and rules
+            systemPrompt += `
+COMBAT INITIATION RULES:
+- Recognize when combat should start based on context:
+  * Player says they attack something
+  * Hostile creature appears and is aggressive
+  * NPCs become hostile due to failed diplomacy
+  * Ambush or surprise attack occurs
+  * Player provokes combat through aggressive actions
+- When combat should start, say "Roll for initiative!" or similar
+- Describe the combat situation and enemies present
+- DO NOT run combat without initiative being rolled first
+
+            `;
+            
+            // Add combat rules enforcement if already in combat
             if (combatState.active) {
                 systemPrompt += ` COMBAT RULES ENFORCEMENT: The party is currently in combat. Each character gets ONE action, ONE bonus action (if applicable), and movement per turn. Players cannot attack multiple times or take multiple actions unless they have specific abilities that allow it. If a player tries to do more than their action economy allows, remind them of the rules and ask them to choose one action. Track initiative order and ensure proper turn-based combat. `;
                 systemPrompt += ` Current turn: ${combatState.combatants[combatState.currentTurn]?.name || 'Unknown'}. Round: ${combatState.round}. `;
+            }
+            
+            // If waiting for initiative
+            if (DM_STATE.waitingForInitiative) {
+                systemPrompt += ` WAITING FOR INITIATIVE: Players need to roll initiative. Don't proceed with combat actions until initiative is established. `;
             }
             
             // Add current scene context
@@ -5296,6 +6657,12 @@ ENDING YOUR RESPONSES - CRITICAL RULES:
                     
                     // Update scene context if needed
                     updateSceneFromResponse(dmResponse, playerAction);
+                    
+                    // Check if combat should be initiated based on DM response
+                    checkForCombatInitiation(dmResponse, playerAction);
+                    
+                    // Update battlemap based on story
+                    updateMapFromStory(DM_STATE.currentLocation, dmResponse);
                     
                     return {
                         response: dmResponse,
@@ -6834,8 +8201,8 @@ ENDING YOUR RESPONSES - CRITICAL RULES:
             console.log('💡 For full functionality, serve this app from a web server (e.g., python -m http.server)');
         }
         
-        // Import the core module (commented out temporarily for debugging)
-        // import './js/core.js';
+        // Import the core module
+        import './js/core.js';
         
         // Application initialization
         document.addEventListener('DOMContentLoaded', async () => {
@@ -6860,11 +8227,16 @@ ENDING YOUR RESPONSES - CRITICAL RULES:
                     console.warn('🚨 File protocol detected - this may cause issues');
                 }
                 
-                updateProgress(30, 'Skipping core modules for debugging...');
-                console.log('🔧 Running in simplified mode without core modules');
+                updateProgress(30, 'Loading core modules...');
+                console.log('🔧 Loading full application with core modules');
                 
-                // Skip core module loading for now to test basic functionality
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Initialize DNDCore
+                if (window.DNDCore) {
+                    await window.DNDCore.init();
+                    console.log('✅ DNDCore initialized successfully');
+                } else {
+                    throw new Error('DNDCore not available');
+                }
                 
                 updateProgress(95, 'Finalizing setup...');
                 await new Promise(resolve => setTimeout(resolve, 200));
