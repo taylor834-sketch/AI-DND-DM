@@ -587,6 +587,100 @@ export default class VoiceIntegration {
         this.saveVoiceSettings();
     }
 
+    // ===== MISSING QUERY METHODS =====
+    
+    async queryEntityInfo(entityName) {
+        try {
+            const worldDatabase = this.core.getModule('worldDatabase');
+            if (worldDatabase) {
+                // Try to find entity as NPC, location, or faction
+                const entity = await this.findEntityByName(entityName);
+                if (entity) {
+                    await this.speak(`${entity.name}: ${entity.description || 'No additional information available.'}`);
+                } else {
+                    await this.speak(`I don't have information about ${entityName}.`);
+                }
+            } else {
+                await this.speak('World database is not available.');
+            }
+        } catch (error) {
+            console.error('Error querying entity info:', error);
+            await this.speak('Unable to retrieve entity information.');
+        }
+    }
+
+    async queryEncounteredMonsters() {
+        try {
+            const monsterDatabase = this.core.getModule('monsterDatabase');
+            if (monsterDatabase && monsterDatabase.getEncounteredMonsters) {
+                const monsters = monsterDatabase.getEncounteredMonsters();
+                if (monsters.length > 0) {
+                    const monsterNames = monsters.map(m => m.name).join(', ');
+                    await this.speak(`You have encountered: ${monsterNames}.`);
+                } else {
+                    await this.speak('You haven\'t encountered any monsters yet.');
+                }
+            } else {
+                await this.speak('Monster database is not available.');
+            }
+        } catch (error) {
+            console.error('Error querying encountered monsters:', error);
+            await this.speak('Unable to retrieve monster information.');
+        }
+    }
+
+    async queryCharacterInfo() {
+        try {
+            const characterSheet = this.core.getModule('characterSheet');
+            if (characterSheet) {
+                const character = characterSheet.getCharacterData();
+                if (character) {
+                    const info = `${character.name}, Level ${character.level} ${character.race} ${character.class}. ` +
+                               `Health: ${character.currentHP} out of ${character.maxHP}.`;
+                    await this.speak(info);
+                } else {
+                    await this.speak('No character data available.');
+                }
+            } else {
+                await this.speak('Character sheet is not available.');
+            }
+        } catch (error) {
+            console.error('Error querying character info:', error);
+            await this.speak('Unable to retrieve character information.');
+        }
+    }
+
+    // Helper method for finding entities
+    async findEntityByName(name) {
+        try {
+            const worldDatabase = this.core.getModule('worldDatabase');
+            if (!worldDatabase) return null;
+
+            // Try to find as NPC first
+            if (worldDatabase.findNPC) {
+                const npc = await worldDatabase.findNPC(name);
+                if (npc) return npc;
+            }
+
+            // Try to find as location
+            if (worldDatabase.findLocation) {
+                const location = await worldDatabase.findLocation(name);
+                if (location) return location;
+            }
+
+            // Try to find as faction
+            if (worldDatabase.findFaction) {
+                const faction = await worldDatabase.findFaction(name);
+                if (faction) return faction;
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error finding entity:', error);
+            return null;
+        }
+    }
+
     // ===== VISUAL FEEDBACK =====
 
     createVoiceInterface() {

@@ -678,6 +678,82 @@ export default class WorldDatabase {
     }
 
     // =================================
+    // Compatibility Methods for Module Integration
+    // =================================
+
+    // Generic data access method (used by multiple modules)
+    getData(category = null) {
+        if (category) {
+            return this.worldData[category] || {};
+        }
+        return this.worldData;
+    }
+
+    // Player choices tracking (used by ChoiceTrackingSystem)
+    getPlayerChoices() {
+        if (!this.worldData.playerChoices) {
+            this.worldData.playerChoices = [];
+        }
+        return this.worldData.playerChoices;
+    }
+
+    setPlayerChoices(choices) {
+        this.worldData.playerChoices = choices;
+        this.saveToStorage();
+    }
+
+    // Player quests tracking (used by DynamicQuestSystem)
+    getPlayerQuests() {
+        if (!this.worldData.playerQuests) {
+            this.worldData.playerQuests = [];
+        }
+        return this.worldData.playerQuests;
+    }
+
+    setPlayerQuests(quests) {
+        this.worldData.playerQuests = quests;
+        this.saveToStorage();
+    }
+
+    // Rest state tracking (used by RestSystem)
+    getRestState() {
+        if (!this.worldData.restState) {
+            this.worldData.restState = {
+                lastRest: null,
+                restType: null,
+                location: null,
+                benefits: []
+            };
+        }
+        return this.worldData.restState;
+    }
+
+    setRestState(restState) {
+        this.worldData.restState = restState;
+        this.saveToStorage();
+    }
+
+    // NPC creation method (used by RelationshipTestScenarios)
+    createNPC(npcData) {
+        return this.addNPC(npcData);
+    }
+
+    // Generic save method (used by various systems)
+    save(category, data) {
+        if (category && data) {
+            this.worldData[category] = data;
+            this.saveToStorage();
+            return true;
+        }
+        return false;
+    }
+
+    // Load method for specific categories
+    load(category) {
+        return this.worldData[category] || null;
+    }
+
+    // =================================
     // Helper Functions
     // =================================
     

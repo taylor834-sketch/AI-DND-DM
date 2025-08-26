@@ -155,6 +155,39 @@ export default class DynamicDialogueSystem {
     }
 
     /**
+     * Load dialogue history from storage
+     */
+    async loadDialogueHistory() {
+        try {
+            if (this.worldDatabase) {
+                const dialogueHistory = this.worldDatabase.load('dialogueHistory');
+                this.dialogueHistory = dialogueHistory || [];
+                console.log(`💬 Loaded ${this.dialogueHistory.length} dialogue records`);
+            } else {
+                console.warn('💬 World database not available, starting with empty dialogue history');
+                this.dialogueHistory = [];
+            }
+        } catch (error) {
+            console.error('💬 Failed to load dialogue history:', error);
+            this.dialogueHistory = [];
+        }
+    }
+
+    /**
+     * Save dialogue history to storage
+     */
+    async saveDialogueHistory() {
+        try {
+            if (this.worldDatabase) {
+                this.worldDatabase.save('dialogueHistory', this.dialogueHistory);
+                console.log('💬 Dialogue history saved');
+            }
+        } catch (error) {
+            console.error('💬 Failed to save dialogue history:', error);
+        }
+    }
+
+    /**
      * Start a dialogue with an NPC
      */
     async startDialogue(npcId, context = {}) {

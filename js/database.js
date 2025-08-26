@@ -131,4 +131,70 @@ export default class DatabaseManager {
             linkElement.click();
         }
     }
+
+    // ===== GENERIC DATA STORAGE METHODS =====
+    // Added for compatibility with battle map repository and other modules
+
+    /**
+     * Generic load method for module data
+     */
+    load(key) {
+        try {
+            const data = localStorage.getItem(`${this.storagePrefix}${key}`);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error(`❌ Failed to load ${key}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Generic save method for module data
+     */
+    save(key, data) {
+        try {
+            localStorage.setItem(`${this.storagePrefix}${key}`, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to save ${key}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Generic delete method for module data
+     */
+    delete(key) {
+        try {
+            localStorage.removeItem(`${this.storagePrefix}${key}`);
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to delete ${key}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Check if key exists in storage
+     */
+    exists(key) {
+        return localStorage.getItem(`${this.storagePrefix}${key}`) !== null;
+    }
+
+    /**
+     * Get all keys matching a prefix
+     */
+    getKeys(prefix = '') {
+        const keys = [];
+        const fullPrefix = `${this.storagePrefix}${prefix}`;
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(fullPrefix)) {
+                keys.push(key.replace(this.storagePrefix, ''));
+            }
+        }
+        
+        return keys;
+    }
 }
