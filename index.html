@@ -1662,23 +1662,38 @@
             }, 100);
             
             // Show success message
-            alert('Campaign "' + campaignData.name + '" created successfully!');
+            const displayName = window.currentCampaign.meta?.name || window.currentCampaign.name || 'Untitled Campaign';
+            alert('Campaign "' + displayName + '" created successfully!');
         }
         
-        // Save campaign to localStorage
+        // Save campaign to localStorage (handles both legacy and new formats)
         function saveCampaign(campaignData) {
             try {
+                console.log('💾 Legacy saveCampaign called with:', campaignData);
+                
+                // Handle both legacy format (campaignData.name) and new format (campaignData.meta.name)
+                const campaignId = campaignData.meta?.id || campaignData.id;
+                const campaignName = campaignData.meta?.name || campaignData.name || 'Untitled Campaign';
+                
+                // Convert to legacy format for storage in 'dnd_campaigns' array
+                const legacyCampaign = {
+                    ...campaignData,
+                    id: campaignId,
+                    name: campaignName,
+                    lastPlayed: new Date().toISOString()
+                };
+                
                 // Get existing campaigns
                 let campaigns = JSON.parse(localStorage.getItem('dnd_campaigns')) || [];
                 
                 // Find existing campaign or add new one
-                const existingIndex = campaigns.findIndex(c => c.id === campaignData.id);
+                const existingIndex = campaigns.findIndex(c => c.id === campaignId);
                 if (existingIndex >= 0) {
-                    campaigns[existingIndex] = campaignData;
-                    console.log('Updated existing campaign:', campaignData.name);
+                    campaigns[existingIndex] = legacyCampaign;
+                    console.log('Updated existing campaign:', campaignName);
                 } else {
-                    campaigns.push(campaignData);
-                    console.log('Added new campaign:', campaignData.name);
+                    campaigns.push(legacyCampaign);
+                    console.log('Added new campaign:', campaignName);
                 }
                 
                 // Save to localStorage
