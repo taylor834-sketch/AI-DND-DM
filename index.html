@@ -1651,6 +1651,53 @@
         // Load campaigns from localStorage
         function loadCampaigns() {
             try {
+                // Try to get campaigns from the new CampaignManager system first
+                if (window.DNDCore && window.DNDCore.getModule('campaignManager')) {
+                    const campaignManager = window.DNDCore.getModule('campaignManager');
+                    const campaigns = campaignManager.listCampaigns();
+                    
+                    // Convert the campaigns object to array format for display
+                    if (campaigns && typeof campaigns === 'object') {
+                        return Object.entries(campaigns).map(([campaignId, campaignInfo]) => {
+                            // Try to load the full campaign data
+                            const fullCampaignData = localStorage.getItem(`dnd_voice_campaign_${campaignId}`);
+                            if (fullCampaignData) {
+                                try {
+                                    const campaign = JSON.parse(fullCampaignData);
+                                    return {
+                                        id: campaignId,
+                                        name: campaign.meta?.name || campaignInfo.name || 'Untitled Campaign',
+                                        startingRegion: campaign.settings?.startingRegion || 'Unknown Region',
+                                        lastPlayed: campaignInfo.lastModified || campaign.meta?.lastModified || new Date().toISOString(),
+                                        characters: campaign.party?.characters ? Object.values(campaign.party.characters) : [],
+                                        gameState: campaign.gameState || {}
+                                    };
+                                } catch (error) {
+                                    console.warn('Failed to parse campaign data for:', campaignId);
+                                    return {
+                                        id: campaignId,
+                                        name: campaignInfo.name || 'Untitled Campaign',
+                                        startingRegion: 'Unknown Region',
+                                        lastPlayed: campaignInfo.lastModified || new Date().toISOString(),
+                                        characters: [],
+                                        gameState: {}
+                                    };
+                                }
+                            } else {
+                                return {
+                                    id: campaignId,
+                                    name: campaignInfo.name || 'Untitled Campaign',
+                                    startingRegion: 'Unknown Region',
+                                    lastPlayed: campaignInfo.lastModified || new Date().toISOString(),
+                                    characters: [],
+                                    gameState: {}
+                                };
+                            }
+                        });
+                    }
+                }
+                
+                // Fallback to legacy system
                 return JSON.parse(localStorage.getItem('dnd_campaigns')) || [];
             } catch (error) {
                 console.error('Error loading campaigns:', error);
@@ -3156,11 +3203,30 @@ Remember this context for ALL future interactions. Maintain continuity with this
                     const lastPlayed = new Date(campaign.lastPlayed).toLocaleDateString();
                     const characterCount = campaign.characters ? campaign.characters.length : 0;
                     
+                    // Ensure we have a campaign name (fallback chain)
+                    const campaignName = campaign.name || campaign.meta?.name || 'Untitled Campaign';
+                    const region = campaign.startingRegion || campaign.settings?.startingRegion || 'Unknown Region';
+                    
+                    // Determine campaign status
+                    let statusText = '🆕 New Campaign';
+                    let statusClass = 'new-campaign';
+                    
+                    if (campaign.gameState && campaign.gameState.timeline && campaign.gameState.timeline.length > 1) {
+                        statusText = '🎯 In Progress';
+                        statusClass = 'active-campaign';
+                    } else if (characterCount > 0) {
+                        statusText = '👥 Characters Created';
+                        statusClass = 'setup-campaign';
+                    }
+                    
                     campaignsHTML += `
                         <div class="campaign-card">
                             <div class="campaign-info">
-                                <h3>${campaign.name}</h3>
-                                <p><strong>Region:</strong> ${campaign.startingRegion}</p>
+                                <h3>${campaignName}</h3>
+                                <div class="campaign-status ${statusClass}">
+                                    <span>${statusText}</span>
+                                </div>
+                                <p><strong>Region:</strong> ${region}</p>
                                 <p><strong>Characters:</strong> ${characterCount}</p>
                                 <p><strong>Last Played:</strong> ${lastPlayed}</p>
                             </div>
@@ -3187,60 +3253,74 @@ Remember this context for ALL future interactions. Maintain continuity with this
         
         // Load a specific campaign
         function loadCampaign(campaignId) {
-            const campaigns = loadCampaigns();
-            const campaign = campaigns.find(c => c.id === campaignId);
+            console.log('🎲 Loading campaign:', campaignId);
             
-            if (campaign) {
-                console.log('Loading campaign:', campaign.name);
+            // Use the campaign manager module for loading
+            if (window.DNDCore && window.DNDCore.getModule('campaignManager')) {
+                const campaignManager = window.DNDCore.getModule('campaignManager');
+                const campaign = campaignManager.loadCampaign(campaignId);
                 
-                // Set as current campaign
-                window.currentCampaign = campaign;
-                
-                // Restore API configuration from campaign
-                restoreAPIConfiguration(campaign);
-                
-                // Load characters into party
-                if (campaign.characters && campaign.characters.length > 0) {
-                    window.partyCharacters = campaign.characters;
+                if (campaign) {
+                    console.log('✅ Campaign loaded successfully:', campaign.meta?.name || 'Unknown Campaign');
                     
-                    // Check if this campaign has a saved session
-                    if (campaign.gameState && campaign.gameState.conversationLog && campaign.gameState.conversationLog.length > 0) {
-                        console.log('Found existing session data - loading saved game state');
-                        
-                        // Restore complete session
-                        loadCampaignSession(campaign);
-                        
-                        // Go directly to game 
-                        populateGameScreen();
-                        switchScreen('game');
-                        
-                        // Generate and display session recap instead of starting fresh
-                        setTimeout(async () => {
-                            const recap = await generateSessionRecap(campaign.gameState);
-                            displaySessionRecap(recap);
-                        }, 500);
+                    // Set as current campaign for legacy systems
+                    window.currentCampaign = campaign;
+                    
+                    // Show notification instead of alert
+                    const ui = window.DNDCore.getModule('ui');
+                    ui?.showNotification(`Campaign "${campaign.meta?.name || 'Unknown Campaign'}" loaded!`, 'success');
+                    
+                    // Navigate to appropriate screen based on campaign state
+                    if (campaign.party?.characters && Object.keys(campaign.party.characters).length > 0) {
+                        // Has characters - check if has active session
+                        if (campaign.gameState?.timeline && campaign.gameState.timeline.length > 1) {
+                            console.log('📜 Found existing session data - continuing adventure');
+                            
+                            // Show loading then go to game
+                            ui?.showScreen('loading');
+                            setTimeout(() => {
+                                populateGameScreen();
+                                ui?.showScreen('game');
+                                
+                                // Generate and display session recap
+                                setTimeout(async () => {
+                                    const recap = await generateSessionRecap(campaign.gameState);
+                                    displaySessionRecap(recap);
+                                }, 1000);
+                            }, 1500);
+                        } else {
+                            console.log('🏃 Has characters but no session data - setup API then continue');
+                            ui?.showScreen('apiSetup');
+                        }
                     } else {
-                        console.log('No session data found but has characters - show API setup before continuing');
-                        
-                        // Show API setup screen to confirm/update API settings
-                        switchScreen('apiSetup');
-                        setTimeout(() => {
-                            loadAPISettingsForSetup(campaign);
-                        }, 100);
+                        console.log('👥 No characters found - start character creation');
+                        ui?.showScreen('characterSetup');
                     }
                 } else {
-                    console.log('No characters found - show API setup first');
-                    
-                    // Show API setup screen before character setup
-                    switchScreen('apiSetup');
-                    setTimeout(() => {
-                        loadAPISettingsForSetup(campaign);
-                    }, 100);
+                    console.error('❌ Failed to load campaign');
+                    const ui = window.DNDCore.getModule('ui');
+                    ui?.showNotification('Failed to load campaign', 'error');
                 }
-                
-                alert('Loaded campaign: ' + campaign.name);
             } else {
-                alert('Campaign not found!');
+                console.warn('⚠️ Campaign manager not available - using fallback');
+                // Fallback to legacy loading
+                const campaigns = loadCampaigns();
+                const campaign = campaigns.find(c => c.id === campaignId);
+                
+                if (campaign) {
+                    console.log('Loading campaign (fallback):', campaign.name);
+                    window.currentCampaign = campaign;
+                    alert('Loaded campaign: ' + (campaign.name || 'Untitled Campaign'));
+                    
+                    // Navigate based on campaign state
+                    if (campaign.characters && campaign.characters.length > 0) {
+                        switchScreen('apiSetup');
+                    } else {
+                        switchScreen('characterSetup');
+                    }
+                } else {
+                    alert('Campaign not found!');
+                }
             }
         }
         
