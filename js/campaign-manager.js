@@ -271,19 +271,22 @@ export default class CampaignManager {
 
     saveCampaignToStorage(campaignData) {
         try {
-            const database = this.core.getModule('database');
-            if (database && database.saveCampaign) {
-                return database.saveCampaign(campaignData);
-            } else {
-                // Fallback to direct localStorage
-                const campaignId = campaignData.meta.id;
-                localStorage.setItem(
-                    `${this.storagePrefix}campaign_${campaignId}`,
-                    JSON.stringify(campaignData)
-                );
-                this.updateCampaignList(campaignId, campaignData.meta.name);
-                return campaignId;
-            }
+            // Always use direct localStorage to avoid conflicts with database manager formats
+            const campaignId = campaignData.meta.id;
+            
+            console.log('💾 CampaignManager saving campaign:', campaignId);
+            
+            // Save the full campaign data in new format
+            localStorage.setItem(
+                `${this.storagePrefix}campaign_${campaignId}`,
+                JSON.stringify(campaignData)
+            );
+            
+            // Update both campaign list formats (new and legacy)
+            this.updateCampaignList(campaignId, campaignData.meta.name);
+            
+            console.log('✅ Campaign saved successfully:', campaignId);
+            return campaignId;
         } catch (error) {
             console.error('Failed to save campaign:', error);
             return null;

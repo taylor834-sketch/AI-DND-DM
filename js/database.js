@@ -14,12 +14,16 @@ export default class DatabaseManager {
 
     saveCampaign(campaignData) {
         try {
-            const campaignId = campaignData.id || this.generateCampaignId();
+            // Handle both legacy format (campaignData.id) and new format (campaignData.meta.id)
+            const campaignId = campaignData.meta?.id || campaignData.id || this.generateCampaignId();
+            const campaignName = campaignData.meta?.name || campaignData.name || 'Untitled Campaign';
+            
             const saveData = {
                 ...campaignData,
                 id: campaignId,
+                name: campaignName,
                 lastSaved: new Date().toISOString(),
-                version: this.core.config.version
+                version: this.core.config?.version || '1.0.0'
             };
 
             localStorage.setItem(
