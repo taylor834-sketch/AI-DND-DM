@@ -683,6 +683,7 @@ export default class WorldDatabase {
 
     // Generic data access method (used by multiple modules)
     getData(category = null) {
+        console.log('🔧 CACHE TEST: WorldDatabase getData method loaded correctly!');
         if (category) {
             return this.worldData[category] || {};
         }

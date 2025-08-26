@@ -590,6 +590,7 @@ export default class VoiceIntegration {
     // ===== MISSING QUERY METHODS =====
     
     async queryEntityInfo(entityName) {
+        console.log('🔧 CACHE TEST: queryEntityInfo method loaded correctly!');
         try {
             const worldDatabase = this.core.getModule('worldDatabase');
             if (worldDatabase) {

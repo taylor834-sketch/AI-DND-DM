@@ -158,6 +158,7 @@ export default class DynamicDialogueSystem {
      * Load dialogue history from storage
      */
     async loadDialogueHistory() {
+        console.log('🔧 CACHE TEST: DynamicDialogueSystem loadDialogueHistory method loaded correctly!');
         try {
             if (this.worldDatabase) {
                 const dialogueHistory = this.worldDatabase.load('dialogueHistory');
