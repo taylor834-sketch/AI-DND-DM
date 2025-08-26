@@ -1,0 +1,43 @@
+{
+  "currentVersion": 1,
+  "lastUpdated": "2025-08-26T19:55:00.000Z",
+  "versions": [
+    {
+      "version": "001",
+      "description": "Initial complete project backup before character sheet navigation fix",
+      "timestamp": "2025-08-26T19:55:00.000Z",
+      "filesCount": 50,
+      "files": [
+        "index.html",
+        "test.html",
+        "version-control-test.html",
+        "css/styles.css",
+        "js/core.js",
+        "js/character-sheet.js",
+        "js/version-control.js",
+        "js/auto-version-backup.js",
+        "js/version-restore-ui.js",
+        "js/version-commands.js",
+        "README.md",
+        "CLAUDE.md",
+        "VERSION_CONTROL_USAGE.md",
+        "sample character sheet.txt",
+        "versions.json"
+      ],
+      "type": "manual",
+      "location": "./versions/version-001/"
+    }
+  ],
+  "settings": {
+    "autoBackupEnabled": true,
+    "backupFrequency": "after_every_change",
+    "maxVersions": 100,
+    "storageLocation": "./versions/"
+  },
+  "statistics": {
+    "totalBackups": 1,
+    "totalRestores": 0,
+    "lastBackupTime": "2025-08-26T19:55:00.000Z",
+    "lastRestoreTime": null
+  }
+}

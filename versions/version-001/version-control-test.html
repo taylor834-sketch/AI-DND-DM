@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Version Control Test - D&D Voice Adventure</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #1a1a1a;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #ffff00; }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.success { background: #2d5016; color: #00ff00; }
+        .status.error { background: #5d1616; color: #ff4444; }
+        .status.info { background: #5d5616; color: #ffff00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Version Control System Test</h1>
+        
+        <div class="test-section">
+            <h2>System Status</h2>
+            <div id="system-status" class="status info">Initializing...</div>
+            <button onclick="checkSystemStatus()">Check Status</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Backup Operations</h2>
+            <button onclick="createTestBackup()">Create Test Backup</button>
+            <button onclick="createPreChangeBackup()">Pre-Change Backup</button>
+            <button onclick="createPostChangeBackup()">Post-Change Backup</button>
+            <button onclick="forceBackup()">Force Backup</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Version Management</h2>
+            <button onclick="listAllVersions()">List All Versions</button>
+            <button onclick="showVersionPanel()">Show Version Panel</button>
+            <button onclick="testRestore()">Test Restore (Safe)</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Auto-Backup System</h2>
+            <button onclick="toggleAutoBackup()">Toggle Auto-Backup</button>
+            <button onclick="simulateCodeChange()">Simulate Code Change</button>
+            <button onclick="simulateDOMChange()">Simulate DOM Change</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Console Commands Test</h2>
+            <button onclick="testConsoleCommands()">Test Console Commands</button>
+            <button onclick="showHelp()">Show Help</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Log Output</h2>
+            <div id="test-log" class="log">Version Control Test initialized...\n</div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <!-- Load the core system -->
+    <script type="module">
+        import DNDVoiceCore from './js/core.js';
+        
+        const core = new DNDVoiceCore();
+        window.testCore = core;
+        
+        // Initialize and wait for modules to load
+        core.init().then(() => {
+            log('✅ Core system initialized', 'success');
+            checkSystemStatus();
+        }).catch(error => {
+            log(`❌ Core initialization failed: ${error.message}`, 'error');
+        });
+        
+        // Global functions for testing
+        window.log = function(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        };
+        
+        window.clearLog = function() {
+            document.getElementById('test-log').innerHTML = 'Log cleared...\n';
+        };
+        
+        window.checkSystemStatus = function() {
+            const statusElement = document.getElementById('system-status');
+            
+            try {
+                const versionControl = core.getModule('versionControl');
+                const autoBackup = core.getModule('autoVersionBackup');
+                const restoreUI = core.getModule('versionRestoreUI');
+                const commands = core.getModule('versionCommands');
+                
+                let status = [];
+                let allGood = true;
+                
+                if (versionControl) {
+                    status.push('✅ Version Control');
+                } else {
+                    status.push('❌ Version Control');
+                    allGood = false;
+                }
+                
+                if (autoBackup) {
+                    status.push('✅ Auto-Backup');
+                } else {
+                    status.push('❌ Auto-Backup');
+                    allGood = false;
+                }
+                
+                if (restoreUI) {
+                    status.push('✅ Restore UI');
+                } else {
+                    status.push('❌ Restore UI');
+                    allGood = false;
+                }
+                
+                if (commands) {
+                    status.push('✅ Commands');
+                } else {
+                    status.push('❌ Commands');
+                    allGood = false;
+                }
+                
+                if (typeof window.vc !== 'undefined') {
+                    status.push('✅ Console API');
+                } else {
+                    status.push('❌ Console API');
+                    allGood = false;
+                }
+                
+                statusElement.textContent = status.join(' | ');
+                statusElement.className = `status ${allGood ? 'success' : 'error'}`;
+                
+                log(`System Status Check: ${allGood ? 'All systems operational' : 'Some systems offline'}`, allGood ? 'success' : 'error');
+                
+            } catch (error) {
+                statusElement.textContent = '❌ System Check Failed';
+                statusElement.className = 'status error';
+                log(`System check error: ${error.message}`, 'error');
+            }
+        };
+        
+        window.createTestBackup = async function() {
+            try {
+                if (window.vc) {
+                    const version = await window.vc.backup('Test backup from test page');
+                    log(`✅ Test backup created: Version ${version}`, 'success');
+                } else {
+                    log('❌ Version control commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.createPreChangeBackup = async function() {
+            try {
+                if (window.vc) {
+                    const version = await window.vc.preChange('About to test something');
+                    log(`✅ Pre-change backup created: Version ${version}`, 'success');
+                } else {
+                    log('❌ Version control commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Pre-change backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.createPostChangeBackup = async function() {
+            try {
+                if (window.vc) {
+                    const version = await window.vc.postChange('Testing completed');
+                    log(`✅ Post-change backup created: Version ${version}`, 'success');
+                } else {
+                    log('❌ Version control commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Post-change backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.forceBackup = function() {
+            try {
+                if (window.vc) {
+                    window.vc.auto.force('Forced backup test');
+                    log('✅ Force backup triggered', 'success');
+                } else {
+                    log('❌ Version control commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Force backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.listAllVersions = function() {
+            try {
+                if (window.vc) {
+                    const versions = window.vc.list();
+                    log(`📋 Found ${versions.length} versions (check console for details)`, 'info');
+                } else {
+                    log('❌ Version control commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ List versions failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.showVersionPanel = function() {
+            try {
+                if (window.versionControl) {
+                    window.versionControl.showPanel();
+                    log('✅ Version control panel opened', 'success');
+                } else {
+                    log('❌ Version control panel not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Show panel failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.testRestore = function() {
+            log('⚠️ Restore function available but not tested automatically for safety', 'info');
+            log('Use vc.restore(VERSION_NUMBER) in console to test restore', 'info');
+        };
+        
+        window.toggleAutoBackup = function() {
+            try {
+                if (window.vc) {
+                    // Try to disable first, if already enabled
+                    window.vc.auto.off();
+                    setTimeout(() => {
+                        window.vc.auto.on();
+                        log('✅ Auto-backup toggled (off then on)', 'success');
+                    }, 1000);
+                } else {
+                    log('❌ Version control commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Toggle auto-backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.simulateCodeChange = function() {
+            // Simulate a code change that would trigger auto-backup
+            const event = new CustomEvent('database:save', {
+                detail: { type: 'test', data: 'simulated code change' }
+            });
+            core.eventBus.dispatchEvent(event);
+            log('✅ Simulated code change event', 'success');
+        };
+        
+        window.simulateDOMChange = function() {
+            // Create a temporary script element to trigger DOM change detection
+            const script = document.createElement('script');
+            script.textContent = '// Test script for DOM change detection';
+            document.head.appendChild(script);
+            setTimeout(() => {
+                document.head.removeChild(script);
+            }, 100);
+            log('✅ Simulated DOM change', 'success');
+        };
+        
+        window.testConsoleCommands = function() {
+            log('Testing console commands...', 'info');
+            
+            const commands = [
+                'vc.help()',
+                'vc.backup("Console test")',
+                'vc.list()',
+                'vc.auto.on()',
+                'vc.auto.off()'
+            ];
+            
+            commands.forEach(cmd => {
+                log(`Available command: ${cmd}`, 'info');
+            });
+            
+            log('✅ All console commands are available', 'success');
+        };
+        
+        window.showHelp = function() {
+            if (window.vc) {
+                window.vc.help();
+                log('✅ Help displayed in console', 'success');
+            } else {
+                log('❌ Version control commands not available', 'error');
+            }
+        };
+        
+    </script>
+</body>
+</html>

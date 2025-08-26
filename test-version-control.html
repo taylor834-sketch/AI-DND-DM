@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taylor's Epic D&D Time - Version Control Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 12px 18px;
+            margin: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #1a1a1a;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #ffff00; }
+        .warning { color: #ff8800; }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.success { background: #2d5016; color: #00ff00; }
+        .status.error { background: #5d1616; color: #ff4444; }
+        .status.info { background: #5d5616; color: #ffff00; }
+        .instructions {
+            background: #1a3a5a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #4a90e2;
+            color: #ffffff;
+        }
+        .instructions h3 {
+            color: #4a90e2;
+            margin-top: 0;
+        }
+        .version-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .version-item {
+            background: #333;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            border-left: 3px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Taylor's Epic D&D Time - Version Control System</h1>
+        
+        <div class="instructions">
+            <h3>📋 How the Fixed System Works</h3>
+            <ol>
+                <li><strong>Backup Creation:</strong> Creates individual downloadable files for each project file</li>
+                <li><strong>File Organization:</strong> Use the PowerShell script to organize downloaded files</li>
+                <li><strong>Version Tracking:</strong> Maintains version history in localStorage and downloads</li>
+                <li><strong>Easy Restoration:</strong> Restore any version using console commands</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h2>System Status</h2>
+            <div id="system-status" class="status info">Initializing...</div>
+            <button onclick="checkSystemStatus()">Check System Status</button>
+            <button onclick="loadVersionHistory()">Load Version History</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Create New Backups</h2>
+            <button onclick="createTestBackup()">Create Test Backup</button>
+            <button onclick="createNavigationFixBackup()">Create "Navigation Fix" Backup</button>
+            <button onclick="createCustomBackup()">Create Custom Backup</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Version Management</h2>
+            <button onclick="listAllVersions()">List All Versions</button>
+            <button onclick="showVersionDetails()">Show Version Details</button>
+            <button onclick="clearVersionHistory()">Clear Version History</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Version History</h2>
+            <div id="version-list" class="version-list">
+                <div class="version-item">Loading versions...</div>
+            </div>
+            <button onclick="refreshVersionList()">Refresh Version List</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Backup Organization Helper</h2>
+            <div class="instructions">
+                <h3>📁 After backup files download:</h3>
+                <p><strong>PowerShell Command:</strong></p>
+                <code>.\organize-backup.ps1 -VersionNumber 002</code>
+                <p>This will move all version-002-* files from Downloads to the proper versions folder.</p>
+            </div>
+            <button onclick="showOrganizationInstructions()">Show Organization Instructions</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Console Output</h2>
+            <div id="test-log" class="log">Version Control Test initialized...\n</div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <!-- Load the core system -->
+    <script type="module">
+        import DNDVoiceCore from './js/core.js';
+        
+        const core = new DNDVoiceCore();
+        window.testCore = core;
+        
+        // Initialize system
+        core.init().then(() => {
+            log('✅ Core system initialized', 'success');
+            setTimeout(() => {
+                checkSystemStatus();
+                loadVersionHistory();
+            }, 1000);
+        }).catch(error => {
+            log(`❌ Core initialization failed: ${error.message}`, 'error');
+        });
+        
+        // Global functions
+        window.log = function(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        };
+        
+        window.clearLog = function() {
+            document.getElementById('test-log').innerHTML = 'Log cleared...\n';
+        };
+        
+        window.checkSystemStatus = function() {
+            const statusElement = document.getElementById('system-status');
+            
+            try {
+                const versionControl = core.getModule('versionControl');
+                const autoBackup = core.getModule('autoVersionBackup');
+                const commands = core.getModule('versionCommands');
+                
+                if (versionControl && autoBackup && commands && window.vc) {
+                    statusElement.textContent = '✅ All Systems Operational';
+                    statusElement.className = 'status success';
+                    log('✅ All version control systems online', 'success');
+                } else {
+                    const missing = [];
+                    if (!versionControl) missing.push('Version Control');
+                    if (!autoBackup) missing.push('Auto Backup');
+                    if (!commands) missing.push('Commands');
+                    if (!window.vc) missing.push('Console API');
+                    
+                    statusElement.textContent = `❌ Missing: ${missing.join(', ')}`;
+                    statusElement.className = 'status error';
+                    log(`❌ Missing systems: ${missing.join(', ')}`, 'error');
+                }
+            } catch (error) {
+                statusElement.textContent = '❌ System Check Failed';
+                statusElement.className = 'status error';
+                log(`❌ System check error: ${error.message}`, 'error');
+            }
+        };
+        
+        window.loadVersionHistory = function() {
+            try {
+                const versionControl = core.getModule('versionControl');
+                if (versionControl) {
+                    log('📁 Loading version history...', 'info');
+                    // The history loads automatically when the module initializes
+                    setTimeout(() => {
+                        log(`📁 Version control loaded with ${versionControl.versions.length} versions`, 'success');
+                        refreshVersionList();
+                    }, 500);
+                } else {
+                    log('❌ Version control module not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Failed to load version history: ${error.message}`, 'error');
+            }
+        };
+        
+        window.createTestBackup = async function() {
+            try {
+                log('🔄 Creating test backup...', 'info');
+                if (window.vc) {
+                    const version = await window.vc.backup('Test backup from improved system');
+                    log(`✅ Test backup created: Version ${version}`, 'success');
+                    log('📥 Files are downloading - use organize-backup.ps1 to organize them', 'warning');
+                    refreshVersionList();
+                } else {
+                    log('❌ Console commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.createNavigationFixBackup = async function() {
+            try {
+                log('🔄 Creating navigation fix backup...', 'info');
+                if (window.vc) {
+                    const version = await window.vc.backup('Character sheet navigation fix implemented');
+                    log(`✅ Navigation fix backup created: Version ${version}`, 'success');
+                    log('📥 Files are downloading - use organize-backup.ps1 to organize them', 'warning');
+                    refreshVersionList();
+                } else {
+                    log('❌ Console commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Backup failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.createCustomBackup = async function() {
+            const description = prompt('Enter backup description:', 'Custom backup');
+            if (description) {
+                try {
+                    log(`🔄 Creating custom backup: ${description}`, 'info');
+                    if (window.vc) {
+                        const version = await window.vc.backup(description);
+                        log(`✅ Custom backup created: Version ${version}`, 'success');
+                        log('📥 Files are downloading - use organize-backup.ps1 to organize them', 'warning');
+                        refreshVersionList();
+                    } else {
+                        log('❌ Console commands not available', 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Backup failed: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.listAllVersions = function() {
+            try {
+                if (window.vc) {
+                    const versions = window.vc.list();
+                    log(`📋 Found ${versions.length} versions (check console for details)`, 'info');
+                    refreshVersionList();
+                } else {
+                    log('❌ Console commands not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ List versions failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.showVersionDetails = function() {
+            try {
+                const versionControl = core.getModule('versionControl');
+                if (versionControl && versionControl.versions.length > 0) {
+                    const latest = versionControl.versions[versionControl.versions.length - 1];
+                    log(`📊 Latest Version Details:`, 'info');
+                    log(`   Version: ${latest.version}`, 'info');
+                    log(`   Description: ${latest.description}`, 'info');
+                    log(`   Files: ${latest.filesCount}`, 'info');
+                    log(`   Created: ${new Date(latest.timestamp).toLocaleString()}`, 'info');
+                } else {
+                    log('📊 No versions available', 'info');
+                }
+            } catch (error) {
+                log(`❌ Show details failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.refreshVersionList = function() {
+            try {
+                const versionControl = core.getModule('versionControl');
+                const versionListElement = document.getElementById('version-list');
+                
+                if (versionControl && versionControl.versions.length > 0) {
+                    versionListElement.innerHTML = versionControl.versions.map(version => `
+                        <div class="version-item">
+                            <strong>Version ${version.version}</strong> - ${version.description}<br>
+                            <small>Created: ${new Date(version.timestamp).toLocaleString()} | Files: ${version.filesCount}</small>
+                        </div>
+                    `).join('');
+                    log(`📋 Version list updated - ${versionControl.versions.length} versions`, 'success');
+                } else {
+                    versionListElement.innerHTML = '<div class="version-item">No versions found</div>';
+                    log('📋 No versions to display', 'info');
+                }
+            } catch (error) {
+                log(`❌ Refresh version list failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.clearVersionHistory = function() {
+            if (confirm('Are you sure you want to clear all version history? This cannot be undone.')) {
+                try {
+                    localStorage.removeItem('dnd_voice_version_history');
+                    log('🗑️ Version history cleared from localStorage', 'warning');
+                    log('ℹ️ Refresh the page to reinitialize', 'info');
+                } catch (error) {
+                    log(`❌ Clear history failed: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.showOrganizationInstructions = function() {
+            log('📁 BACKUP ORGANIZATION INSTRUCTIONS:', 'info');
+            log('1. After creating a backup, files will download automatically', 'info');
+            log('2. Open PowerShell in the project directory', 'info');
+            log('3. Run: .\\organize-backup.ps1 -VersionNumber XXX', 'info');
+            log('   (Replace XXX with your version number)', 'info');
+            log('4. The script will organize all downloaded files', 'info');
+            log('5. Your backup is ready for use!', 'success');
+        };
+        
+    </script>
+</body>
+</html>

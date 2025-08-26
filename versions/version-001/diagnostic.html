@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Module Loading Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f0f0f0; }
+        .module { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .loading { background: #fff3cd; border-left: 4px solid #ffc107; }
+        .success { background: #d4edda; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; border-left: 4px solid #dc3545; }
+        .log { font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Module Loading Diagnostic</h1>
+    <p>Testing each module individually to identify loading issues...</p>
+    
+    <div id="results"></div>
+    <div id="console-log" class="log"></div>
+    
+    <script type="module">
+        const results = document.getElementById('results');
+        const consoleLog = document.getElementById('console-log');
+        
+        // Capture console output
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = (...args) => {
+            originalLog(...args);
+            consoleLog.innerHTML += `<div>LOG: ${args.join(' ')}</div>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        };
+        
+        console.error = (...args) => {
+            originalError(...args);
+            consoleLog.innerHTML += `<div style="color: red;">ERROR: ${args.join(' ')}</div>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        };
+        
+        const modules = [
+            ['ui', './js/ui.js'],
+            ['database', './js/database.js'],
+            ['campaignManager', './js/campaign-manager.js'],
+            ['characterSheet', './js/character-sheet.js'],
+            ['inventorySystem', './js/inventory-system.js'],
+            ['worldDatabase', './js/world-database.js'],
+            ['worldBrowser', './js/world-browser.js'],
+            ['relationshipSystem', './js/relationship-system.js'],
+            ['relationshipUI', './js/relationship-ui.js'],
+            ['relationshipTestScenarios', './js/relationship-test-scenarios.js'],
+            ['monsterDatabase', './js/monsters.js'],
+            ['bestiaryInterface', './js/bestiary-interface.js'],
+            ['interactionHistory', './js/interaction-history.js'],
+            ['aiDMIntegration', './js/ai-dm-integration.js'],
+            ['aiDMInterface', './js/ai-dm-interface.js'],
+            ['voiceIntegration', './js/voice-integration.js'],
+            ['voiceTestSuite', './js/voice-test-suite.js'],
+            ['combatSystem', './js/combat-system.js'],
+            ['tacticalBattleMap', './js/tactical-battle-map.js'],
+            ['combatTestSuite', './js/combat-test-suite.js'],
+            ['choiceTrackingSystem', './js/choice-tracking-system.js'],
+            ['decisionTreeVisualizer', './js/decision-tree-visualizer.js'],
+            ['dynamicQuestSystem', './js/dynamic-quest-system.js'],
+            ['choiceConsequenceInterface', './js/choice-consequence-interface.js'],
+            ['restSystem', './js/rest-system.js'],
+            ['dynamicDialogueSystem', './js/dynamic-dialogue-system.js'],
+            ['githubIntegration', './js/optimized-github-integration.js']
+        ];
+        
+        async function testModule(name, path) {
+            const moduleDiv = document.createElement('div');
+            moduleDiv.className = 'module loading';
+            moduleDiv.innerHTML = `<strong>${name}</strong> - Loading...`;
+            results.appendChild(moduleDiv);
+            
+            try {
+                console.log(`Testing module: ${name}`);
+                const startTime = performance.now();
+                
+                const module = await import(path);
+                const ModuleClass = module.default || module[Object.keys(module)[0]];
+                
+                if (!ModuleClass) {
+                    throw new Error(`No valid class found in ${name}`);
+                }
+                
+                // Try to create instance with mock core
+                const mockCore = {
+                    on: () => {},
+                    emit: () => {},
+                    updateState: () => {},
+                    getModule: () => null
+                };
+                
+                new ModuleClass(mockCore);
+                
+                const loadTime = Math.round(performance.now() - startTime);
+                moduleDiv.className = 'module success';
+                moduleDiv.innerHTML = `<strong>${name}</strong> - ✅ Success (${loadTime}ms)`;
+                console.log(`✅ ${name} loaded successfully in ${loadTime}ms`);
+                
+            } catch (error) {
+                moduleDiv.className = 'module error';
+                moduleDiv.innerHTML = `<strong>${name}</strong> - ❌ Failed: ${error.message}`;
+                console.error(`❌ ${name} failed:`, error.message);
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async function runDiagnostic() {
+            console.log('🔍 Starting module diagnostic...');
+            
+            for (const [name, path] of modules) {
+                const success = await testModule(name, path);
+                
+                // Add small delay between tests
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                if (!success) {
+                    console.log('🛑 Stopping at first failure for detailed analysis');
+                    break;
+                }
+            }
+            
+            console.log('✅ Diagnostic complete');
+        }
+        
+        runDiagnostic().catch(error => {
+            console.error('Diagnostic failed:', error);
+        });
+    </script>
+</body>
+</html>

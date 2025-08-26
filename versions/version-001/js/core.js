@@ -18,7 +18,7 @@ class DNDVoiceCore {
     }
 
     async init() {
-        console.log('🎲 Initializing Taylor\'s Epic D&D Time...');
+        console.log('🎲 Initializing D&D Voice Adventure...');
         
         const modules = [
             ['ui', './js/ui.js'],

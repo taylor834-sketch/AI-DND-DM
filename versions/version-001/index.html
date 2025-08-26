@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Taylor's Epic D&D Time - A comprehensive tabletop RPG companion with voice integration, inspired by Baldur's Gate 3 and Gloomhaven.">
-    <meta name="keywords" content="D&D, Dungeons Dragons, RPG, tabletop, voice, adventure, campaign, Taylor">
-    <meta name="author" content="Taylor's Epic D&D Time">
+    <meta name="description" content="D&D Voice Adventure - A comprehensive tabletop RPG companion with voice integration, inspired by Baldur's Gate 3 and Gloomhaven.">
+    <meta name="keywords" content="D&D, Dungeons Dragons, RPG, tabletop, voice, adventure, campaign">
+    <meta name="author" content="D&D Voice Adventure">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://taylor834-sketch.github.io/AI-DND-DM/">
-    <meta property="og:title" content="Taylor's Epic D&D Time">
+    <meta property="og:title" content="D&D Voice Adventure">
     <meta property="og:description" content="Experience immersive tabletop RPG adventures with voice integration and atmospheric storytelling.">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://taylor834-sketch.github.io/AI-DND-DM/"
-    <meta property="twitter:title" content="Taylor's Epic D&D Time">
+    <meta property="twitter:title" content="D&D Voice Adventure">
     <meta property="twitter:description" content="Experience immersive tabletop RPG adventures with voice integration and atmospheric storytelling.">
     
-    <title>Taylor's Epic D&D Time</title>
+    <title>D&D Voice Adventure</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
@@ -100,7 +100,7 @@
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
             <div class="dragon-symbol">🐉</div>
-            <h1 class="loading-title">Taylor's Epic D&D Time</h1>
+            <h1 class="loading-title">D&D Voice Adventure</h1>
             <div class="loading-bar">
                 <div class="loading-progress" id="loading-progress"></div>
             </div>
@@ -123,8 +123,8 @@
             <header class="main-header">
                 <div class="title-container">
                     <h1 class="main-title">
-                        <span class="title-primary">Taylor's Epic</span>
-                        <span class="title-secondary">D&D Time</span>
+                        <span class="title-primary">D&D Voice</span>
+                        <span class="title-secondary">Adventure</span>
                     </h1>
                     <p class="subtitle">Embark on Epic Journeys</p>
                 </div>
@@ -990,12 +990,12 @@
         <div id="game-screen" class="screen game-screen">
             <div class="game-container">
                 <header class="game-header">
-                    <h2>Taylor's Epic D&D Time</h2>
+                    <h2>D&D Adventure</h2>
                     <div class="game-controls">
                         <button class="secondary-button" onclick="switchScreen('characterSheet')">📄 Character Sheet</button>
                         <button class="secondary-button" onclick="switchScreen('worldBrowser')">🌍 World Browser</button>
                         <button class="secondary-button" onclick="openGameSettings()">⚙️ Settings</button>
-                        <button class="secondary-button" onclick="saveAndExitToMainMenu()">💾 Save and Exit</button>
+                        <button class="secondary-button" onclick="promptToSave('mainMenu')">🏠 Main Menu</button>
                     </div>
                 </header>
                 
@@ -1553,239 +1553,7 @@
             }
         }
         
-        // Comprehensive Campaign Data Save - saves everything for AI DM continuity
-        async function saveComprehensiveCampaignData() {
-            if (!window.currentCampaign) {
-                console.error('No current campaign to save');
-                return false;
-            }
-
-            console.log('🗄️ Saving comprehensive campaign database...');
-
-            try {
-                // Collect all game data for AI DM context
-                const comprehensiveGameState = {
-                    // Session metadata
-                    sessionInfo: {
-                        sessionNumber: (window.currentCampaign.sessionSummaries?.length || 0) + 1,
-                        startTime: window.sessionStartTime || Date.now(),
-                        endTime: Date.now(),
-                        duration: Date.now() - (window.sessionStartTime || Date.now()),
-                        playedBy: window.partyCharacters?.map(c => c.name) || []
-                    },
-                    
-                    // Complete DM State
-                    dmState: {
-                        currentLocation: DM_STATE.currentLocation,
-                        currentScene: DM_STATE.currentScene,
-                        combatActive: DM_STATE.combatActive,
-                        npcsNearby: DM_STATE.npcsNearby,
-                        activeNPCs: Array.from(DM_STATE.activeNPCs.entries()),
-                        recentEvents: DM_STATE.recentEvents,
-                        conversationHistory: DM_STATE.conversationHistory,
-                        tensionLevel: DM_STATE.tensionLevel,
-                        lastPlayerAction: DM_STATE.lastPlayerAction
-                    },
-                    
-                    // Complete Story State
-                    storyState: {
-                        currentChapter: STORY_STATE.currentChapter,
-                        plotThreads: STORY_STATE.plotThreads,
-                        activeQuests: STORY_STATE.activeQuests,
-                        completedEvents: STORY_STATE.completedEvents,
-                        worldState: STORY_STATE.worldState,
-                        narrativeTension: STORY_STATE.narrativeTension,
-                        storyBeats: STORY_STATE.storyBeats
-                    },
-                    
-                    // Complete conversation log
-                    conversationLog: getConversationHistory(),
-                    
-                    // Player decisions and consequences
-                    playerDecisions: analyzePlayerDecisions(DM_STATE.conversationHistory),
-                    
-                    // World database for AI context
-                    worldDatabase: {
-                        locations: await getLocationDatabase(),
-                        npcs: await getNPCDatabase(), 
-                        quests: await getQuestDatabase(),
-                        relationships: await getRelationshipDatabase(),
-                        factions: await getFactionDatabase(),
-                        lore: await getLoreDatabase(),
-                        timeline: DM_STATE.recentEvents || []
-                    },
-                    
-                    // Character progression
-                    characterProgression: {
-                        party: window.partyCharacters || [],
-                        experience: 0,
-                        levelUps: [],
-                        itemsGained: [],
-                        itemsLost: [],
-                        spellsLearned: [],
-                        skillsImproved: []
-                    }
-                };
-
-                // Save to campaign
-                window.currentCampaign.gameState = comprehensiveGameState;
-                window.currentCampaign.lastPlayed = new Date().toISOString();
-                
-                // Save enhanced data
-                const success = saveCampaign(window.currentCampaign);
-                
-                if (success) {
-                    console.log('✅ Comprehensive campaign data saved successfully');
-                    console.log(`📊 Saved: ${comprehensiveGameState.conversationLog.length} conversation entries`);
-                    console.log(`📊 Saved: ${Object.keys(comprehensiveGameState.worldDatabase.npcs).length} NPCs`);
-                    console.log(`📊 Saved: ${comprehensiveGameState.storyState.activeQuests.length} active quests`);
-                    return true;
-                } else {
-                    console.error('❌ Failed to save comprehensive data');
-                    return false;
-                }
-                
-            } catch (error) {
-                console.error('❌ Error in comprehensive save:', error);
-                return false;
-            }
-        }
-
-        // Database collection functions
-        async function getLocationDatabase() {
-            return {
-                [DM_STATE.currentLocation]: {
-                    name: DM_STATE.currentLocation,
-                    type: DM_STATE.currentScene,
-                    description: `Location where the party has spent time`,
-                    npcsPresent: DM_STATE.npcsNearby,
-                    events: DM_STATE.recentEvents,
-                    visited: true,
-                    lastVisited: new Date().toISOString()
-                }
-            };
-        }
-
-        async function getNPCDatabase() {
-            const npcDatabase = {};
-            
-            for (const [npcName, npcData] of DM_STATE.activeNPCs.entries()) {
-                npcDatabase[npcName] = {
-                    ...npcData,
-                    lastEncounter: new Date().toISOString(),
-                    relationshipStatus: 'met',
-                    conversationTopics: [],
-                    questsInvolved: []
-                };
-            }
-            
-            return npcDatabase;
-        }
-
-        async function getQuestDatabase() {
-            return STORY_STATE.activeQuests.map(quest => ({
-                name: quest,
-                status: 'active',
-                startedDate: new Date().toISOString(),
-                objectives: [],
-                rewards: [],
-                difficulty: 'normal',
-                questGiver: 'unknown',
-                location: DM_STATE.currentLocation
-            }));
-        }
-
-        async function getRelationshipDatabase() {
-            const relationships = {};
-            
-            for (const npcName of Array.from(DM_STATE.activeNPCs.keys())) {
-                relationships[npcName] = {
-                    reputation: 0,
-                    trust: 0,
-                    lastInteraction: new Date().toISOString(),
-                    relationshipType: 'neutral',
-                    sharedHistory: []
-                };
-            }
-            
-            return relationships;
-        }
-
-        async function getFactionDatabase() {
-            return {
-                'local_village': {
-                    name: 'Local Village',
-                    reputation: 0,
-                    influence: 'local',
-                    attitude: 'neutral',
-                    members: DM_STATE.npcsNearby
-                }
-            };
-        }
-
-        async function getLoreDatabase() {
-            return {
-                worldEvents: DM_STATE.recentEvents,
-                legends: [],
-                history: [],
-                rumors: [],
-                discoveries: []
-            };
-        }
-
-        // Analyze player decisions from conversation history
-        function analyzePlayerDecisions(conversationHistory) {
-            const decisions = {
-                majorDecisions: [],
-                moralChoices: [],
-                strategicChoices: [],
-                diplomaticChoices: []
-            };
-
-            for (const entry of conversationHistory) {
-                if (entry.type === 'player_action') {
-                    const action = entry.content.toLowerCase();
-                    
-                    // Classify decision types
-                    if (action.includes('attack') || action.includes('fight') || action.includes('kill')) {
-                        decisions.strategicChoices.push({
-                            decision: entry.content,
-                            timestamp: entry.timestamp,
-                            type: 'combat',
-                            context: DM_STATE.currentLocation
-                        });
-                    } else if (action.includes('help') || action.includes('save') || action.includes('rescue')) {
-                        decisions.moralChoices.push({
-                            decision: entry.content,
-                            timestamp: entry.timestamp,
-                            type: 'heroic',
-                            context: DM_STATE.currentLocation
-                        });
-                    } else if (action.includes('talk') || action.includes('negotiate') || action.includes('persuade')) {
-                        decisions.diplomaticChoices.push({
-                            decision: entry.content,
-                            timestamp: entry.timestamp,
-                            type: 'diplomatic',
-                            context: DM_STATE.currentLocation
-                        });
-                    }
-                    
-                    // Flag major story decisions
-                    if (action.includes('quest') || action.includes('mission') || action.includes('journey')) {
-                        decisions.majorDecisions.push({
-                            decision: entry.content,
-                            timestamp: entry.timestamp,
-                            type: 'story',
-                            context: DM_STATE.currentLocation
-                        });
-                    }
-                }
-            }
-
-            return decisions;
-        }
-
-        // Save comprehensive campaign session data (legacy function)
+        // Save comprehensive campaign session data
         function saveCurrentCampaignData() {
             if (window.currentCampaign) {
                 // Update campaign with current party data
@@ -2068,342 +1836,6 @@
             // Scroll to bottom
             historyDiv.scrollTop = historyDiv.scrollHeight;
             console.log(`Restored ${conversationLog.length} conversation messages`);
-        }
-
-        // Comprehensive Save and Exit function
-        async function saveAndExitToMainMenu() {
-            if (!window.currentCampaign) {
-                console.log('No active campaign to save');
-                promptToSave('mainMenu');
-                return;
-            }
-
-            // Show save progress
-            showNotification('📝 Saving session and generating summary...', 5000, 'info');
-
-            try {
-                // 1. Save comprehensive campaign data
-                const success = await saveComprehensiveCampaignData();
-                
-                if (success) {
-                    // 2. Generate session summary
-                    const summary = await generateSessionSummary();
-                    
-                    // 3. Save the summary to the campaign
-                    if (summary) {
-                        window.currentCampaign.lastSessionSummary = summary;
-                        window.currentCampaign.sessionSummaries = window.currentCampaign.sessionSummaries || [];
-                        window.currentCampaign.sessionSummaries.push({
-                            date: new Date().toISOString(),
-                            summary: summary,
-                            sessionLength: Date.now() - (window.sessionStartTime || Date.now()),
-                            actionsCount: DM_STATE.conversationHistory.length
-                        });
-                        
-                        // Save the updated campaign
-                        saveCampaign(window.currentCampaign);
-                    }
-                    
-                    showNotification('✅ Session saved successfully! Summary generated.', 3000, 'success');
-                    
-                    // Clear session state and go to main menu
-                    setTimeout(() => {
-                        stopAutoSave();
-                        window.currentCampaign = null;
-                        window.partyCharacters = [];
-                        switchScreen('mainMenu');
-                    }, 2000);
-                    
-                } else {
-                    showNotification('❌ Failed to save session. Please try again.', 5000, 'error');
-                }
-                
-            } catch (error) {
-                console.error('Save and exit failed:', error);
-                showNotification('❌ Error saving session: ' + error.message, 5000, 'error');
-            }
-        }
-
-        // Enhanced session summary generation
-        async function generateSessionSummary() {
-            const conversationLog = getConversationHistory();
-            
-            if (!conversationLog || conversationLog.length === 0) {
-                return "A new adventure begins! The party is ready to embark on their journey.";
-            }
-
-            // Get session data for summary
-            const sessionData = {
-                actions: conversationLog.filter(msg => msg.type === 'player').length,
-                dmResponses: conversationLog.filter(msg => msg.type === 'dm').length,
-                duration: Date.now() - (window.sessionStartTime || Date.now()),
-                location: DM_STATE.currentLocation || 'unknown',
-                activeQuests: STORY_STATE.activeQuests || [],
-                npcsEncountered: Array.from(DM_STATE.activeNPCs.keys()),
-                keyEvents: DM_STATE.recentEvents || []
-            };
-
-            // Try AI-powered summary first
-            if (window.openAIConfig && window.openAIConfig.apiKey) {
-                try {
-                    const aiSummary = await generateAISessionSummary(conversationLog, sessionData);
-                    if (aiSummary) {
-                        return aiSummary;
-                    }
-                } catch (error) {
-                    console.warn('AI summary generation failed, using template:', error);
-                }
-            }
-
-            // Fallback to template-based summary
-            return generateTemplateSummary(conversationLog, sessionData);
-        }
-
-        // AI-powered session summary generation
-        async function generateAISessionSummary(conversationLog, sessionData) {
-            const recentMessages = conversationLog.slice(-15); // Last 15 exchanges
-            const conversationText = recentMessages.map(msg => 
-                `${msg.type === 'dm' ? 'DM' : 'Player'}: ${msg.content}`
-            ).join('\n');
-
-            const systemPrompt = `You are a D&D Dungeon Master creating a brief session recap for players. 
-
-Create a 2-3 sentence summary of what happened in this session. Focus on:
-- Key story moments and decisions made
-- Combat encounters or challenges faced
-- NPCs met and important dialogue
-- Quest progress or new plot developments
-- Locations explored
-
-Keep it engaging and set up anticipation for the next session. Write in past tense as if recounting events.
-
-Session Data:
-- Location: ${sessionData.location}
-- Player Actions: ${sessionData.actions}
-- Active Quests: ${sessionData.activeQuests.join(', ') || 'None'}
-- NPCs Encountered: ${sessionData.npcsEncountered.join(', ') || 'None'}
-- Key Events: ${sessionData.keyEvents.join(', ') || 'None'}`;
-
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${window.openAIConfig.apiKey}`
-                },
-                body: JSON.stringify({
-                    model: window.openAIConfig.model || 'gpt-3.5-turbo',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: `Recent session activity:\n${conversationText}` }
-                    ],
-                    max_tokens: 200,
-                    temperature: 0.7
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                return data.choices[0].message.content.trim();
-            }
-            
-            throw new Error('AI API request failed');
-        }
-
-        // Template-based session summary fallback
-        function generateTemplateSummary(conversationLog, sessionData) {
-            let summary = "Last session, the party ";
-            
-            // Add location context
-            if (sessionData.location && sessionData.location !== 'unknown') {
-                summary += `explored ${sessionData.location} and `;
-            }
-            
-            // Add action context
-            if (sessionData.actions > 5) {
-                summary += "had an action-packed adventure with multiple encounters. ";
-            } else if (sessionData.actions > 2) {
-                summary += "engaged in several key interactions. ";
-            } else {
-                summary += "began their journey with careful planning. ";
-            }
-            
-            // Add NPC context
-            if (sessionData.npcsEncountered.length > 0) {
-                summary += `They met ${sessionData.npcsEncountered.slice(0, 2).join(' and ')}, `;
-            }
-            
-            // Add quest context
-            if (sessionData.activeQuests.length > 0) {
-                summary += `advancing their quest to ${sessionData.activeQuests[0].toLowerCase()}. `;
-            } else {
-                summary += "setting the stage for their upcoming adventures. ";
-            }
-            
-            return summary + "The story continues...";
-        }
-
-        // Initialize AI DM with complete campaign context for continuity
-        async function initializeAIDMWithCampaignContext(campaign) {
-            if (!campaign.gameState || !window.openAIConfig?.apiKey) {
-                console.log('⚠️ AI DM context initialization skipped (no API key or game state)');
-                return;
-            }
-
-            console.log('🧠 Initializing AI DM with complete campaign context...');
-
-            try {
-                const gameState = campaign.gameState;
-                
-                // Build comprehensive context for AI DM
-                const dmContextPrompt = `You are the AI Dungeon Master for "${campaign.name}". Here is the complete campaign context you need to remember:
-
-CAMPAIGN OVERVIEW:
-- Campaign: ${campaign.scenario || 'Fantasy Adventure'}
-- Tone: ${campaign.tone || 'Heroic'}
-- Current Session: ${gameState.sessionInfo?.sessionNumber || 1}
-
-PARTY INFORMATION:
-${gameState.characterProgression?.party?.map(char => 
-`- ${char.name}: Level ${char.level} ${char.race} ${char.class}`).join('\n') || '- No party data available'}
-
-CURRENT WORLD STATE:
-- Location: ${gameState.dmState?.currentLocation || 'Unknown'}
-- Scene: ${gameState.dmState?.currentScene || 'Unknown'}
-- Active Quests: ${gameState.storyState?.activeQuests?.join(', ') || 'None'}
-- Tension Level: ${gameState.dmState?.tensionLevel || 1}/5
-
-KNOWN NPCs:
-${gameState.worldDatabase?.npcs ? Object.entries(gameState.worldDatabase.npcs).map(([name, npc]) => 
-`- ${name}: ${npc.description || 'NPC encountered'}`).join('\n') : '- No NPCs recorded'}
-
-RECENT EVENTS:
-${gameState.dmState?.recentEvents?.map(event => `- ${event}`).join('\n') || '- No recent events'}
-
-PLAYER DECISION PATTERNS:
-- Major Decisions: ${gameState.playerDecisions?.majorDecisions?.length || 0}
-- Moral Choices: ${gameState.playerDecisions?.moralChoices?.length || 0} 
-- Combat Choices: ${gameState.playerDecisions?.strategicChoices?.length || 0}
-- Diplomatic Choices: ${gameState.playerDecisions?.diplomaticChoices?.length || 0}
-
-LAST SESSION SUMMARY:
-${campaign.lastSessionSummary || 'This is the beginning of the adventure.'}
-
-Remember this context for ALL future interactions. Maintain continuity with this information.`;
-
-                // Send context initialization to AI (non-visible to player)
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${window.openAIConfig.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: window.openAIConfig.model || 'gpt-3.5-turbo',
-                        messages: [
-                            { role: 'system', content: dmContextPrompt },
-                            { role: 'user', content: 'Acknowledge that you understand and remember this campaign context. Just say "Context loaded" and nothing else.' }
-                        ],
-                        max_tokens: 50,
-                        temperature: 0.3
-                    })
-                });
-
-                if (response.ok) {
-                    console.log('✅ AI DM campaign context loaded successfully');
-                } else {
-                    console.warn('⚠️ Failed to initialize AI DM context');
-                }
-
-            } catch (error) {
-                console.error('❌ AI DM context initialization failed:', error);
-            }
-        }
-
-        // Show episode-style session recap when continuing campaign
-        async function showSessionRecap(campaign) {
-            if (!campaign.lastSessionSummary && (!campaign.sessionSummaries || campaign.sessionSummaries.length === 0)) {
-                console.log('No session recap to show - this is the first session');
-                return;
-            }
-
-            console.log('📺 Displaying session recap...');
-
-            // Get the most recent session summary
-            const latestSummary = campaign.lastSessionSummary || 
-                (campaign.sessionSummaries && campaign.sessionSummaries.length > 0 ? 
-                campaign.sessionSummaries[campaign.sessionSummaries.length - 1].summary : null);
-
-            if (!latestSummary) return;
-
-            // Create episode-style recap message
-            const recapMessage = `
-                <div class="message dm-message episode-recap">
-                    <div class="message-header">
-                        <span class="speaker">📺 Previously on Taylor's Epic D&D Time...</span>
-                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div class="message-content episode-content">
-                        <div class="episode-intro">
-                            <strong>Session Recap</strong>
-                        </div>
-                        <p>${latestSummary}</p>
-                        <div class="episode-outro">
-                            <em>The adventure continues...</em>
-                        </div>
-                    </div>
-                    ${getDMActionButtons()}
-                </div>
-            `;
-
-            // Add recap to conversation
-            setTimeout(() => {
-                appendToConversation(recapMessage);
-                
-                // Add special styling for episode recap
-                const style = document.createElement('style');
-                style.textContent = `
-                    .episode-recap {
-                        border-left: 4px solid #DAA520 !important;
-                        background: linear-gradient(135deg, #2a2a2a, #3a3a2a) !important;
-                    }
-                    .episode-recap .speaker {
-                        color: #DAA520 !important;
-                        font-weight: bold;
-                    }
-                    .episode-content {
-                        font-style: italic;
-                        padding: 15px;
-                        background: rgba(218, 165, 32, 0.1);
-                        border-radius: 8px;
-                        margin: 10px 0;
-                    }
-                    .episode-intro {
-                        color: #DAA520;
-                        font-size: 14px;
-                        margin-bottom: 10px;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    }
-                    .episode-outro {
-                        margin-top: 15px;
-                        text-align: center;
-                        color: #888;
-                        font-size: 12px;
-                    }
-                `;
-                
-                if (!document.querySelector('#episode-recap-styles')) {
-                    style.id = 'episode-recap-styles';
-                    document.head.appendChild(style);
-                }
-
-                // Play TTS if enabled
-                if (window.isTTSEnabled) {
-                    speakText(`Previously on Taylor's Epic D&D Time: ${latestSummary}`);
-                }
-
-                console.log('✅ Session recap displayed');
-            }, 1000);
         }
 
         // Generate session recap using AI or template
@@ -3148,12 +2580,6 @@ Remember this context for ALL future interactions. Maintain continuity with this
             const campaign = window.currentCampaign;
             if (campaign && campaign.gameState && campaign.gameState.conversationLog && campaign.gameState.conversationLog.length > 0) {
                 console.log('Continuing existing session...');
-                
-                // Initialize AI DM with complete campaign context
-                await initializeAIDMWithCampaignContext(campaign);
-                
-                // Show session recap (episode-style introduction)
-                await showSessionRecap(campaign);
                 
                 // Restore session and show recap
                 setTimeout(async () => {
@@ -5107,16 +4533,7 @@ Remember this context for ALL future interactions. Maintain continuity with this
             DM_STATE.lastPlayerAction = playerAction;
             
             // Build the system prompt with enhanced context
-            let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master running an ongoing campaign. 
-
-CRITICAL CONTEXT RULES:
-- You have the FULL conversation history - use it to maintain perfect continuity
-- NEVER ignore what was just said or change topics abruptly
-- If discussing goblins, STAY with goblins until resolved
-- If in a specific location, STAY there unless player explicitly moves
-- ALWAYS acknowledge and respond to the player's EXACT action
-- Build on the immediately previous exchange - don't jump to new scenarios
-- Remember active NPCs, ongoing conversations, and current situations`;
+            let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master. IMPORTANT: Maintain scene continuity and don't randomly change locations or ignore NPCs without player direction.`;
             
             // Add combat rules enforcement
             if (combatState.active) {
@@ -5174,26 +4591,14 @@ CRITICAL CONTEXT RULES:
             
             systemPrompt += ` CRITICAL: Only change locations if the player explicitly says to move/leave/go somewhere. If talking to NPCs, keep the conversation going in the current location. Always end with "What do you do?" or similar engagement.`;
             
-            // Build proper conversation messages for OpenAI with full context
-            const messages = [{ role: 'system', content: systemPrompt }];
+            // Build the user message with recent context
+            let userMessage = `Current player action: ${playerAction}`;
             
-            // Add recent conversation history as alternating user/assistant messages
-            const recentHistory = DM_STATE.conversationHistory.slice(-8); // Last 8 exchanges
-            
-            for (const entry of recentHistory) {
-                if (entry.type === 'player_action') {
-                    messages.push({ role: 'user', content: entry.content });
-                } else if (entry.type === 'dm_response') {
-                    messages.push({ role: 'assistant', content: entry.content });
-                }
-                // Skip other entry types to maintain clean conversation flow
+            // Add conversation history for continuity
+            const recentContext = getRecentContext(4);
+            if (recentContext) {
+                userMessage += `\n\nRecent conversation:\n${recentContext}`;
             }
-            
-            // Add the current player action as the final user message
-            messages.push({ role: 'user', content: playerAction });
-            
-            console.log('🧠 Sending to AI with proper conversation context:', messages.length - 1, 'history messages');
-            console.log('📖 Full message thread:', messages.map(m => `${m.role}: ${m.content.substring(0, 100)}...`));
             
             try {
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -5204,9 +4609,12 @@ CRITICAL CONTEXT RULES:
                     },
                     body: JSON.stringify({
                         model: openAIConfig.model,
-                        messages: messages,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userMessage }
+                        ],
                         temperature: openAIConfig.creativity / 100, // Convert to 0-1 scale
-                        max_tokens: 300 // Increased for better responses
+                        max_tokens: 200
                     })
                 });
                 
@@ -5216,9 +4624,6 @@ CRITICAL CONTEXT RULES:
                     
                     // Track the DM response for continuity
                     addToConversationHistory('dm_response', dmResponse);
-                    
-                    console.log('✅ AI Response received and logged:', dmResponse.substring(0, 100) + '...');
-                    console.log('📊 Conversation history now has', DM_STATE.conversationHistory.length, 'entries');
                     
                     // Auto-detect and track NPCs mentioned in the response
                     detectAndTrackNPCs(dmResponse);
@@ -6872,7 +6277,7 @@ CRITICAL CONTEXT RULES:
                     errorContainer.innerHTML = `
                         <div class="critical-error">
                             <h2>⚠️ Initialization Error</h2>
-                            <p>Taylor's Epic D&D Time failed to initialize.</p>
+                            <p>The D&D Voice Adventure app failed to initialize.</p>
                             ${helpText}
                             <details>
                                 <summary>Technical Details</summary>

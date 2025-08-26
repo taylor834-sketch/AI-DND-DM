@@ -15,7 +15,10 @@
       "Bash(dir)",
       "Bash(taskkill:*)",
       "Bash(powershell:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mkdir:*)",
+      "Bash(robocopy:*)",
+      "Bash(xcopy:*)"
     ],
     "deny": [],
     "ask": []

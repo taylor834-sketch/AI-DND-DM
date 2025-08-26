@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Save Data - D&D Voice Adventure</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #0D1117; 
+            color: #F0E6D2; 
+        }
+        .save-entry {
+            background: #1F2937;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #10B981;
+        }
+        .no-saves {
+            background: #7F1D1D;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #DC2626;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #047857;
+        }
+        .warning {
+            background: #7C2D12;
+            border-left: 4px solid #EA580C;
+        }
+        pre {
+            background: #111827;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Save Data Debugger</h1>
+    
+    <div class="save-entry">
+        <h3>Current Location Info</h3>
+        <p><strong>URL:</strong> <span id="current-url"></span></p>
+        <p><strong>Port:</strong> <span id="current-port"></span></p>
+        <p><strong>Protocol:</strong> <span id="current-protocol"></span></p>
+    </div>
+
+    <div class="save-entry">
+        <h3>Quick Actions</h3>
+        <button onclick="checkAllSaves()">🔍 Check All Save Data</button>
+        <button onclick="checkOldPortSaves()">🔄 Check Port 8000 Saves</button>
+        <button onclick="exportSaves()">💾 Export All Saves</button>
+        <button onclick="clearOldSaves()">🧹 Clear Old/Duplicate Saves</button>
+    </div>
+    
+    <div id="save-results"></div>
+    
+    <div id="detailed-save-data" style="display: none;">
+        <h3>Detailed Save Data</h3>
+        <pre id="save-data-content"></pre>
+    </div>
+
+    <script>
+        // Display current location info
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('current-port').textContent = window.location.port || '(default)';
+        document.getElementById('current-protocol').textContent = window.location.protocol;
+
+        function checkAllSaves() {
+            const resultsDiv = document.getElementById('save-results');
+            const prefix = 'dnd_voice_';
+            let foundSaves = [];
+            let allKeys = [];
+
+            // Check all localStorage keys
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                allKeys.push(key);
+                
+                if (key.startsWith(prefix)) {
+                    try {
+                        const value = localStorage.getItem(key);
+                        const data = JSON.parse(value);
+                        foundSaves.push({
+                            key: key,
+                            data: data,
+                            size: value.length,
+                            lastSaved: data.lastSaved || data.lastModified || 'Unknown'
+                        });
+                    } catch (error) {
+                        foundSaves.push({
+                            key: key,
+                            data: null,
+                            error: error.message,
+                            size: localStorage.getItem(key).length
+                        });
+                    }
+                }
+            }
+
+            let html = `
+                <div class="save-entry">
+                    <h3>📊 Save Data Analysis</h3>
+                    <p><strong>Total localStorage keys:</strong> ${localStorage.length}</p>
+                    <p><strong>D&D Voice Adventure saves:</strong> ${foundSaves.length}</p>
+                </div>
+            `;
+
+            if (foundSaves.length === 0) {
+                html += `
+                    <div class="no-saves">
+                        <h3>❌ No Save Data Found</h3>
+                        <p>No saves found with prefix "${prefix}"</p>
+                        <p>This might mean:</p>
+                        <ul>
+                            <li>You haven't saved any campaigns yet</li>
+                            <li>Saves are stored under a different port/domain</li>
+                            <li>Browser storage was cleared</li>
+                        </ul>
+                        <p><strong>All localStorage keys found:</strong></p>
+                        <pre>${allKeys.join('\\n')}</pre>
+                    </div>
+                `;
+            } else {
+                foundSaves.forEach((save, index) => {
+                    if (save.error) {
+                        html += `
+                            <div class="save-entry warning">
+                                <h4>⚠️ Corrupted Save: ${save.key}</h4>
+                                <p><strong>Error:</strong> ${save.error}</p>
+                                <p><strong>Size:</strong> ${save.size} characters</p>
+                            </div>
+                        `;
+                    } else {
+                        const isCampaign = save.key.includes('campaign_');
+                        const isList = save.key === prefix + 'campaigns';
+                        
+                        html += `
+                            <div class="save-entry">
+                                <h4>${isCampaign ? '🎲' : isList ? '📋' : '📄'} ${save.key}</h4>
+                                <p><strong>Type:</strong> ${isCamera ? 'Campaign' : isList ? 'Campaign List' : 'Other Data'}</p>
+                                <p><strong>Size:</strong> ${save.size} characters</p>
+                                <p><strong>Last Saved:</strong> ${save.lastSaved}</p>
+                                ${save.data.name ? `<p><strong>Name:</strong> ${save.data.name}</p>` : ''}
+                                ${save.data.id ? `<p><strong>ID:</strong> ${save.data.id}</p>` : ''}
+                                <button onclick="showSaveDetails('${save.key}')">View Details</button>
+                                <button onclick="loadThisSave('${save.key}')">Load This Save</button>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function checkOldPortSaves() {
+            alert('To check saves from port 8000:\\n\\n1. Open a new tab\\n2. Go to http://localhost:8000\\n3. Open Developer Tools (F12)\\n4. Go to Application → Local Storage → http://localhost:8000\\n5. Look for keys starting with "dnd_voice_"\\n\\nIf you find saves there, you can copy them over or export/import them.');
+        }
+
+        function showSaveDetails(key) {
+            const data = localStorage.getItem(key);
+            const detailsDiv = document.getElementById('detailed-save-data');
+            const contentDiv = document.getElementById('save-data-content');
+            
+            try {
+                const parsed = JSON.parse(data);
+                contentDiv.textContent = JSON.stringify(parsed, null, 2);
+            } catch (error) {
+                contentDiv.textContent = `Raw data (JSON parse failed):\\n${data}`;
+            }
+            
+            detailsDiv.style.display = 'block';
+            detailsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function loadThisSave(key) {
+            try {
+                const data = localStorage.getItem(key);
+                const parsed = JSON.parse(data);
+                
+                if (key.includes('campaign_')) {
+                    // This is a campaign save
+                    const confirmation = confirm(`Load campaign: ${parsed.name || parsed.id || 'Unnamed'}?\\n\\nThis will redirect you to the main game.`);
+                    if (confirmation) {
+                        // Store the campaign ID to load
+                        sessionStorage.setItem('loadCampaignId', parsed.id);
+                        window.location.href = '/index.html';
+                    }
+                } else {
+                    alert('This save data is not a campaign file.');
+                }
+            } catch (error) {
+                alert('Failed to load save: ' + error.message);
+            }
+        }
+
+        function exportSaves() {
+            const prefix = 'dnd_voice_';
+            const saves = {};
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(prefix)) {
+                    saves[key] = localStorage.getItem(key);
+                }
+            }
+            
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                source: window.location.href,
+                saves: saves
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dnd-saves-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Saves exported! You can import this file later if needed.');
+        }
+
+        function clearOldSaves() {
+            const confirmation = confirm('Are you sure you want to clear old/duplicate saves? This cannot be undone!\\n\\nRecommend exporting first.');
+            if (confirmation) {
+                // This would implement logic to clean up old saves
+                alert('Feature not implemented yet - export your saves first for safety!');
+            }
+        }
+
+        // Auto-run check on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkAllSaves, 500);
+        });
+    </script>
+</body>
+</html>

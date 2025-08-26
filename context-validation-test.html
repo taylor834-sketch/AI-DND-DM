@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taylor's Epic D&D Time - Context Validation</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 12px 18px;
+            margin: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #1a1a1a;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ff8800; }
+        .info { color: #ffff00; }
+        .context-display {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #ffff00;
+        }
+        .message-thread {
+            background: #1a1a2a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            border-left: 3px solid #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Taylor's Epic D&D Time - Context Validation Test</h1>
+        
+        <div class="test-section">
+            <h2>Context Continuity Test</h2>
+            <p>This test validates that the AI DM properly maintains conversation context by simulating the exact scenario you experienced.</p>
+            <button onclick="runContextTest()">Run Context Test</button>
+            <button onclick="clearContextHistory()">Clear History</button>
+            <button onclick="showCurrentContext()">Show Current Context</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Current Context State</h2>
+            <div id="context-display" class="context-display">
+                <p><em>Click "Show Current Context" to display current conversation state.</em></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Message Thread Preview</h2>
+            <div id="message-thread" class="message-thread">
+                <p><em>Messages to be sent to AI will appear here.</em></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Log</h2>
+            <div id="test-log" class="log">Context validation test initialized...\n</div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        // Mock the game's state for testing
+        window.DM_STATE = {
+            currentLocation: 'sword_coast',
+            currentScene: 'goblin_raid',
+            combatActive: false,
+            npcsNearby: [],
+            activeNPCs: new Map(),
+            recentEvents: ['Goblin raiders attack village', 'Villagers seek help'],
+            conversationHistory: [],
+            tensionLevel: 3,
+            lastPlayerAction: ''
+        };
+
+        window.STORY_STATE = {
+            currentChapter: 'village_defense',
+            plotThreads: [{ description: 'Defend Millhaven from goblin raiders' }],
+            activeQuests: ['Drive back goblin raiders'],
+            completedEvents: [],
+            worldState: { millhaven_status: 'under_attack' },
+            narrativeTension: 3,
+            storyBeats: []
+        };
+
+        // Mock OpenAI configuration
+        window.openAIConfig = {
+            apiKey: 'test-key',
+            model: 'gpt-3.5-turbo',
+            creativity: 70,
+            responseLength: 'normal',
+            useCampaignContext: true,
+            useReferenceData: true
+        };
+
+        window.currentCampaign = {
+            scenario: 'fantasy_adventure',
+            tone: 'heroic',
+            name: 'Test Campaign'
+        };
+
+        window.partyCharacters = [
+            { name: 'Tater', level: 4, race: 'Stout Halfling', class: 'Barbarian' }
+        ];
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('test-log').innerHTML = 'Log cleared...\n';
+        }
+
+        function addToConversationHistory(type, content, speaker = null) {
+            const entry = {
+                type: type,
+                content: content,
+                timestamp: new Date().toISOString(),
+                speaker: speaker
+            };
+            
+            if (speaker) {
+                entry.speaker = speaker;
+            }
+            
+            DM_STATE.conversationHistory.push(entry);
+            log(`Added to history: ${type} - ${content.substring(0, 50)}...`, 'info');
+        }
+
+        function buildContextMessages(playerAction) {
+            // Replicate the exact logic from the fixed game
+            let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master running an ongoing campaign. 
+
+CRITICAL CONTEXT RULES:
+- You have the FULL conversation history - use it to maintain perfect continuity
+- NEVER ignore what was just said or change topics abruptly
+- If discussing goblins, STAY with goblins until resolved
+- If in a specific location, STAY there unless player explicitly moves
+- ALWAYS acknowledge and respond to the player's EXACT action
+- Build on the immediately previous exchange - don't jump to new scenarios
+- Remember active NPCs, ongoing conversations, and current situations`;
+
+            // Add current scene context
+            systemPrompt += ` Current location: ${DM_STATE.currentLocation}. `;
+            systemPrompt += ` Scene type: ${DM_STATE.currentScene}. `;
+
+            // Add campaign context
+            if (window.currentCampaign) {
+                systemPrompt += `Campaign: ${window.currentCampaign.scenario || 'fantasy'}. `;
+                systemPrompt += `Tone: ${window.currentCampaign.tone || 'balanced'}. `;
+                systemPrompt += `Party: ${window.partyCharacters?.length || 1} adventurers. `;
+            }
+
+            systemPrompt += ` CRITICAL: Only change locations if the player explicitly says to move/leave/go somewhere. If talking to NPCs, keep the conversation going in the current location. Always end with "What do you do?" or similar engagement.`;
+
+            // Build proper conversation messages
+            const messages = [{ role: 'system', content: systemPrompt }];
+
+            // Add recent conversation history as alternating user/assistant messages
+            const recentHistory = DM_STATE.conversationHistory.slice(-8);
+
+            for (const entry of recentHistory) {
+                if (entry.type === 'player_action') {
+                    messages.push({ role: 'user', content: entry.content });
+                } else if (entry.type === 'dm_response') {
+                    messages.push({ role: 'assistant', content: entry.content });
+                }
+            }
+
+            // Add the current player action as the final user message
+            messages.push({ role: 'user', content: playerAction });
+
+            return messages;
+        }
+
+        function runContextTest() {
+            log('🧪 Starting context continuity test...', 'info');
+            
+            // Simulate the exact scenario from your example
+            clearContextHistory();
+            
+            // Step 1: Initial DM message about goblin raid
+            log('📖 Step 1: Setting up initial goblin raid scenario', 'info');
+            addToConversationHistory('dm_response', 'Welcome, brave adventurers, to Test!\n\nYou find yourselves in the sword_coast, on the outskirts of Millhaven village.\n\nSmoke rises from burned farms, and frightened villagers huddle behind hastily built barricades. Goblin war cries echo in the distance.\n\nYour party consists of:\n\nTater - Level 4 Stout Halfling Barbarian\nThe villagers desperately need your help to drive back the goblin raiders.\n\nWhat do you choose to do?');
+            
+            // Step 2: Player action
+            log('🎭 Step 2: Player asks to look for nearby people', 'info');
+            const playerAction = "I want to see if anyone is nearby";
+            addToConversationHistory('player_action', playerAction);
+            
+            // Step 3: Build messages that would be sent to AI
+            const messages = buildContextMessages(playerAction);
+            
+            log(`🧠 Step 3: Built message thread with ${messages.length} messages`, 'success');
+            log(`📊 Context: ${DM_STATE.conversationHistory.length} entries in history`, 'info');
+            
+            // Display the message thread
+            displayMessageThread(messages);
+            
+            log('✅ Context test completed - check message thread above', 'success');
+            log('🎯 Expected: AI should respond about looking for people in goblin raid context', 'warning');
+            log('❌ Previous bug: AI would respond about tavern instead', 'error');
+        }
+
+        function displayMessageThread(messages) {
+            const threadDiv = document.getElementById('message-thread');
+            let html = '<h4>Messages that would be sent to OpenAI:</h4>';
+            
+            messages.forEach((msg, index) => {
+                const roleColor = msg.role === 'system' ? '#ff8800' : msg.role === 'user' ? '#4a90e2' : '#00ff00';
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: #333; border-left: 4px solid ${roleColor}; border-radius: 3px;">
+                        <strong style="color: ${roleColor};">${msg.role.toUpperCase()}</strong><br>
+                        <span style="color: #ddd; font-size: 12px;">${msg.content}</span>
+                    </div>
+                `;
+            });
+            
+            threadDiv.innerHTML = html;
+        }
+
+        function showCurrentContext() {
+            const contextDiv = document.getElementById('context-display');
+            
+            let html = `
+                <h4>Current Game State Context:</h4>
+                <div><strong>Location:</strong> ${DM_STATE.currentLocation}</div>
+                <div><strong>Scene:</strong> ${DM_STATE.currentScene}</div>
+                <div><strong>Combat Active:</strong> ${DM_STATE.combatActive}</div>
+                <div><strong>Tension Level:</strong> ${DM_STATE.tensionLevel}</div>
+                <div><strong>Last Player Action:</strong> ${DM_STATE.lastPlayerAction || 'None'}</div>
+                <div><strong>Recent Events:</strong> ${DM_STATE.recentEvents.join(', ')}</div>
+                
+                <h4>Conversation History (${DM_STATE.conversationHistory.length} entries):</h4>
+            `;
+            
+            if (DM_STATE.conversationHistory.length === 0) {
+                html += '<div style="color: #888;"><em>No conversation history</em></div>';
+            } else {
+                DM_STATE.conversationHistory.forEach((entry, index) => {
+                    const typeColor = entry.type === 'player_action' ? '#4a90e2' : '#00ff00';
+                    html += `
+                        <div style="margin: 5px 0; padding: 8px; background: #1a1a1a; border-left: 3px solid ${typeColor}; font-size: 11px;">
+                            <strong style="color: ${typeColor};">${entry.type}</strong>: ${entry.content.substring(0, 100)}${entry.content.length > 100 ? '...' : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            contextDiv.innerHTML = html;
+            log('📊 Current context displayed', 'info');
+        }
+
+        function clearContextHistory() {
+            DM_STATE.conversationHistory = [];
+            DM_STATE.lastPlayerAction = '';
+            log('🗑️ Context history cleared', 'warning');
+            showCurrentContext();
+        }
+
+        // Initialize
+        showCurrentContext();
+        log('🚀 Context validation test ready', 'success');
+        log('🎯 This test simulates the goblin->tavern context break issue', 'info');
+        log('✅ The new system should maintain perfect goblin raid continuity', 'info');
+    </script>
+</body>
+</html>

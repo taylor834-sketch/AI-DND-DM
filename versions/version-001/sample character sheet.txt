@@ -1,0 +1,196 @@
+# D&D Character Sheet - Tater (Complete Data)
+# Generated from D&D Beyond character sheet
+# Format: Key=Value pairs for easy parsing
+
+[CHARACTER_INFO]
+name=Tater
+class=Barbarian
+level=4
+species=Stout Halfling
+background=Pirate
+player_name=taylor834
+experience_type=Milestone
+alignment=Chaotic
+size=Small
+gender=
+age=
+height=
+weight=
+skin=
+hair=
+eyes=
+faith=
+
+[ABILITY_SCORES]
+strength=18
+dexterity=18
+constitution=17
+intelligence=6
+wisdom=10
+charisma=6
+
+[ABILITY_MODIFIERS]
+strength_mod=+4
+dexterity_mod=+4
+constitution_mod=+3
+intelligence_mod=-2
+wisdom_mod=+0
+charisma_mod=-2
+
+[COMBAT_STATS]
+armor_class=17
+initiative=+4
+speed=25
+hit_points_max=45
+hit_points_current=45
+hit_dice=4d12
+proficiency_bonus=+2
+passive_perception=12
+passive_insight=10
+passive_investigation=8
+
+[SAVING_THROWS]
+strength_save=+4
+dexterity_save=+4
+constitution_save=+3
+intelligence_save=-2
+wisdom_save=+0
+charisma_save=-2
+
+[SKILLS]
+acrobatics=+4
+animal_handling=+2
+arcana=-2
+athletics=+6
+deception=-2
+history=-2
+insight=+0
+intimidation=+0
+investigation=-2
+medicine=+0
+nature=-2
+perception=+2
+performance=-2
+persuasion=-2
+religion=-2
+sleight_of_hand=+4
+stealth=+4
+survival=+0
+
+[RESISTANCES_IMMUNITIES]
+resistances=Poison
+damage_resistances=Poison
+
+[PROFICIENCIES]
+armor=Light Armor, Medium Armor, Shields
+weapons=Martial Weapons, Simple Weapons
+tools=Navigator's Tools, Vehicles (Water)
+languages=Common, Halfling
+
+[WEAPONS]
+weapon_1=Greataxe,+6,1d12+4 Slashing,Martial Heavy Two-Handed Cleave
+weapon_2=Handaxe,+6,1d6+4 Slashing,Simple Light Thrown Vex Range(20/60)
+weapon_3=Javelin,+6,1d6+4 Piercing,Simple Thrown Slow Range(30/120)
+weapon_4=Unarmed Strike,+6,5 Bludgeoning
+
+[EQUIPMENT]
+handaxe_qty1=1,2
+handaxe_qty2=1,2
+javelin=4,8
+greataxe=1,7
+backpack=1,5
+clothes_common=1,3
+rope_silk_50ft=1,5
+bedroll=1,7
+mess_kit=1,1
+rations_1day=10,20
+rope_hempen_50ft=1,10
+tinderbox=1,1
+torch=10,10
+waterskin=1,5
+total_weight=86
+encumbered_at=270
+max_carry=540
+
+[FEATURES_TRAITS]
+# Barbarian Features
+hit_points_phb47=Hit Points
+proficiencies_phb47=Proficiencies
+rage_phb48=As a bonus action enter a rage for up to 1 minute (10 rounds). You gain advantage on STR checks and saving throws (not attacks) +2 melee damage with STR weapons resistance to bludgeoning piercing slashing damage. You can't cast or concentrate on spells while raging. Your rage ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage as a bonus action.
+unarmored_defense_phb48=While not wearing armor your AC equals 10 + DEX modifier + CON modifier + any shield bonus
+reckless_attack_phb48=When you make your first attack on your turn you can decide to attack recklessly giving you advantage on melee weapon attack rolls using STR during this turn but attack rolls against you have advantage until your next turn
+danger_sense_phb48=You have advantage on DEX saving throws against effects that you can see while not blinded deafened or incapacitated
+primal_path_phb48=Path of Wild Magic
+ability_score_improvement_phb49=+1 to two different ability scores or +2 to one ability score or a feat
+
+# Wild Magic Features
+magic_awareness_tcoe=2/Long Rest - As an action you can open your awareness to the presence of concentrated magic. Until the end of your next turn you know the location of any spell or magic item within 60 ft of you that isn't behind total cover. When you sense a spell you learn which school of magic it belongs to
+wild_surge_tcoe=When you enter your rage roll on the Wild Magic table to determine the magical effect produced. If the effect requires a saving throw the DC equals 13
+
+# Stout Halfling Traits
+lucky_br28=When you roll a 1 on the d20 for an attack roll ability check or saving throw you can reroll the die and must use the new roll
+brave_br28=You have advantage on saving throws against being frightened
+halfling_nimbleness_br28=You can move through the space of any creature that is of a size larger than yours
+stout_resilience_br28=You have advantage on saving throws against poison and you have resistance against poison damage
+
+[FEATS]
+great_weapon_master_phb167=On your turn when you score a critical hit with a melee weapon or reduce a creature to 0 HP with one you can make one melee weapon attack as a bonus action. Before you make a melee attack with a heavy weapon that you are proficient with you can choose to take a -5 penalty to the attack roll if the attack hits add +10 to the attack's damage
+
+[PERSONALITY]
+personality_traits=I never pass up a friendly wager. To me a tavern brawl is a nice way to get to know a new city. My language is as foul as an otyugh
+ideals=Freedom. I live for freedom—the freedom to go anywhere and do anything. (Chaotic)
+bonds=
+flaws=
+
+[ACTIONS]
+standard_actions=Strike Attack Dispoage Dodge Help Hide Ready Search Use an Item Influence
+great_weapon_master_attack=On your turn when you score a critical hit with a melee weapon or reduce a creature to 0 HP with one you can make one melee weapon attack as a bonus action
+rage_bonus_action=3/Long Rest - As a bonus action enter a rage for up to 1 minute (10 rounds). You gain advantage on STR checks and saving throws (not attacks) +2 melee damage with STR weapons resistance to bludgeoning piercing slashing damage. You can't cast or concentrate on spells while raging
+
+[MAGIC_AWARENESS]
+magic_awareness_uses=2
+magic_awareness_description=As an action you can open your awareness to the presence of concentrated magic. Until the end of your next turn you know the location of any spell or magic item within 60 ft of you that isn't behind total cover. When you sense a spell you learn which school of magic it belongs to
+
+[SPELLS]
+# Barbarians typically don't have spells unless multiclassed
+spellcasting_class=None
+spellcasting_ability=None
+spell_save_dc=None
+spell_attack_bonus=None
+
+[CURRENCY]
+copper_pieces=0
+silver_pieces=10
+electrum_pieces=0
+gold_pieces=0
+platinum_pieces=0
+
+[ATTUNED_MAGIC_ITEMS]
+# No attuned magic items currently
+
+[ALLIES_ORGANIZATIONS]
+# Empty section for future use
+
+[CHARACTER_APPEARANCE]
+# Empty section for future use
+
+[CHARACTER_BACKSTORY]
+# Empty section for future use
+
+[ADDITIONAL_NOTES]
+# Empty section for future use
+
+[GAME_MECHANICS]
+# Additional calculated values for game use
+ac_calculation=10 + 4 (DEX) + 3 (CON) = 17 (Unarmored Defense)
+hp_calculation=4d12 + 12 (CON) = 45 HP
+carrying_capacity=18 * 15 = 270 lbs (Encumbered), 540 lbs (Maximum)
+rage_damage_bonus=+2
+rage_uses_per_long_rest=3
+great_weapon_master_penalty=-5 attack, +10 damage
+
+[COMBAT_OPTIONS]
+reckless_attack=Advantage on STR-based melee attacks, but enemies get advantage against you
+rage_benefits=Advantage on STR checks/saves, +2 melee damage with STR weapons, resistance to B/P/S damage
+great_weapon_master_power_attack=-5 to hit, +10 damage with heavy weapons
+great_weapon_master_bonus_attack=Bonus action attack after critical hit or reducing creature to 0 HP

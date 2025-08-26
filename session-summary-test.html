@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Summary & Recap System Test - Taylor's Epic D&D Time</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 12px 18px;
+            margin: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #1a1a1a;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ff8800; }
+        .info { color: #ffff00; }
+        .data-display {
+            background: #1a1a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #4a90e2;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .json-display {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            color: #ddd;
+        }
+        .recap-preview {
+            background: linear-gradient(135deg, #2a2a2a, #3a3a2a);
+            border-left: 4px solid #DAA520;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .episode-intro {
+            color: #DAA520;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📺 Session Summary & Recap System Test</h1>
+        
+        <div class="test-section">
+            <h2>Save & Exit System Test</h2>
+            <p>Test the complete save and exit workflow with session summary generation.</p>
+            <button onclick="simulateGameSession()">Simulate Game Session</button>
+            <button onclick="testSaveAndExit()">Test Save & Exit</button>
+            <button onclick="testSessionSummary()">Test Session Summary</button>
+            <button onclick="clearTestData()">Clear Test Data</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Campaign Database Preview</h2>
+            <p>View comprehensive database that gets saved with each session.</p>
+            <button onclick="generateSampleDatabase()">Generate Sample Database</button>
+            <button onclick="showDatabaseContents()">Show Database Contents</button>
+            <div id="database-display" class="data-display">
+                <p><em>Generate sample database to preview contents.</em></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Session Recap Preview</h2>
+            <p>Test the episode-style recap that players see when continuing campaigns.</p>
+            <button onclick="generateSampleRecap()">Generate Sample Recap</button>
+            <button onclick="testAIDMContextLoad()">Test AI DM Context Loading</button>
+            <div id="recap-display" class="recap-preview" style="display: none;">
+                <div class="episode-intro">
+                    <strong>Session Recap</strong>
+                </div>
+                <div id="recap-content"></div>
+                <div style="margin-top: 15px; text-align: center; color: #888; font-size: 12px;">
+                    <em>The adventure continues...</em>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>AI Summary Generation Test</h2>
+            <p>Test both AI-powered and template-based session summaries.</p>
+            <button onclick="testAISummary()">Test AI Summary (requires API key)</button>
+            <button onclick="testTemplateSummary()">Test Template Summary</button>
+            <div id="summary-display" class="data-display">
+                <p><em>Generated summaries will appear here.</em></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Log</h2>
+            <div id="test-log" class="log">Session Summary Test initialized...\n</div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        // Mock game state for testing
+        let mockCampaign = {
+            name: "Test Campaign",
+            scenario: "fantasy_adventure", 
+            tone: "heroic",
+            sessionSummaries: [],
+            lastSessionSummary: null,
+            gameState: null
+        };
+
+        let mockDMState = {
+            currentLocation: 'goblin_caves',
+            currentScene: 'dungeon_exploration',
+            combatActive: false,
+            npcsNearby: ['Grimjaw the Goblin Chief', 'Slink the Sneaky'],
+            activeNPCs: new Map([
+                ['grimjaw', { name: 'Grimjaw', description: 'Fierce goblin leader', attitude: 'hostile' }],
+                ['slink', { name: 'Slink', description: 'Cowardly goblin scout', attitude: 'fearful' }]
+            ]),
+            recentEvents: [
+                'Party entered the goblin caves',
+                'Discovered ancient dwarven ruins',
+                'Found mysterious glowing crystals'
+            ],
+            conversationHistory: [
+                { type: 'dm_response', content: 'You enter the dark goblin caves...', timestamp: new Date().toISOString() },
+                { type: 'player_action', content: 'I want to search for traps', timestamp: new Date().toISOString() },
+                { type: 'dm_response', content: 'You notice pressure plates on the floor...', timestamp: new Date().toISOString() },
+                { type: 'player_action', content: 'I carefully step around them', timestamp: new Date().toISOString() },
+                { type: 'dm_response', content: 'Grimjaw the Goblin Chief emerges from the shadows!', timestamp: new Date().toISOString() },
+                { type: 'player_action', content: 'I try to negotiate with Grimjaw', timestamp: new Date().toISOString() }
+            ],
+            tensionLevel: 3,
+            lastPlayerAction: 'I try to negotiate with Grimjaw'
+        };
+
+        let mockStoryState = {
+            currentChapter: 'cave_exploration',
+            plotThreads: [{ description: 'Find the ancient dwarven artifact' }],
+            activeQuests: ['Retrieve the Crystal of Power', 'Defeat the Goblin Chief'],
+            completedEvents: ['Met the village elder', 'Accepted the quest'],
+            worldState: { village_reputation: 'friendly', goblins_aware: true },
+            narrativeTension: 3,
+            storyBeats: ['entered_caves', 'found_ruins', 'met_grimjaw']
+        };
+
+        window.partyCharacters = [
+            { name: 'Tater', level: 4, race: 'Stout Halfling', class: 'Barbarian' },
+            { name: 'Elara', level: 4, race: 'High Elf', class: 'Wizard' }
+        ];
+
+        // Mock OpenAI config (you can set real API key for testing)
+        window.openAIConfig = {
+            apiKey: '', // Set real API key to test AI summaries
+            model: 'gpt-3.5-turbo',
+            creativity: 70
+        };
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('test-log').innerHTML = 'Log cleared...\n';
+        }
+
+        function simulateGameSession() {
+            log('🎮 Simulating a complete game session...', 'info');
+            
+            // Simulate session start
+            window.sessionStartTime = Date.now() - (45 * 60 * 1000); // 45 minutes ago
+            
+            // Build comprehensive game state
+            const gameState = {
+                sessionInfo: {
+                    sessionNumber: 3,
+                    startTime: window.sessionStartTime,
+                    endTime: Date.now(),
+                    duration: 45 * 60 * 1000,
+                    playedBy: window.partyCharacters.map(c => c.name)
+                },
+                dmState: mockDMState,
+                storyState: mockStoryState,
+                conversationLog: [
+                    { type: 'dm', content: 'You enter the dark goblin caves...' },
+                    { type: 'player', content: 'I want to search for traps' },
+                    { type: 'dm', content: 'You notice pressure plates on the floor...' },
+                    { type: 'player', content: 'I carefully step around them' },
+                    { type: 'dm', content: 'Grimjaw the Goblin Chief emerges from the shadows!' },
+                    { type: 'player', content: 'I try to negotiate with Grimjaw' }
+                ],
+                playerDecisions: {
+                    majorDecisions: [
+                        { decision: 'Entered the goblin caves', type: 'exploration', context: 'village_outskirts' }
+                    ],
+                    moralChoices: [
+                        { decision: 'I try to negotiate with Grimjaw', type: 'diplomatic', context: 'goblin_caves' }
+                    ],
+                    strategicChoices: [
+                        { decision: 'I carefully step around them', type: 'stealth', context: 'goblin_caves' }
+                    ],
+                    diplomaticChoices: [
+                        { decision: 'I try to negotiate with Grimjaw', type: 'diplomatic', context: 'goblin_caves' }
+                    ]
+                },
+                worldDatabase: {
+                    locations: {
+                        goblin_caves: {
+                            name: 'Goblin Caves',
+                            type: 'dungeon_exploration',
+                            description: 'Dark caves filled with goblins and ancient dwarven ruins',
+                            npcsPresent: ['Grimjaw the Goblin Chief', 'Slink the Sneaky'],
+                            events: mockDMState.recentEvents,
+                            visited: true
+                        }
+                    },
+                    npcs: {
+                        grimjaw: { name: 'Grimjaw', description: 'Fierce goblin leader', attitude: 'hostile' },
+                        slink: { name: 'Slink', description: 'Cowardly goblin scout', attitude: 'fearful' }
+                    },
+                    quests: [
+                        { name: 'Retrieve the Crystal of Power', status: 'active', location: 'goblin_caves' },
+                        { name: 'Defeat the Goblin Chief', status: 'active', location: 'goblin_caves' }
+                    ],
+                    relationships: {
+                        grimjaw: { reputation: -1, trust: 0, relationshipType: 'hostile' },
+                        village_elder: { reputation: 2, trust: 1, relationshipType: 'friendly' }
+                    }
+                },
+                characterProgression: {
+                    party: window.partyCharacters,
+                    experience: 250,
+                    itemsGained: ['Dwarven Key', 'Glowing Crystal Shard']
+                }
+            };
+
+            mockCampaign.gameState = gameState;
+            log('✅ Game session simulated successfully', 'success');
+            log(`📊 Created session with ${gameState.conversationLog.length} conversation entries`, 'info');
+            log(`📊 Tracked ${Object.keys(gameState.worldDatabase.npcs).length} NPCs and ${gameState.worldDatabase.quests.length} quests`, 'info');
+        }
+
+        async function testSaveAndExit() {
+            log('💾 Testing Save and Exit workflow...', 'info');
+            
+            if (!mockCampaign.gameState) {
+                log('⚠️ No game session data - run "Simulate Game Session" first', 'warning');
+                return;
+            }
+
+            try {
+                // Simulate the save process
+                log('📝 Generating session summary...', 'info');
+                
+                const summary = generateMockSummary(mockCampaign.gameState);
+                
+                // Save summary to campaign
+                mockCampaign.lastSessionSummary = summary;
+                mockCampaign.sessionSummaries = mockCampaign.sessionSummaries || [];
+                mockCampaign.sessionSummaries.push({
+                    date: new Date().toISOString(),
+                    summary: summary,
+                    sessionLength: 45 * 60 * 1000,
+                    actionsCount: mockCampaign.gameState.conversationLog.length
+                });
+
+                log('✅ Session summary generated and saved', 'success');
+                log(`📋 Summary: "${summary}"`, 'info');
+                log('💾 Campaign data would be saved to localStorage', 'success');
+                log('🏠 Would transition to main menu after 2 second delay', 'info');
+
+            } catch (error) {
+                log(`❌ Save and exit test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function generateMockSummary(gameState) {
+            const actions = gameState.conversationLog.filter(msg => msg.type === 'player').length;
+            const location = gameState.dmState.currentLocation;
+            const npcs = Object.keys(gameState.worldDatabase.npcs);
+            
+            let summary = `The party ventured into the ${location.replace('_', ' ')} where they encountered ${npcs.join(' and ')}. `;
+            
+            if (actions > 3) {
+                summary += "Through careful exploration and tactical decisions, they navigated ancient traps and attempted diplomatic solutions. ";
+            }
+            
+            summary += "The tension builds as new challenges await in the depths ahead.";
+            
+            return summary;
+        }
+
+        async function testSessionSummary() {
+            log('📊 Testing session summary generation...', 'info');
+            
+            if (!mockCampaign.gameState) {
+                simulateGameSession();
+            }
+
+            const summary = generateMockSummary(mockCampaign.gameState);
+            
+            document.getElementById('summary-display').innerHTML = `
+                <h4>Generated Session Summary:</h4>
+                <div style="background: #333; padding: 15px; border-radius: 5px; border-left: 3px solid #00ff00;">
+                    ${summary}
+                </div>
+                <h4>Session Statistics:</h4>
+                <div style="color: #888; font-size: 12px;">
+                    <div>Session Duration: 45 minutes</div>
+                    <div>Player Actions: ${mockCampaign.gameState.conversationLog.filter(m => m.type === 'player').length}</div>
+                    <div>NPCs Encountered: ${Object.keys(mockCampaign.gameState.worldDatabase.npcs).length}</div>
+                    <div>Active Quests: ${mockCampaign.gameState.worldDatabase.quests.length}</div>
+                </div>
+            `;
+            
+            log('✅ Session summary generated successfully', 'success');
+        }
+
+        function generateSampleDatabase() {
+            log('🗄️ Generating sample campaign database...', 'info');
+            
+            if (!mockCampaign.gameState) {
+                simulateGameSession();
+            }
+
+            log('✅ Sample database generated', 'success');
+            log(`📊 Database includes: locations, NPCs, quests, relationships, player decisions`, 'info');
+        }
+
+        function showDatabaseContents() {
+            if (!mockCampaign.gameState) {
+                log('⚠️ No database data - run "Generate Sample Database" first', 'warning');
+                return;
+            }
+
+            const dbDisplay = document.getElementById('database-display');
+            dbDisplay.innerHTML = `
+                <h4>Comprehensive Campaign Database</h4>
+                <div class="json-display">${JSON.stringify(mockCampaign.gameState.worldDatabase, null, 2)}</div>
+                <h4>Player Decisions</h4>
+                <div class="json-display">${JSON.stringify(mockCampaign.gameState.playerDecisions, null, 2)}</div>
+            `;
+            
+            log('📊 Database contents displayed', 'info');
+        }
+
+        function generateSampleRecap() {
+            log('📺 Generating episode-style session recap...', 'info');
+            
+            const sampleRecap = "Last time on Taylor's Epic D&D Time: The brave party ventured into the mysterious goblin caves, where they encountered the fierce Grimjaw and his minions. Through clever negotiation and careful trap navigation, they discovered ancient dwarven ruins and mysterious glowing crystals. The tension builds as Grimjaw's true intentions remain unknown...";
+            
+            document.getElementById('recap-content').innerHTML = sampleRecap;
+            document.getElementById('recap-display').style.display = 'block';
+            
+            log('✅ Episode recap generated', 'success');
+            log('📺 "Previously on Taylor\'s Epic D&D Time..." style recap displayed', 'info');
+        }
+
+        async function testAIDMContextLoad() {
+            log('🧠 Testing AI DM context loading...', 'info');
+            
+            if (!window.openAIConfig.apiKey) {
+                log('⚠️ No OpenAI API key set - this would load the complete campaign context to AI DM', 'warning');
+                log('🔧 Set openAIConfig.apiKey in this test to enable real AI context loading', 'info');
+                return;
+            }
+
+            log('🧠 Would send comprehensive context to AI DM including:', 'info');
+            log('  - Campaign overview and tone', 'info');
+            log('  - Complete party information', 'info');
+            log('  - Current world state and location', 'info');
+            log('  - All known NPCs and relationships', 'info');
+            log('  - Recent events and player decisions', 'info');
+            log('  - Quest status and objectives', 'info');
+            log('✅ AI DM would be fully contextualized for perfect continuity', 'success');
+        }
+
+        async function testAISummary() {
+            log('🤖 Testing AI-powered session summary...', 'info');
+            
+            if (!window.openAIConfig.apiKey) {
+                log('⚠️ No OpenAI API key set - using template fallback', 'warning');
+                testTemplateSummary();
+                return;
+            }
+
+            log('🤖 Would use OpenAI to generate contextual session summary', 'info');
+            log('✅ AI would analyze conversation log and create personalized recap', 'success');
+        }
+
+        function testTemplateSummary() {
+            log('📝 Testing template-based session summary...', 'info');
+            
+            const templateSummary = generateMockSummary(mockCampaign.gameState || {
+                conversationLog: [{ type: 'player' }, { type: 'player' }, { type: 'player' }],
+                dmState: { currentLocation: 'goblin_caves' },
+                storyState: { activeQuests: ['Find the treasure'] },
+                worldDatabase: { npcs: { grimjaw: {} } }
+            });
+
+            document.getElementById('summary-display').innerHTML = `
+                <h4>Template-Generated Summary:</h4>
+                <div style="background: #333; padding: 15px; border-radius: 5px; border-left: 3px solid #ffff00;">
+                    ${templateSummary}
+                </div>
+                <p style="color: #888; font-size: 12px; margin-top: 10px;">
+                    This template system analyzes player actions, location, NPCs, and quests to create contextual summaries even without AI.
+                </p>
+            `;
+            
+            log('✅ Template summary generated successfully', 'success');
+        }
+
+        function clearTestData() {
+            mockCampaign.gameState = null;
+            mockCampaign.sessionSummaries = [];
+            mockCampaign.lastSessionSummary = null;
+            
+            document.getElementById('database-display').innerHTML = '<p><em>Generate sample database to preview contents.</em></p>';
+            document.getElementById('summary-display').innerHTML = '<p><em>Generated summaries will appear here.</em></p>';
+            document.getElementById('recap-display').style.display = 'none';
+            
+            log('🗑️ All test data cleared', 'warning');
+        }
+
+        // Initialize
+        log('🚀 Session Summary & Recap System Test ready', 'success');
+        log('🎯 This tests the complete save/summary/recap workflow for D&D campaigns', 'info');
+        log('✅ Run "Simulate Game Session" to start testing the system', 'info');
+    </script>
+</body>
+</html>

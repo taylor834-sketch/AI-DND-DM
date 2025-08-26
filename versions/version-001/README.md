@@ -1,10 +1,10 @@
-# 🐉 Taylor's Epic D&D Time
+# 🐉 D&D Voice Adventure
 
 A comprehensive tabletop RPG companion with voice integration, inspired by Baldur's Gate 3 and Gloomhaven. Built with a modular architecture for GitHub Pages hosting.
 
 ## 🎯 Project Overview
 
-This project creates a solid foundation for Taylor's Epic D&D Time with:
+This project creates a solid foundation for a D&D voice adventure game with:
 - **Modular Architecture**: Event-driven system preventing tight coupling
 - **GitHub Integration**: Save/sync campaigns via GitHub repositories  
 - **Atmospheric UI**: Dark medieval fantasy theme with environmental storytelling

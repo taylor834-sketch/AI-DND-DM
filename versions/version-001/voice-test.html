@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Performance Test - D&D Voice Adventure</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background: #2e7d32; }
+        .error { background: #c62828; }
+        .info { background: #1565c0; }
+        .warning { background: #f57c00; }
+        
+        button {
+            background: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #5a5a5a; }
+        button:disabled { background: #333; opacity: 0.5; cursor: not-allowed; }
+        
+        .performance-stats {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.5em; font-weight: bold; color: #4CAF50; }
+        .stat-label { font-size: 0.9em; color: #ccc; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔊 Voice Performance Test</h1>
+        
+        <div class="test-section">
+            <h2>Performance Statistics</h2>
+            <div class="performance-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="cache-hits">0</div>
+                    <div class="stat-label">Cache Hits</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="cache-size">0</div>
+                    <div class="stat-label">Cache Size</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="total-requests">0</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avg-time">0ms</div>
+                    <div class="stat-label">Avg Response Time</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Voice Generation Tests</h2>
+            <button onclick="testShortPhrase()">Test Short Phrase (Cache Test)</button>
+            <button onclick="testLongText()">Test Long Text (Chunking Test)</button>
+            <button onclick="testRepeatedPhrase()">Test Repeated Phrase (Cache Hit Test)</button>
+            <button onclick="testMultipleChunks()">Test Multiple Long Texts</button>
+            <button onclick="clearCache()">Clear Voice Cache</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Sample Texts</h2>
+            <div>
+                <strong>Short:</strong> "What do you do next, brave adventurer?"<br>
+                <strong>Long:</strong> A detailed DM response with multiple sentences about exploring dungeons, meeting NPCs, and combat scenarios that should trigger text chunking for optimal performance.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock voice optimization system for testing
+        const voiceCache = new Map();
+        const CACHE_MAX_SIZE = 50;
+        const MAX_CHUNK_LENGTH = 500;
+        let totalRequests = 0;
+        let cacheHits = 0;
+        let responseTimes = [];
+
+        const testResults = document.getElementById('test-results');
+
+        function addTestResult(message, type = 'info') {
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            testResults.appendChild(result);
+            console.log(`[VOICE TEST ${type.toUpperCase()}] ${message}`);
+            testResults.scrollTop = testResults.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById('cache-hits').textContent = cacheHits;
+            document.getElementById('cache-size').textContent = voiceCache.size;
+            document.getElementById('total-requests').textContent = totalRequests;
+            
+            const avgTime = responseTimes.length > 0 
+                ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+                : 0;
+            document.getElementById('avg-time').textContent = avgTime + 'ms';
+        }
+
+        function getVoiceCacheKey(text, voice, stability, clarity) {
+            return `${text}-${voice}-${stability}-${clarity}`;
+        }
+
+        // Mock voice generation function
+        async function mockGenerateVoice(text, useCache = true) {
+            const startTime = Date.now();
+            totalRequests++;
+
+            const cacheKey = getVoiceCacheKey(text, 'test-voice', 0.5, 0.8);
+            
+            if (useCache && voiceCache.has(cacheKey)) {
+                cacheHits++;
+                const endTime = Date.now();
+                responseTimes.push(endTime - startTime);
+                addTestResult(`🚀 Cache hit for: "${text.substring(0, 50)}..." (${endTime - startTime}ms)`, 'success');
+                updateStats();
+                return;
+            }
+
+            // Simulate API delay (shorter for chunked vs full text)
+            const isChunked = text.length > MAX_CHUNK_LENGTH;
+            const delay = isChunked ? 800 : 1500; // Chunked responses are faster
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            if (useCache) {
+                voiceCache.set(cacheKey, `audio-url-${Date.now()}`);
+            }
+
+            const endTime = Date.now();
+            responseTimes.push(endTime - startTime);
+            
+            const chunkInfo = isChunked ? ' (chunked)' : '';
+            addTestResult(`🎵 Generated voice for: "${text.substring(0, 50)}..."${chunkInfo} (${endTime - startTime}ms)`, 'info');
+            updateStats();
+        }
+
+        function chunkText(text, maxLength = MAX_CHUNK_LENGTH) {
+            if (text.length <= maxLength) return [text];
+            
+            const chunks = [];
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+            
+            let currentChunk = '';
+            for (const sentence of sentences) {
+                if (currentChunk.length + sentence.length > maxLength && currentChunk) {
+                    chunks.push(currentChunk.trim());
+                    currentChunk = sentence;
+                } else {
+                    currentChunk += (currentChunk ? '. ' : '') + sentence.trim();
+                }
+            }
+            
+            if (currentChunk) chunks.push(currentChunk);
+            return chunks;
+        }
+
+        async function testShortPhrase() {
+            addTestResult('Testing short phrase generation...', 'warning');
+            const shortText = "What do you do next, brave adventurer?";
+            await mockGenerateVoice(shortText);
+        }
+
+        async function testLongText() {
+            addTestResult('Testing long text with chunking...', 'warning');
+            const longText = `As you push deeper into the ancient dungeon, the flickering torchlight reveals crumbling stone walls covered in mysterious runes that seem to pulse with an otherworldly energy. The air grows thick with the scent of decay and something else—something magical and dangerous. Your footsteps echo through the corridors as you notice several passages branching off from this main chamber. To your left, you hear the faint sound of dripping water, while to your right, a cold draft carries whispers that might be the wind, or something far more sinister. Directly ahead, an ornate door stands slightly ajar, beyond which you can see the glint of gold and the shimmer of what might be magical items waiting to be discovered.`;
+            
+            const chunks = chunkText(longText);
+            addTestResult(`Split into ${chunks.length} chunks for processing`, 'info');
+            
+            for (let i = 0; i < chunks.length; i++) {
+                addTestResult(`Processing chunk ${i + 1}/${chunks.length}...`, 'info');
+                await mockGenerateVoice(chunks[i]);
+            }
+        }
+
+        async function testRepeatedPhrase() {
+            addTestResult('Testing repeated phrase (should hit cache)...', 'warning');
+            const repeatedText = "What do you do next, brave adventurer?";
+            await mockGenerateVoice(repeatedText); // Should be cached from previous test
+        }
+
+        async function testMultipleChunks() {
+            addTestResult('Testing multiple long texts for cache efficiency...', 'warning');
+            
+            const texts = [
+                "The ancient dragon emerges from its lair, scales gleaming in the firelight. Its massive wings cast shadows across the cavern as it roars with primordial fury.",
+                "You enter a bustling tavern filled with adventurers sharing tales of glory and treasure. The bartender nods knowingly as mysterious figures huddle in darkened corners.",
+                "The forest path winds through towering trees that seem to whisper secrets. Somewhere in the distance, you hear the howl of wolves and the creak of ancient wood."
+            ];
+
+            for (let i = 0; i < texts.length; i++) {
+                addTestResult(`Testing text ${i + 1}/3...`, 'info');
+                await mockGenerateVoice(texts[i]);
+            }
+            
+            // Test the same texts again to demonstrate caching
+            addTestResult('Re-testing same texts (should hit cache)...', 'warning');
+            for (let i = 0; i < texts.length; i++) {
+                await mockGenerateVoice(texts[i]);
+            }
+        }
+
+        function clearCache() {
+            voiceCache.clear();
+            cacheHits = 0;
+            totalRequests = 0;
+            responseTimes = [];
+            updateStats();
+            addTestResult('Voice cache cleared', 'warning');
+        }
+
+        // Initialize
+        addTestResult('Voice performance test initialized', 'info');
+        addTestResult('Click buttons above to test different voice generation scenarios', 'info');
+        updateStats();
+    </script>
+</body>
+</html>

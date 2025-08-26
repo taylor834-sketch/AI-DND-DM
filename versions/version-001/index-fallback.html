@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Voice Adventure - Fallback Mode</title>
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="./css/main.css">
+    
+    <!-- Error Styles -->
+    <style>
+        .protocol-warning {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            color: white;
+            font-family: 'Cinzel', serif;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .protocol-warning h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .protocol-warning .solutions {
+            text-align: left;
+            margin: 30px 0;
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .protocol-warning .solution {
+            margin: 15px 0;
+            padding: 15px;
+            background: #444;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .protocol-warning code {
+            background: #222;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #4CAF50;
+        }
+        .protocol-warning .buttons {
+            margin-top: 30px;
+        }
+        .protocol-warning button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .protocol-warning button:hover {
+            background: #45a049;
+        }
+        .protocol-warning .server-button {
+            background: #2196F3;
+        }
+        .protocol-warning .server-button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="protocol-warning">
+        <h1>🎲 D&D Voice Adventure</h1>
+        
+        <h2>⚠️ File Protocol Detected</h2>
+        
+        <p>You're opening this file directly from your file system (<code>file://</code>). Modern browsers block ES modules from file:// URLs for security reasons, which prevents the app from loading.</p>
+        
+        <div class="solutions">
+            <h3>🚀 Quick Solutions:</h3>
+            
+            <div class="solution">
+                <h4>Option 1: Python Server (Recommended)</h4>
+                <ol>
+                    <li>Open terminal/command prompt in this folder</li>
+                    <li>Run: <code>python -m http.server 8000</code></li>
+                    <li>Open: <a href="http://localhost:8000" style="color: #4CAF50;">http://localhost:8000</a></li>
+                </ol>
+            </div>
+            
+            <div class="solution">
+                <h4>Option 2: Use Provided Script</h4>
+                <ol>
+                    <li>Double-click <code>start-server.py</code> in this folder</li>
+                    <li>Your browser should open automatically</li>
+                </ol>
+            </div>
+            
+            <div class="solution">
+                <h4>Option 3: VS Code Live Server</h4>
+                <ol>
+                    <li>Install "Live Server" extension in VS Code</li>
+                    <li>Right-click <code>index.html</code></li>
+                    <li>Select "Open with Live Server"</li>
+                </ol>
+            </div>
+            
+            <div class="solution">
+                <h4>Option 4: Node.js Server</h4>
+                <ol>
+                    <li>Install: <code>npm install -g http-server</code></li>
+                    <li>Run: <code>http-server -p 8000</code></li>
+                    <li>Open: <a href="http://localhost:8000" style="color: #4CAF50;">http://localhost:8000</a></li>
+                </ol>
+            </div>
+        </div>
+        
+        <p><strong>Why this happens:</strong> The app uses modern ES modules for better performance and code organization. Browsers require these to be served from a web server, not opened as local files.</p>
+        
+        <div class="buttons">
+            <button onclick="location.reload()">🔄 Reload</button>
+            <button class="server-button" onclick="window.open('README-SERVER.md', '_blank')">📖 Detailed Guide</button>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #444; border-radius: 10px; font-size: 14px;">
+            <h4>🎮 What you'll get once running from a server:</h4>
+            <ul style="text-align: left; max-width: 500px; margin: 0 auto;">
+                <li>✅ Full campaign creation and management</li>
+                <li>✅ Character sheet integration</li>
+                <li>✅ World browser with NPCs and locations</li>
+                <li>✅ GitHub cloud save integration</li>
+                <li>✅ Voice integration capabilities</li>
+                <li>✅ Combat and tactical systems</li>
+                <li>✅ Dynamic dialogue and story tracking</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Simple protocol detection
+        console.log('Current protocol:', window.location.protocol);
+        console.log('Current URL:', window.location.href);
+        
+        // Check if we're on file:// protocol
+        if (window.location.protocol !== 'file:') {
+            // If we're on a server, redirect to the main app
+            console.log('Server detected, redirecting to main app...');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
