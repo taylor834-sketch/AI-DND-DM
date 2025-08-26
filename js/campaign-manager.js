@@ -292,6 +292,7 @@ export default class CampaignManager {
 
     updateCampaignList(campaignId, campaignName) {
         try {
+            // Update the new format (for CampaignManager compatibility)
             const existingList = localStorage.getItem(`${this.storagePrefix}campaigns`);
             const campaigns = existingList ? JSON.parse(existingList) : {};
             
@@ -301,8 +302,47 @@ export default class CampaignManager {
             };
             
             localStorage.setItem(`${this.storagePrefix}campaigns`, JSON.stringify(campaigns));
+            
+            // Also update the legacy format (for backwards compatibility)
+            this.updateLegacyCampaignList(campaignId, campaignName);
         } catch (error) {
             console.error('Failed to update campaign list:', error);
+        }
+    }
+
+    updateLegacyCampaignList(campaignId, campaignName) {
+        try {
+            // Get existing legacy campaigns
+            let legacyCampaigns = JSON.parse(localStorage.getItem('dnd_campaigns')) || [];
+            
+            // Create campaign data for legacy format
+            const campaignData = {
+                id: campaignId,
+                name: campaignName,
+                lastPlayed: new Date().toISOString(),
+                characters: [],
+                gameState: {}
+            };
+            
+            // Find existing campaign or add new one
+            const existingIndex = legacyCampaigns.findIndex(c => c.id === campaignId);
+            if (existingIndex >= 0) {
+                // Update existing - preserve characters and gameState
+                legacyCampaigns[existingIndex] = {
+                    ...legacyCampaigns[existingIndex],
+                    name: campaignName,
+                    lastPlayed: new Date().toISOString()
+                };
+                console.log('Updated legacy campaign:', campaignName);
+            } else {
+                legacyCampaigns.push(campaignData);
+                console.log('Added new legacy campaign:', campaignName);
+            }
+            
+            // Save legacy format
+            localStorage.setItem('dnd_campaigns', JSON.stringify(legacyCampaigns));
+        } catch (error) {
+            console.error('Failed to update legacy campaign list:', error);
         }
     }
 
@@ -568,9 +608,10 @@ export default class CampaignManager {
 
     deleteCampaign(campaignId) {
         try {
+            // Remove the campaign data itself
             localStorage.removeItem(`${this.storagePrefix}campaign_${campaignId}`);
             
-            // Remove from campaign list
+            // Remove from new format campaign list
             const campaignsData = localStorage.getItem(`${this.storagePrefix}campaigns`);
             if (campaignsData) {
                 const campaigns = JSON.parse(campaignsData);
@@ -578,7 +619,13 @@ export default class CampaignManager {
                 localStorage.setItem(`${this.storagePrefix}campaigns`, JSON.stringify(campaigns));
             }
             
+            // Also remove from legacy format campaign list
+            const legacyCampaigns = JSON.parse(localStorage.getItem('dnd_campaigns')) || [];
+            const filteredCampaigns = legacyCampaigns.filter(c => c.id !== campaignId);
+            localStorage.setItem('dnd_campaigns', JSON.stringify(filteredCampaigns));
+            
             this.core.emit('campaign:deleted', { campaignId });
+            console.log('Campaign deleted from both storage systems:', campaignId);
             return true;
         } catch (error) {
             console.error('Failed to delete campaign:', error);

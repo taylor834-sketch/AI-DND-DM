@@ -1648,57 +1648,84 @@
             }
         }
         
-        // Load campaigns from localStorage
+        // Load campaigns from localStorage (unified approach)
         function loadCampaigns() {
             try {
-                // Try to get campaigns from the new CampaignManager system first
+                const allCampaigns = [];
+                const seenIds = new Set();
+                
+                // First, try to get campaigns from the new CampaignManager system
                 if (window.DNDCore && window.DNDCore.getModule('campaignManager')) {
                     const campaignManager = window.DNDCore.getModule('campaignManager');
                     const campaigns = campaignManager.listCampaigns();
                     
                     // Convert the campaigns object to array format for display
                     if (campaigns && typeof campaigns === 'object') {
-                        return Object.entries(campaigns).map(([campaignId, campaignInfo]) => {
-                            // Try to load the full campaign data
-                            const fullCampaignData = localStorage.getItem(`dnd_voice_campaign_${campaignId}`);
-                            if (fullCampaignData) {
-                                try {
-                                    const campaign = JSON.parse(fullCampaignData);
-                                    return {
-                                        id: campaignId,
-                                        name: campaign.meta?.name || campaignInfo.name || 'Untitled Campaign',
-                                        startingRegion: campaign.settings?.startingRegion || 'Unknown Region',
-                                        lastPlayed: campaignInfo.lastModified || campaign.meta?.lastModified || new Date().toISOString(),
-                                        characters: campaign.party?.characters ? Object.values(campaign.party.characters) : [],
-                                        gameState: campaign.gameState || {}
-                                    };
-                                } catch (error) {
-                                    console.warn('Failed to parse campaign data for:', campaignId);
-                                    return {
+                        Object.entries(campaigns).forEach(([campaignId, campaignInfo]) => {
+                            if (!seenIds.has(campaignId)) {
+                                seenIds.add(campaignId);
+                                
+                                // Try to load the full campaign data
+                                const fullCampaignData = localStorage.getItem(`dnd_voice_campaign_${campaignId}`);
+                                if (fullCampaignData) {
+                                    try {
+                                        const campaign = JSON.parse(fullCampaignData);
+                                        allCampaigns.push({
+                                            id: campaignId,
+                                            name: campaign.meta?.name || campaignInfo.name || 'Untitled Campaign',
+                                            startingRegion: campaign.settings?.startingRegion || 'Unknown Region',
+                                            lastPlayed: campaignInfo.lastModified || campaign.meta?.lastModified || new Date().toISOString(),
+                                            characters: campaign.party?.characters ? Object.values(campaign.party.characters) : [],
+                                            gameState: campaign.gameState || {}
+                                        });
+                                    } catch (error) {
+                                        console.warn('Failed to parse campaign data for:', campaignId);
+                                        allCampaigns.push({
+                                            id: campaignId,
+                                            name: campaignInfo.name || 'Untitled Campaign',
+                                            startingRegion: 'Unknown Region',
+                                            lastPlayed: campaignInfo.lastModified || new Date().toISOString(),
+                                            characters: [],
+                                            gameState: {}
+                                        });
+                                    }
+                                } else {
+                                    allCampaigns.push({
                                         id: campaignId,
                                         name: campaignInfo.name || 'Untitled Campaign',
                                         startingRegion: 'Unknown Region',
                                         lastPlayed: campaignInfo.lastModified || new Date().toISOString(),
                                         characters: [],
                                         gameState: {}
-                                    };
+                                    });
                                 }
-                            } else {
-                                return {
-                                    id: campaignId,
-                                    name: campaignInfo.name || 'Untitled Campaign',
-                                    startingRegion: 'Unknown Region',
-                                    lastPlayed: campaignInfo.lastModified || new Date().toISOString(),
-                                    characters: [],
-                                    gameState: {}
-                                };
                             }
                         });
                     }
                 }
                 
-                // Fallback to legacy system
-                return JSON.parse(localStorage.getItem('dnd_campaigns')) || [];
+                // Also get campaigns from legacy system (but avoid duplicates)
+                const legacyCampaigns = JSON.parse(localStorage.getItem('dnd_campaigns')) || [];
+                legacyCampaigns.forEach(campaign => {
+                    if (!seenIds.has(campaign.id)) {
+                        seenIds.add(campaign.id);
+                        allCampaigns.push({
+                            id: campaign.id,
+                            name: campaign.name || 'Untitled Campaign',
+                            startingRegion: campaign.startingRegion || 'Unknown Region',
+                            lastPlayed: campaign.lastPlayed || new Date().toISOString(),
+                            characters: campaign.characters || [],
+                            gameState: campaign.gameState || {}
+                        });
+                    }
+                });
+                
+                // Sort by last played date (newest first)
+                allCampaigns.sort((a, b) => new Date(b.lastPlayed) - new Date(a.lastPlayed));
+                
+                console.log(`📚 Loaded ${allCampaigns.length} campaigns from storage`);
+                return allCampaigns;
+                
             } catch (error) {
                 console.error('Error loading campaigns:', error);
                 return [];
