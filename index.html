@@ -92,7 +92,6 @@
     </style>
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="./js/core.js" as="script">
     <link rel="preload" href="./css/main.css" as="style">
 </head>
 <body>
@@ -3127,7 +3126,7 @@ Remember this context for ALL future interactions. Maintain continuity with this
         }
         
         // Continue to game function
-        function continueToGame() {
+        async function continueToGame() {
             console.log('Continuing to game...');
             
             // Initialize session tracking and auto-save
@@ -4999,7 +4998,11 @@ Remember this context for ALL future interactions. Maintain continuity with this
             document.getElementById('ai-use-reference-data').checked = openAIConfig.useReferenceData;
             
             // Toggle OpenAI settings visibility
-            toggleOpenAISettings();
+            const openaiRadio = document.querySelector('input[value="openai"]:checked');
+            const openaiSettings = document.getElementById('openai-settings');
+            if (openaiSettings) {
+                openaiSettings.style.display = openaiRadio ? 'block' : 'none';
+            }
             
             // Show modal
             modal.style.display = 'flex';
@@ -6763,8 +6766,8 @@ CRITICAL CONTEXT RULES:
             console.log('💡 For full functionality, serve this app from a web server (e.g., python -m http.server)');
         }
         
-        // Import the core module
-        import './js/core.js';
+        // Import the core module (commented out temporarily for debugging)
+        // import './js/core.js';
         
         // Application initialization
         document.addEventListener('DOMContentLoaded', async () => {
@@ -6789,42 +6792,11 @@ CRITICAL CONTEXT RULES:
                     console.warn('🚨 File protocol detected - this may cause issues');
                 }
                 
-                updateProgress(30, 'Importing core modules...');
-                // Wait for DNDCore to be available globally
-                let attempts = 0;
-                while (!window.DNDCore && attempts < 100) {
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    attempts++;
-                    if (attempts % 10 === 0) {
-                        updateProgress(30 + (attempts / 2), `Waiting for core module... (${attempts}/100)`);
-                    }
-                }
+                updateProgress(30, 'Skipping core modules for debugging...');
+                console.log('🔧 Running in simplified mode without core modules');
                 
-                if (!window.DNDCore) {
-                    throw new Error('DNDCore module failed to load after 5 seconds. This usually indicates a file:// protocol issue or JavaScript error.');
-                }
-                
-                updateProgress(60, 'Core module loaded successfully');
-                console.log('✅ DNDCore is available');
-                
-                updateProgress(70, 'Initializing application modules...');
-                
-                // Listen for core loading progress
-                window.DNDCore.on('core:loading_progress', (event) => {
-                    const { loaded, total, current } = event.detail;
-                    const moduleProgress = 70 + ((loaded / total) * 20);
-                    updateProgress(moduleProgress, `Loading ${current}... (${loaded}/${total})`);
-                });
-                
-                updateProgress(75, 'Starting core initialization...');
-                
-                // Initialize the core application with timeout
-                const initPromise = window.DNDCore.init();
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Initialization timed out after 30 seconds')), 30000);
-                });
-                
-                await Promise.race([initPromise, timeoutPromise]);
+                // Skip core module loading for now to test basic functionality
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 updateProgress(95, 'Finalizing setup...');
                 await new Promise(resolve => setTimeout(resolve, 200));
@@ -6893,14 +6865,14 @@ CRITICAL CONTEXT RULES:
             }
         });
         
-        // Service Worker Registration for PWA support
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('SW registered'))
-                    .catch(error => console.log('SW registration failed'));
-            });
-        }
+        // Service Worker Registration for PWA support (disabled - sw.js not present)
+        // if ('serviceWorker' in navigator) {
+        //     window.addEventListener('load', () => {
+        //         navigator.serviceWorker.register('./sw.js')
+        //             .then(registration => console.log('SW registered'))
+        //             .catch(error => console.log('SW registration failed'));
+        //     });
+        // }
         
         // Global error handler
         window.addEventListener('error', (event) => {
@@ -6925,7 +6897,19 @@ CRITICAL CONTEXT RULES:
             // Add event listeners for AI engine radio buttons
             const aiRadioButtons = document.querySelectorAll('input[name="aiEngine"]');
             aiRadioButtons.forEach(radio => {
-                radio.addEventListener('change', toggleOpenAISettings);
+                radio.addEventListener('change', function() {
+                    // Toggle OpenAI settings visibility
+                    const openaiRadio = document.querySelector('input[value="openai"]:checked');
+                    const openaiSettings = document.getElementById('openai-settings');
+                    
+                    if (openaiSettings) {
+                        if (openaiRadio) {
+                            openaiSettings.style.display = 'block';
+                        } else {
+                            openaiSettings.style.display = 'none';
+                        }
+                    }
+                });
             });
 
             // Add event listener for creativity slider

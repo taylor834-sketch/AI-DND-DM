@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 echo.
-echo D^&D Voice Adventure - Starting Server...
+echo Taylor's Epic D^&D Time - Starting Server...
 echo.
 
 REM Check if Python is available
@@ -18,7 +18,7 @@ if %errorlevel% neq 0 (
 echo [OK] Python found, starting server...
 echo.
 
-REM Start the Python server
-python start-server.py
+REM Start the Python server (without emoji in filename)
+python "Open Game - Taylors Epic DnD Time.py"
 
 pause

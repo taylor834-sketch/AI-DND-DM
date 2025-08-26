@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Debug - Taylor's Epic D&D Time</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .debug-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .result {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎲 Button Debug Test</h1>
+    
+    <div class="debug-section">
+        <h2>Test: Check if buttons exist</h2>
+        <button class="test-button" onclick="checkButtons()">Check Main Menu Buttons</button>
+        <div id="button-check-result" class="result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Test: Check console for errors</h2>
+        <button class="test-button" onclick="testConsole()">Test Console Output</button>
+        <div id="console-result" class="result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Direct Button Test</h2>
+        <button class="test-button" onclick="testDirectClick()">Test Direct Button Click</button>
+        <div id="direct-result" class="result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Open Main Game</h2>
+        <button class="test-button" onclick="openMainGame()">Open index.html in New Tab</button>
+    </div>
+
+    <script>
+        function log(message, containerId = 'console-result') {
+            const element = document.getElementById(containerId);
+            element.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+        }
+        
+        function checkButtons() {
+            const resultDiv = document.getElementById('button-check-result');
+            resultDiv.innerHTML = '';
+            
+            // Open main game in new window to test
+            const gameWindow = window.open('/index.html', '_blank');
+            
+            // Wait for it to load, then check buttons
+            setTimeout(() => {
+                try {
+                    const buttons = [
+                        'create-campaign-btn',
+                        'continue-campaign-btn', 
+                        'world-browser-btn',
+                        'settings-btn'
+                    ];
+                    
+                    let results = [];
+                    buttons.forEach(id => {
+                        const btn = gameWindow.document.getElementById(id);
+                        if (btn) {
+                            results.push(`✅ ${id}: Found, onclick = ${typeof btn.onclick}`);
+                        } else {
+                            results.push(`❌ ${id}: Not found`);
+                        }
+                    });
+                    
+                    resultDiv.innerHTML = results.join('<br>');
+                } catch (error) {
+                    resultDiv.innerHTML = `❌ Error: ${error.message}`;
+                }
+            }, 2000);
+        }
+        
+        function testConsole() {
+            log('Testing console output...', 'console-result');
+            log('Console methods available: ' + Object.keys(console).join(', '), 'console-result');
+        }
+        
+        function testDirectClick() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.innerHTML = 'Opening main game and testing direct click...';
+            
+            const gameWindow = window.open('/index.html', '_blank');
+            
+            setTimeout(() => {
+                try {
+                    const createBtn = gameWindow.document.getElementById('create-campaign-btn');
+                    if (createBtn) {
+                        log('Found button, attempting click...', 'direct-result');
+                        createBtn.click();
+                        log('Click attempted!', 'direct-result');
+                    } else {
+                        log('❌ Button not found', 'direct-result');
+                    }
+                } catch (error) {
+                    log(`❌ Error: ${error.message}`, 'direct-result');
+                }
+            }, 3000);
+        }
+        
+        function openMainGame() {
+            window.open('/index.html', '_blank');
+        }
+    </script>
+</body>
+</html>

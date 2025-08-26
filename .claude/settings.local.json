@@ -18,7 +18,8 @@
       "Bash(curl:*)",
       "Bash(mkdir:*)",
       "Bash(robocopy:*)",
-      "Bash(xcopy:*)"
+      "Bash(xcopy:*)",
+      "Bash(del \"C:\\Users\\taylo\\dnd-voice-adventure\\index-fallback.html\")"
     ],
     "deny": [],
     "ask": []
