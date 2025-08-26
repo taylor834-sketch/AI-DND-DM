@@ -5892,9 +5892,13 @@ Remember this context for ALL future interactions. Maintain continuity with this
                     generateGenericMap();
             }
             
-            // Update map location display
-            document.getElementById('map-location-name').textContent = 
-                locationType.charAt(0).toUpperCase() + locationType.slice(1);
+            // Update map location display (if element exists)
+            const mapLocationElement = document.getElementById('map-location-name');
+            if (mapLocationElement) {
+                mapLocationElement.textContent = locationType.charAt(0).toUpperCase() + locationType.slice(1);
+            } else {
+                console.log(`🗺️ Generated ${locationType} battle map`);
+            }
         }
 
         // Generate town/village map
@@ -6269,6 +6273,150 @@ Remember this context for ALL future interactions. Maintain continuity with this
         // Make debugging functions globally accessible
         window.forceRedrawBattlemap = forceRedrawBattlemap;
         window.BATTLEMAP = BATTLEMAP;
+
+        // ===== ENHANCED BATTLE MAP GENERATION FROM DM RESPONSES =====
+        
+        // Check if DM response indicates a new location that needs a battle map
+        function checkIfMapNeeded(dmResponse) {
+            if (!dmResponse || typeof dmResponse !== 'string') return false;
+            
+            const response = dmResponse.toLowerCase();
+            
+            // Location keywords that trigger map generation
+            const locationKeywords = [
+                'enter', 'arrive', 'approach', 'find yourself', 'you see', 'before you', 
+                'room', 'chamber', 'hall', 'corridor', 'tavern', 'inn', 'temple', 'cave',
+                'forest', 'clearing', 'village', 'town', 'bridge', 'crossroads', 'market',
+                'dungeon', 'tower', 'castle', 'ruins', 'underground', 'basement', 'attic',
+                'courtyard', 'garden', 'library', 'laboratory', 'throne room', 'jail', 'prison'
+            ];
+            
+            // Combat keywords that definitely need maps
+            const combatKeywords = [
+                'combat', 'fight', 'battle', 'attack', 'initiative', 'enemies', 'monsters',
+                'bandits', 'goblins', 'orcs', 'undead', 'wolves', 'bears', 'dragon'
+            ];
+            
+            const hasLocationKeyword = locationKeywords.some(keyword => response.includes(keyword));
+            const hasCombatKeyword = combatKeywords.some(keyword => response.includes(keyword));
+            
+            return hasLocationKeyword || hasCombatKeyword;
+        }
+        
+        // Generate battle map based on DM description with loading indicator
+        function generateBattleMapFromDMDescription(dmResponse) {
+            console.log('🗺️ DM described a scene - generating battle map...');
+            
+            // Show loading indicator
+            showBattleMapLoading('Reading DM\'s scene description...');
+            
+            // Analyze the description to determine map type
+            const mapType = analyzeSceneForMapType(dmResponse);
+            
+            setTimeout(() => {
+                updateBattleMapLoading('Generating terrain layout...');
+                
+                // Generate the appropriate map
+                setTimeout(() => {
+                    generateMap(mapType);
+                    
+                    updateBattleMapLoading('Adding environmental details...');
+                    
+                    setTimeout(() => {
+                        drawMap();
+                        
+                        updateBattleMapLoading('Finalizing battle grid...');
+                        
+                        // Also initialize tactical battle map if available
+                        setTimeout(() => {
+                            if (window.DNDCore && window.DNDCore.getModule) {
+                                const tacticalMap = window.DNDCore.getModule('tacticalBattleMap');
+                                if (tacticalMap) {
+                                    console.log('🗺️ Updating tactical battle map based on DM description');
+                                    
+                                    // Choose appropriate test map based on scene
+                                    if (mapType === 'dungeon') {
+                                        tacticalMap.testDungeonMap();
+                                    } else if (mapType === 'forest') {
+                                        tacticalMap.testForestMap();  
+                                    } else {
+                                        tacticalMap.testVillageMap();
+                                    }
+                                }
+                            }
+                            
+                            // Hide loading indicator
+                            setTimeout(() => {
+                                hideBattleMapLoading();
+                                console.log('✅ Battle map generated from DM scene description');
+                            }, 800);
+                            
+                        }, 600);
+                    }, 800);
+                }, 1000);
+            }, 500);
+        }
+        
+        // Analyze DM response to determine appropriate map type
+        function analyzeSceneForMapType(dmResponse) {
+            const response = dmResponse.toLowerCase();
+            
+            // Specific environment detection
+            if (response.includes('dungeon') || response.includes('underground') || 
+                response.includes('cave') || response.includes('crypt') || response.includes('tomb')) {
+                return 'dungeon';
+            }
+            
+            if (response.includes('forest') || response.includes('woods') || 
+                response.includes('trees') || response.includes('clearing')) {
+                return 'forest';
+            }
+            
+            if (response.includes('village') || response.includes('town') || 
+                response.includes('tavern') || response.includes('inn') || response.includes('market')) {
+                return 'village';
+            }
+            
+            if (response.includes('castle') || response.includes('tower') || 
+                response.includes('fortress') || response.includes('keep')) {
+                return 'castle';
+            }
+            
+            if (response.includes('temple') || response.includes('shrine') || 
+                response.includes('church') || response.includes('altar')) {
+                return 'temple';
+            }
+            
+            // Default to village for general scenes
+            return 'village';
+        }
+        
+        // Enhanced battle map loading functions
+        function showBattleMapLoading(message = 'Loading Battle Map...') {
+            const loadingIndicator = document.getElementById('battle-map-loading');
+            const loadingText = document.getElementById('battle-map-loading-text');
+            
+            if (loadingIndicator && loadingText) {
+                loadingIndicator.style.display = 'block';
+                loadingText.textContent = message;
+                console.log('🔄 ' + message);
+            }
+        }
+        
+        function updateBattleMapLoading(message) {
+            const loadingText = document.getElementById('battle-map-loading-text');
+            if (loadingText) {
+                loadingText.textContent = message;
+                console.log('🔄 ' + message);
+            }
+        }
+        
+        function hideBattleMapLoading() {
+            const loadingIndicator = document.getElementById('battle-map-loading');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+        }
 
         // Map control functions
         function zoomIn() {
@@ -7708,7 +7856,7 @@ ENDING YOUR RESPONSES - CRITICAL RULES:
             displayDMResponse(followupResponse, followupVoice);
         }
         
-        // Display DM response with voice
+        // Display DM response with voice and trigger battle map generation
         function displayDMResponse(textResponse, voiceResponse) {
             const responseMessage = `
                 <div class="dm-message voice-message">
@@ -7725,6 +7873,14 @@ ENDING YOUR RESPONSES - CRITICAL RULES:
             `;
             
             appendToConversation(responseMessage);
+            
+            // Check if DM response describes a new location and generate battle map
+            setTimeout(() => {
+                const shouldGenerateMap = checkIfMapNeeded(textResponse);
+                if (shouldGenerateMap) {
+                    generateBattleMapFromDMDescription(textResponse);
+                }
+            }, 800);
             
             // Speak the response
             setTimeout(() => {
