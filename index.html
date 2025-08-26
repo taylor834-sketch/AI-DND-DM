@@ -1035,7 +1035,7 @@
                                 <details>
                                     <summary>Or type your action (fallback)</summary>
                                     <div class="input-group">
-                                        <textarea id="player-input" placeholder="What do you do? Describe your actions..." rows="2"></textarea>
+                                        <textarea id="player-input" placeholder="Describe your action..." rows="2"></textarea>
                                         <div class="input-actions">
                                             <button class="secondary-button" onclick="sendPlayerAction()">Send Text</button>
                                             <button class="secondary-button" onclick="rollDice()">🎲 Roll Dice</button>
@@ -1932,6 +1932,8 @@
         
         // Show brief notification to user
         function showNotification(message, type = 'info', duration = 3000) {
+            // Ensure type is a string to prevent errors
+            type = String(type || 'info');
             console.log(`[${type.toUpperCase()}] ${message}`);
             
             // Create notification element
@@ -2078,7 +2080,7 @@
             }
 
             // Show save progress
-            showNotification('📝 Saving session and generating summary...', 5000, 'info');
+            showNotification('📝 Saving session and generating summary...', 'info', 5000);
 
             try {
                 // 1. Save comprehensive campaign data
@@ -2463,7 +2465,7 @@ Remember this context for ALL future interactions. Maintain continuity with this
             const npcs = dmState?.npcsNearby?.length > 0 ? ` You were interacting with ${dmState.npcsNearby.join(', ')}.` : '';
             const lastAction = dmState?.lastPlayerAction ? ` Your last action was: "${dmState.lastPlayerAction}".` : '';
             
-            return `Welcome back, adventurers! Last session, you were in ${location}.${npcs}${lastAction} The adventure continues from where you left off. What do you do?`;
+            return `Welcome back, adventurers! Last session, you were in ${location}.${npcs}${lastAction} The adventure continues from where you left off...`;
         }
         
         // Display session recap to player
@@ -3165,7 +3167,8 @@ Remember this context for ALL future interactions. Maintain continuity with this
                 
                 // Start the adventure with opening narration for new campaigns
                 setTimeout(() => {
-                    startAdventureNarration();
+                    // Disabled - using startInitialStory() instead for proper scenario-based narration
+                    // startAdventureNarration();
                 }, 500);
             }
         }
@@ -3195,7 +3198,24 @@ Remember this context for ALL future interactions. Maintain continuity with this
             // Initialize the adventure conversation when game screen loads
             setTimeout(() => {
                 initializeVoiceSystem();
-                initializeAdventure();
+                // Only initialize adventure if we're not starting a new campaign
+                // (new campaigns already get narration from startAdventureNarration)
+                const campaign = window.currentCampaign;
+                const hasExistingSession = campaign && campaign.gameState && campaign.gameState.conversationLog && campaign.gameState.conversationLog.length > 0;
+                if (hasExistingSession) {
+                    console.log('Continuing existing session - loading conversation history');
+                    // For existing sessions, we need to restore the conversation but not create new opening
+                    const history = document.getElementById('conversation-history');
+                    if (history && campaign.gameState.conversationLog) {
+                        // Restore previous conversation
+                        history.innerHTML = campaign.gameState.conversationLog.join('');
+                        history.scrollTop = history.scrollHeight;
+                    }
+                } else {
+                    console.log('New session - initializing with proper scenario-based narration');
+                    // Call initializeAdventure() for new campaigns to get proper goblin scenario narration
+                    initializeAdventure();
+                }
             }, 500);
         }
         
@@ -4677,6 +4697,23 @@ Remember this context for ALL future interactions. Maintain continuity with this
             return scenarioOpenings[scenario] || scenarioOpenings.mysterious_caravan;
         }
         
+        // Get varied prompts instead of always "What do you do?"
+        function getVariedPrompt() {
+            const prompts = [
+                "The choice is yours...",
+                "How will you proceed?",
+                "The moment hangs in the air...",
+                "Your next move could change everything.",
+                "The path forward awaits your decision.",
+                "What happens next is up to you.",
+                "The adventure continues...",
+                "Your response will shape what comes next.",
+                "The scene awaits your action.",
+                "How do you respond?"
+            ];
+            return prompts[Math.floor(Math.random() * prompts.length)];
+        }
+
         // Start the initial story
         function startInitialStory() {
             const campaign = window.currentCampaign;
@@ -4688,7 +4725,7 @@ Remember this context for ALL future interactions. Maintain continuity with this
                 You find yourselves in the ${campaign?.startingRegion || 'Sword Coast'}, ${scenarioInfo.setting}. 
                 ${scenarioInfo.description} 
                 ${characters.length > 0 ? `Your party consists of ${characters.map(c => `${c.name}, a level ${c.level} ${c.species} ${c.class}`).join(', ')}.` : 'Your character stands ready to begin this journey.'}
-                ${scenarioInfo.hook} What do you choose to do?`;
+                ${scenarioInfo.hook}`;
             
             let initialStory = `
                 <div class="dm-message voice-message">
@@ -4708,7 +4745,7 @@ Remember this context for ALL future interactions. Maintain continuity with this
                         
                         <p><strong>${scenarioInfo.hook}</strong></p>
                         
-                        <p class="dm-prompt"><em>What do you choose to do?</em></p>
+                        <p class="dm-prompt"><em>${getVariedPrompt()}</em></p>
                     </div>
                 </div>
             `;
@@ -4720,8 +4757,26 @@ Remember this context for ALL future interactions. Maintain continuity with this
                 speakAsDM(spokenIntro);
             }, 1000);
             
-            // Update game status
-            updateGameStatus(campaign?.startingRegion || 'Ancient Forest', 'Morning', 'Clear skies');
+            // Update game status and DM state with proper context
+            const actualLocation = campaign?.startingScenario === 'goblin_raids' ? 'Millhaven village' : (campaign?.startingRegion || 'Ancient Forest');
+            updateGameStatus(actualLocation, 'Morning', 'Clear skies');
+            
+            // CRITICAL: Set DM state to match the actual scenario
+            DM_STATE.currentLocation = actualLocation;
+            DM_STATE.currentScene = campaign?.startingScenario === 'goblin_raids' ? 'combat_imminent' : 'exploration';
+            
+            // Add initial context to conversation history
+            DM_STATE.conversationHistory.push({
+                type: 'dm_response',
+                content: `Setting: ${actualLocation}. Scenario: ${scenarioInfo.description} ${scenarioInfo.hook}`,
+                timestamp: Date.now()
+            });
+            
+            console.log('DM State initialized:', {
+                location: DM_STATE.currentLocation,
+                scene: DM_STATE.currentScene,
+                scenario: campaign?.startingScenario
+            });
         }
         
         
@@ -4762,7 +4817,7 @@ Remember this context for ALL future interactions. Maintain continuity with this
         // Enhanced DM personality and game state
         const DM_STATE = {
             combatActive: false,
-            currentLocation: 'tavern', // Track current scene location
+            currentLocation: window.currentCampaign?.startingRegion || 'Millhaven village', // Track current scene location
             currentScene: 'social_interaction', // Track scene type
             npcsNearby: [], // Track active NPCs
             activeNPCs: new Map(), // Detailed NPC tracking with names and context
@@ -5113,13 +5168,15 @@ Remember this context for ALL future interactions. Maintain continuity with this
             let systemPrompt = `You are an expert Dungeons & Dragons 5e Dungeon Master running an ongoing campaign. 
 
 CRITICAL CONTEXT RULES:
+- Current Location: ${DM_STATE.currentLocation} - DO NOT CHANGE LOCATIONS unless player explicitly moves
+- Current Scenario: ${window.currentCampaign?.startingScenario || 'adventure'} 
 - You have the FULL conversation history - use it to maintain perfect continuity
-- NEVER ignore what was just said or change topics abruptly
-- If discussing goblins, STAY with goblins until resolved
-- If in a specific location, STAY there unless player explicitly moves
-- ALWAYS acknowledge and respond to the player's EXACT action
+- NEVER ignore what was just said or change topics abruptly  
+- If the scene is about goblin raids on Millhaven village, EVERYTHING happens in that context
+- If a player looks for a stick, they find it IN THE CURRENT LOCATION (not a random tavern!)
+- ALWAYS acknowledge and respond to the player's EXACT action IN THE CURRENT CONTEXT
 - Build on the immediately previous exchange - don't jump to new scenarios
-- Remember active NPCs, ongoing conversations, and current situations`;
+- The very first message established the setting - RESPECT IT`;
             
             // Add combat rules enforcement
             if (combatState.active) {
@@ -5175,7 +5232,18 @@ CRITICAL CONTEXT RULES:
             };
             systemPrompt += lengthGuides[openAIConfig.responseLength];
             
-            systemPrompt += ` CRITICAL: Only change locations if the player explicitly says to move/leave/go somewhere. If talking to NPCs, keep the conversation going in the current location. Always end with "What do you do?" or similar engagement.`;
+            systemPrompt += ` 
+ENDING YOUR RESPONSES - CRITICAL RULES:
+- DO NOT ask "What do you do?" or similar UNLESS the situation is genuinely ambiguous
+- Most of the time, just END with the scene description or NPC dialogue
+- Let the scene breathe - players know it's their turn without being asked
+- Only prompt for action if: 
+  * Multiple urgent choices present themselves simultaneously
+  * A critical decision point with unclear options
+  * The party seems genuinely stuck
+- Good endings: Scene descriptions, NPC dialogue trailing off, environmental details, sounds, smells
+- Bad endings: "What do you do?", "What's your choice?", "How do you proceed?" (avoid these!)
+- Remember: This is collaborative storytelling - players will act when ready`;
             
             // Build proper conversation messages for OpenAI with full context
             const messages = [{ role: 'system', content: systemPrompt }];
@@ -5405,10 +5473,10 @@ CRITICAL CONTEXT RULES:
                 const partySize = party.length === 1 ? "alone" : `as a party of ${party.length}`;
                 const partyClasses = party.map(c => c.class).join(", ");
                 opening += ` You stand ${partySize}, ready to face whatever comes.`;
-                voiceOpening += ` You stand ${partySize} - ${partyClasses} - ready to face whatever destiny awaits. What do you do?`;
+                voiceOpening += ` You stand ${partySize} - ${partyClasses} - ready to face whatever destiny awaits.`;
             } else {
-                opening += " What will you do?";
-                voiceOpening += " The choice, as always, is yours. What do you do?";
+                opening += " The adventure begins.";
+                voiceOpening += " Your journey begins here.";
             }
             
             // Display the opening narration
@@ -5507,7 +5575,7 @@ CRITICAL CONTEXT RULES:
             const climaxes = [
                 {
                     text: "This is it - the moment of truth! Everything has led to this critical juncture.",
-                    voice: "THIS IS IT! The moment of truth has arrived! Everything you've done has led to this crucial moment. The fate of everyone involved hangs in the balance. This is your chance to be heroes! What do you do?"
+                    voice: "THIS IS IT! The moment of truth has arrived! Everything you've done has led to this crucial moment. The fate of everyone involved hangs in the balance. This is your chance to be heroes!"
                 },
                 {
                     text: "The tension reaches its breaking point! The situation demands immediate decisive action.",
@@ -5563,7 +5631,7 @@ CRITICAL CONTEXT RULES:
             
             return {
                 text: selected,
-                voice: `${selected} What do you do next?`,
+                voice: `${selected}`,
                 category: category
             };
         }
@@ -5884,7 +5952,7 @@ CRITICAL CONTEXT RULES:
                     },
                     {
                         response: "Catastrophic failure! Your action backfires completely, creating a whole new problem!",
-                        voice: "Oh no! That's a critical failure! Your attempt goes so wrong it actually makes things worse! The universe itself seems to be laughing at you! Quick, damage control - what do you do?"
+                        voice: "Oh no! That's a critical failure! Your attempt goes so wrong it actually makes things worse! The universe itself seems to be laughing at you! Everything starts going sideways..."
                     }
                 ];
                 const fail = criticalFailures[Math.floor(Math.random() * criticalFailures.length)];
@@ -5911,7 +5979,7 @@ CRITICAL CONTEXT RULES:
                     </div>
                     <div class="message-content">
                         <p>${textResponse}</p>
-                        <p class="dm-prompt"><em>What do you do next?</em></p>
+                        <p class="dm-prompt"><em>${getVariedPrompt()}</em></p>
                     </div>
                 </div>
             `;
@@ -5967,7 +6035,7 @@ CRITICAL CONTEXT RULES:
                     </div>
                     <div class="message-content">
                         <p>${dmResponse}</p>
-                        <p class="dm-prompt"><em>What do you do next?</em></p>
+                        <p class="dm-prompt"><em>${getVariedPrompt()}</em></p>
                     </div>
                 </div>
             `;
