@@ -1605,11 +1605,54 @@
             
             console.log('Campaign data:', campaignData);
             
-            // Save campaign to localStorage
-            saveCampaign(campaignData);
-            
-            // Set as current campaign
-            window.currentCampaign = campaignData;
+            // Try to use the CampaignManager system first (preferred)
+            if (window.DNDCore && window.DNDCore.getModule('campaignManager')) {
+                const campaignManager = window.DNDCore.getModule('campaignManager');
+                
+                // Convert to the new format expected by CampaignManager
+                const newFormatCampaign = {
+                    meta: {
+                        id: campaignData.id,
+                        name: campaignData.name,
+                        version: '1.0.0',
+                        created: campaignData.createdDate,
+                        lastModified: campaignData.lastPlayed,
+                        syncStatus: 'local'
+                    },
+                    settings: {
+                        worldSeed: campaignData.worldSeed,
+                        moralComplexity: campaignData.moralComplexity,
+                        startingRegion: campaignData.startingRegion,
+                        startingScenario: campaignData.startingScenario
+                    },
+                    gameState: campaignData.gameState,
+                    party: {
+                        characters: {},
+                        relationships: {},
+                        reputation: {}
+                    },
+                    world: {
+                        locations: {},
+                        npcs: {},
+                        factions: {}
+                    }
+                };
+                
+                console.log('🎯 Using CampaignManager for save');
+                const savedId = campaignManager.saveCampaignToStorage(newFormatCampaign);
+                if (savedId) {
+                    console.log('✅ Campaign saved with CampaignManager:', savedId);
+                    window.currentCampaign = newFormatCampaign;
+                } else {
+                    console.warn('⚠️ CampaignManager save failed, using legacy fallback');
+                    saveCampaign(campaignData);
+                    window.currentCampaign = campaignData;
+                }
+            } else {
+                console.warn('⚠️ CampaignManager not available, using legacy save');
+                saveCampaign(campaignData);
+                window.currentCampaign = campaignData;
+            }
             
             // Show API setup screen first for new campaigns
             switchScreen('apiSetup');

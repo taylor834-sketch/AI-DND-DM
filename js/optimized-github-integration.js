@@ -110,6 +110,40 @@ export default class OptimizedGitHubIntegration {
     }
 
     /**
+     * Save incremental data to prevent full syncs for small changes
+     */
+    async saveIncrementalData(dataType, data) {
+        if (!data || !this.config.enableIncrementalSync) {
+            return false;
+        }
+
+        try {
+            console.log(`💾 Saving incremental ${dataType} data...`);
+            
+            // For now, just store locally - can be enhanced later for actual GitHub sync
+            const database = this.core.getModule('database');
+            if (database) {
+                const success = database.save(`incremental_${dataType}`, {
+                    data: data,
+                    timestamp: new Date().toISOString(),
+                    type: dataType
+                });
+                
+                if (success) {
+                    console.log(`✅ Incremental ${dataType} data saved locally`);
+                }
+                
+                return success;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error(`❌ Failed to save incremental ${dataType} data:`, error);
+            return false;
+        }
+    }
+
+    /**
      * Optimized campaign saving with chunking and compression
      */
     async saveCampaignOptimized(campaignData) {
