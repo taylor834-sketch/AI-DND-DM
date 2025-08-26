@@ -999,7 +999,23 @@
                     </div>
                 </header>
                 
-                <div class="game-content" style="display: flex; gap: 20px; height: calc(100vh - 120px);">
+                <!-- Game Status Panel -->
+                <div id="game-status" class="game-status-panel" style="background: #2a2a2a; padding: 10px 20px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-around; align-items: center;">
+                    <div class="status-item">
+                        <span style="color: #999;">📍 Location:</span>
+                        <span id="current-location" style="color: #f0f0f0; margin-left: 5px;">Unknown</span>
+                    </div>
+                    <div class="status-item">
+                        <span style="color: #999;">🕐 Time:</span>
+                        <span id="current-time" style="color: #f0f0f0; margin-left: 5px;">Dawn</span>
+                    </div>
+                    <div class="status-item">
+                        <span style="color: #999;">☁️ Weather:</span>
+                        <span id="current-weather" style="color: #f0f0f0; margin-left: 5px;">Clear</span>
+                    </div>
+                </div>
+                
+                <div class="game-content" style="display: flex; gap: 20px; height: calc(100vh - 180px);">
                     <!-- Left Side: AI DM Conversation Interface -->
                     <div class="dm-conversation" style="flex: 1; display: flex; flex-direction: column; min-width: 400px;">
                         <div class="conversation-header">
@@ -1118,9 +1134,9 @@
                     
                     <!-- Battle Map -->
                     <div class="battle-map-container">
-                        <div class="battle-map-header">
-                            <h3>🗺️ Battle Map</h3>
-                            <div class="map-controls">
+                        <div class="battle-map-header" style="background: #2a2a2a; padding: 12px 15px; border-radius: 8px 8px 0 0; margin-bottom: 0; border-bottom: 2px solid #444;">
+                            <h3 style="margin: 0; color: #f0f0f0; font-size: 1.2em; display: inline-block;">⚔️ Tactical Battle Map</h3>
+                            <div class="map-controls" style="float: right;">
                                 <button class="secondary-button" onclick="zoomMap('in')">🔍+</button>
                                 <button class="secondary-button" onclick="zoomMap('out')">🔍-</button>
                                 <button class="secondary-button" onclick="centerMap()">🎯 Center</button>
