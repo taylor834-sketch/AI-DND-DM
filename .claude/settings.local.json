@@ -24,7 +24,9 @@
       "Bash(del \"C:\\Users\\taylo\\dnd-voice-adventure\\OPEN GAME.bat\")",
       "Bash(grep:*)",
       "Bash(start index.html)",
-      "Bash(start test-embedded-map.html)"
+      "Bash(start test-embedded-map.html)",
+      "Bash(git reset:*)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "ask": []

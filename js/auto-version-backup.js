@@ -9,6 +9,9 @@ export default class AutoVersionBackup {
     }
 
     init() {
+        // DISABLED - Auto-backup should only run during development, not gameplay
+        // Uncomment the lines below to enable auto-backup during code changes
+        /*
         this.core.on('core:initialized', () => {
             this.versionControl = this.core.getModule('versionControl');
             if (this.versionControl) {
@@ -17,6 +20,8 @@ export default class AutoVersionBackup {
                 console.log('🔄 Auto-backup system initialized');
             }
         });
+        */
+        console.log('💤 Auto-backup system disabled (only for code changes)');
     }
 
     setupAutoBackupHooks() {

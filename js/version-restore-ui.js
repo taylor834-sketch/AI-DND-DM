@@ -6,12 +6,22 @@ export default class VersionRestoreUI {
     }
 
     init() {
+        // DISABLED - Version UI should only appear during development
+        // Don't create UI on game startup
+        /*
         this.core.on('core:initialized', () => {
             this.versionControl = this.core.getModule('versionControl');
             this.setupUI();
         });
+        */
 
-        this.core.on('version:show_restore_ui', () => this.showRestoreInterface());
+        // Still allow manual triggering if needed for development
+        this.core.on('version:show_restore_ui', () => {
+            this.versionControl = this.core.getModule('versionControl');
+            this.showRestoreInterface();
+        });
+        
+        console.log('💤 Version Restore UI disabled (only for development)');
     }
 
     setupUI() {

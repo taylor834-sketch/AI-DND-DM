@@ -7,10 +7,14 @@ export default class VersionControl {
     }
 
     init() {
-        this.loadVersionHistory();
+        // Don't load version history on startup - only when explicitly needed
+        // this.loadVersionHistory();  // DISABLED - only load when doing code changes
+        
         this.core.on('version:backup', (event) => this.createBackup(event.detail.description));
         this.core.on('version:restore', (event) => this.restoreVersion(event.detail.version));
         this.core.on('version:list', () => this.listVersions());
+        
+        console.log('📦 Version control ready (inactive until needed)');
     }
 
     async loadVersionHistory() {

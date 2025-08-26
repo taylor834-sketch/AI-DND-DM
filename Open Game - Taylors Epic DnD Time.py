@@ -11,24 +11,55 @@ import webbrowser
 import sys
 
 PORT = 8000
+FALLBACK_PORTS = [8001, 8002, 8080, 8888, 3000]  # Alternative ports to try
+
+def find_available_port():
+    """Find an available port to use"""
+    import socket
+    
+    # First try the default port
+    ports_to_try = [PORT] + FALLBACK_PORTS
+    
+    for port in ports_to_try:
+        try:
+            # Try to bind to the port
+            test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            test_socket.bind(('', port))
+            test_socket.close()
+            return port
+        except OSError:
+            continue
+    
+    # If no ports available, return None
+    return None
 
 def main():
     # Change to the directory containing the files
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
     
+    # Find an available port
+    available_port = find_available_port()
+    if not available_port:
+        print("ERROR: No available ports found!")
+        print("Please close other applications using ports 8000-8002, 8080, 8888, or 3000")
+        sys.exit(1)
+    
+    if available_port != PORT:
+        print(f"NOTE: Port {PORT} was busy, using port {available_port} instead")
+    
     print("Taylor's Epic D&D Time - v2.0 (Latest)")
     print("Enhanced with Fog of War Battle System")
     print("=" * 50)
     print(f"Serving from: {script_dir}")
-    print(f"Server URL: http://localhost:{PORT}")
-    print(f"Game URL: http://localhost:{PORT}/index.html")
+    print(f"Server URL: http://localhost:{available_port}")
+    print(f"Game URL: http://localhost:{available_port}/index.html")
     print("=" * 50)
     
     Handler = http.server.SimpleHTTPRequestHandler
     
     try:
-        with socketserver.TCPServer(("", PORT), Handler) as httpd:
+        with socketserver.TCPServer(("", available_port), Handler) as httpd:
             print(f"Server started successfully!")
             print(f"Opening browser automatically...")
             print(f"Press Ctrl+C to stop the server")
@@ -36,11 +67,11 @@ def main():
             
             # Open browser automatically
             try:
-                webbrowser.open(f'http://localhost:{PORT}/index.html')
+                webbrowser.open(f'http://localhost:{available_port}/index.html')
                 print("Browser opened automatically")
             except Exception as e:
                 print(f"Could not open browser automatically: {e}")
-                print(f"Please manually open: http://localhost:{PORT}/index.html")
+                print(f"Please manually open: http://localhost:{available_port}/index.html")
             
             print("\nServer is running... enjoy your adventure!")
             
@@ -52,9 +83,9 @@ def main():
                 
     except OSError as e:
         if "Address already in use" in str(e):
-            print(f"Port {PORT} is already in use!")
-            print(f"Try opening http://localhost:{PORT} in your browser")
-            print(f"Or change PORT in this script to a different number")
+            print(f"Port {available_port} is already in use!")
+            print(f"This shouldn't happen - please report this issue")
+            print(f"Try running the script again")
         else:
             print(f"Failed to start server: {e}")
         sys.exit(1)

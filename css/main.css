@@ -2097,6 +2097,9 @@ body::before {
         var(--color-background-tertiary);
     background-size: 50px 50px;
     overflow: hidden;
+    min-height: 400px;
+    width: 100%;
+    height: 100%;
 }
 
 .grid-overlay {

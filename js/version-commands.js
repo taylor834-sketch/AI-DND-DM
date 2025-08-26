@@ -7,11 +7,15 @@ export default class VersionCommands {
     }
 
     init() {
+        // DISABLED - Version commands should only be available during development
+        /*
         this.core.on('core:initialized', () => {
             this.versionControl = this.core.getModule('versionControl');
             this.autoBackup = this.core.getModule('autoVersionBackup');
             this.setupGlobalCommands();
         });
+        */
+        console.log('💤 Version Commands disabled (only for development)');
     }
 
     setupGlobalCommands() {

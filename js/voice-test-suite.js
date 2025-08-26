@@ -92,13 +92,24 @@ export default class VoiceTestSuite {
     }
 
     init() {
-        this.core.on('core:initialized', () => {
-            this.voiceIntegration = this.core.getModule('voiceIntegration');
-            this.aiDMIntegration = this.core.getModule('aiDMIntegration');
-            
-            this.createTestInterface();
-            console.log('🧪 Voice Test Suite initialized');
-        });
+        // DISABLED - Voice Test Suite should only load when explicitly requested in settings
+        // this.core.on('core:initialized', () => {
+        //     this.voiceIntegration = this.core.getModule('voiceIntegration');
+        //     this.aiDMIntegration = this.core.getModule('aiDMIntegration');
+        //     
+        //     this.createTestInterface();
+        //     console.log('🧪 Voice Test Suite initialized');
+        // });
+        
+        console.log('💤 Voice Test Suite disabled (available in Settings only)');
+    }
+
+    // Manual initialization method for settings use
+    initializeForSettings() {
+        this.voiceIntegration = this.core.getModule('voiceIntegration');
+        this.aiDMIntegration = this.core.getModule('aiDMIntegration');
+        
+        return this.createTestInterface();
     }
 
     createTestInterface() {
@@ -372,12 +383,17 @@ export default class VoiceTestSuite {
         `;
 
         document.head.insertAdjacentHTML('beforeend', styles);
-        document.body.appendChild(testPanel);
+        
+        // Store panel reference for later use
+        this.testPanel = testPanel;
         
         // Make test suite globally accessible
         window.voiceTestSuite = this;
         
         this.bindTestEvents();
+        
+        // Return the panel instead of adding to DOM automatically
+        return testPanel;
     }
 
     bindTestEvents() {
